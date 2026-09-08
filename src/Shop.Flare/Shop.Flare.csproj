@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="Flare.Blazor" Version="0.33.0" />
     <PackageReference Include="Flare.Theme.MaterialDesign2" Version="0.33.0" />
-    <PackageReference Include="Flare.Icons.MaterialDesign2.Svg" Version="0.33.0" />
+    <!-- TEST: икон-пак отключен -->
   </ItemGroup>
 
   <ItemGroup>
