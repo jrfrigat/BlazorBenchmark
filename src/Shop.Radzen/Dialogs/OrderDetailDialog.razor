@@ -28,11 +28,11 @@
                         AllowFiltering="false" Style="width:100%">
             <Columns>
                 <RadzenDataGridColumn TItem="OrderItem" Property="ProductName" Title="Товар" />
-                <RadzenDataGridColumn TItem="OrderItem" Property="UnitPrice" Title="Цена" Align="TextAlign.Right">
+                <RadzenDataGridColumn TItem="OrderItem" Property="UnitPrice" Title="Цена" TextAlign="TextAlign.Right">
                     <Template Context="i">@ShopLabels.Money(i.UnitPrice)</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="OrderItem" Property="Quantity" Title="Кол-во" Width="90px" Align="TextAlign.Center" />
-                <RadzenDataGridColumn TItem="OrderItem" Property="Total" Title="Сумма" Align="TextAlign.Right">
+                <RadzenDataGridColumn TItem="OrderItem" Property="Quantity" Title="Кол-во" Width="90px" TextAlign="TextAlign.Center" />
+                <RadzenDataGridColumn TItem="OrderItem" Property="Total" Title="Сумма" TextAlign="TextAlign.Right">
                     <Template Context="i">@ShopLabels.Money(i.Total)</Template>
                 </RadzenDataGridColumn>
             </Columns>

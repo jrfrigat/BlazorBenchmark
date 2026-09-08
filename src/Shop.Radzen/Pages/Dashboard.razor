@@ -93,7 +93,7 @@ else
                     <Columns>
                         <RadzenDataGridColumn TItem="RecentOrder" Property="Id" Title="№" Width="70px" />
                         <RadzenDataGridColumn TItem="RecentOrder" Property="CustomerName" Title="Клиент" />
-                        <RadzenDataGridColumn TItem="RecentOrder" Property="Total" Title="Сумма" Align="TextAlign.Right">
+                        <RadzenDataGridColumn TItem="RecentOrder" Property="Total" Title="Сумма" TextAlign="TextAlign.Right">
                             <Template Context="o">@ShopLabels.Money(o.Total)</Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn TItem="RecentOrder" Property="Status" Title="Статус">

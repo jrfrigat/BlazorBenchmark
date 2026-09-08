@@ -21,10 +21,10 @@
                     <RadzenBadge BadgeStyle="BadgeStyle.Secondary" IsPill="true" Text="@p.Category" />
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Product" Property="Price" Title="Цена" Align="TextAlign.Right" Sortable="true">
+            <RadzenDataGridColumn TItem="Product" Property="Price" Title="Цена" TextAlign="TextAlign.Right" Sortable="true">
                 <Template Context="p">@ShopLabels.Money(p.Price)</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Product" Title="Остаток" Width="110px" Align="TextAlign.Center">
+            <RadzenDataGridColumn TItem="Product" Title="Остаток" Width="110px" TextAlign="TextAlign.Center">
                 <Template Context="p">
                     <RadzenBadge BadgeStyle="@(p.Stock <= 5 ? BadgeStyle.Danger : BadgeStyle.Success)" IsPill="true" Text="@p.Stock.ToString()" />
                 </Template>

@@ -20,7 +20,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Payment" Property="OrderId" Title="Заказ" Width="90px" Sortable="true" />
             <RadzenDataGridColumn TItem="Payment" Property="CustomerName" Title="Клиент" Sortable="true" />
-            <RadzenDataGridColumn TItem="Payment" Property="Amount" Title="Сумма" Align="TextAlign.Right" Sortable="true">
+            <RadzenDataGridColumn TItem="Payment" Property="Amount" Title="Сумма" TextAlign="TextAlign.Right" Sortable="true">
                 <Template Context="p">@ShopLabels.Money(p.Amount)</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="Payment" Title="Способ">
