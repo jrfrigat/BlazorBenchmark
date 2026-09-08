@@ -10,7 +10,7 @@
         <FlareText Element="h1" Typo="TypographyScale.HeadlineSmall">Оплаты</FlareText>
         <FlareSpacer />
         <FlareButton Variant="ButtonVariant.Filled" OnClick="OpenCreate" Disabled="@(_unpaidOrders.Count == 0)">
-            <LeadingIcon><FlareIconView Value="@FlareIcons.Favorite" /></LeadingIcon>
+            <LeadingIcon><FlareIconView Value="@MaterialDesign2Icons.Payments" /></LeadingIcon>
             <ChildContent>Принять оплату</ChildContent>
         </FlareButton>
     </FlareStack>
@@ -59,7 +59,7 @@
     <ActionsContent>
         <FlareButton Variant="ButtonVariant.Text" OnClick="@(() => _dialogOpen = false)">Отмена</FlareButton>
         <FlareButton Variant="ButtonVariant.Filled" OnClick="CreateAsync" Loading="_saving">
-            <LeadingIcon><FlareIconView Value="@FlareIcons.Favorite" /></LeadingIcon>
+            <LeadingIcon><FlareIconView Value="@MaterialDesign2Icons.Paid" /></LeadingIcon>
             <ChildContent>Принять</ChildContent>
         </FlareButton>
     </ActionsContent>

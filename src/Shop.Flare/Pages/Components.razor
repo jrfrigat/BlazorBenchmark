@@ -25,7 +25,6 @@
                     <ChildContent>Сохранить</ChildContent>
                 </FlareButton>
                 <FlareIconButton AriaLabel="Изменить" Color="FlareColor.Primary"><FlareIconView Value="@FlareIcons.Edit" /></FlareIconButton>
-                <!-- bisect: toggleiconbutton -->
                 <FlareToggleButton Toggled="@_toggleBold" ToggledChanged="OnToggleBold">Жирный</FlareToggleButton>
             </FlareStack>
         </FlareCardContent>
@@ -38,8 +37,10 @@
             <FlareGrid Gap="FlareSpacing.Large">
                 <FlareCol Xs="12" Md="6">
                     <FlareStack Gap="FlareSpacing.Medium">
-                        <FlareSlider @bind-Value="_slider" Label="Скидка, %" Min="0" Max="100" Indicator="true" /> <FlareSwitch @bind-Value="_switch" Label="Уведомления о заказах" /> <FlareCheckbox @bind-Value="_check" Label="Подписка на рассылку" />
+                        <FlareSwitch @bind-Value="_switch" Label="Уведомления о заказах" />
+                        <FlareCheckbox @bind-Value="_check" Label="Подписка на рассылку" />
                         <FlareCheckbox Value="false" Label="Недоступный пункт" Disabled="true" />
+                        <FlareSlider @bind-Value="_slider" Label="Скидка, %" Min="0" Max="100" Indicator="true" />
                     </FlareStack>
                 </FlareCol>
                 <FlareCol Xs="12" Md="6">
