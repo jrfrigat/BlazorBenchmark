@@ -27,7 +27,7 @@
                     <FlareChip Variant="ChipVariant.Filled" Color="FlareColor.Secondary">@p.Category</FlareChip>
                 </Template>
             </FlareColumn>
-            <FlareColumn Title="Цена" Field="@(p => p.Price)" Sortable="true" Format="C0" Width="130px" />
+            <FlareColumn Title="Цена" Field="@(p => p.Price)" Sortable="true" Format="N0" Width="130px" />
             <FlareColumn Title="Остаток">
                 <Template Context="p">
                     <FlareBadge Standalone="true" Text="@p.Stock.ToString()"

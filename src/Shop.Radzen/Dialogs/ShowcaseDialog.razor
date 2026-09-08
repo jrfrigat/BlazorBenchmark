@@ -1,0 +1,40 @@
+@inject DialogService Dialog
+
+<RadzenStack Gap="12px" Style="padding:8px 4px">
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Название" Style="font-size:.875rem" />
+        <RadzenTextBox T="string" @bind-Value="_text" Style="width:100%" />
+    </RadzenStack>
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Количество" Style="font-size:.875rem" />
+        <RadzenNumeric TValue="int" @bind-Value="_number" Min="0" Style="width:100%" />
+    </RadzenStack>
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Категория" Style="font-size:.875rem" />
+        <RadzenDropDown TValue="string" Data="@ShowcaseData.Categories" @bind-Value="_category" Style="width:100%" />
+    </RadzenStack>
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="8px" Style="margin-top:8px">
+    <RadzenButton Text="Отмена" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialog.Close())" />
+    <RadzenButton Text="Сохранить" Icon="save" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@Save" />
+</RadzenStack>
+
+@code {
+    [Parameter] public string? InitialText { get; set; }
+    [Parameter] public int InitialNumber { get; set; }
+    [Parameter] public string? InitialCategory { get; set; }
+
+    private string? _text;
+    private int _number;
+    private string _category = "";
+
+    protected override void OnInitialized()
+    {
+        _text = InitialText;
+        _number = InitialNumber;
+        _category = InitialCategory ?? ShowcaseData.Categories[0];
+    }
+
+    private void Save() => Dialog.Close((_text ?? "", _number, _category));
+}

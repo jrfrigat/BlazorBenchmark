@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Магазин — Flare / Material Design 2</title>
     <base href="/" />
+    <link rel="preload" id="webassembly" />
 
     <!-- PWA -->
     <link href="manifest.webmanifest" rel="manifest" />
@@ -20,7 +21,7 @@
 
     <!-- Flare: стили компонентов + анти-FOUC бутстрап темы -->
     <link rel="stylesheet" href="_content/Flare.Components/css/flare-components.css" />
-    <script src="_content/Flare.Components/js/flare-bootstrap.js"></script>
+    <script src="_content/Flare.Components/js/flare-bootstrap#[.{fingerprint}].js"></script>
 
     <!-- Загрузчик приложения (идентичен во всех трёх приложениях) -->
     <link rel="stylesheet" href="_content/Shop.Shared/css/app.css" />

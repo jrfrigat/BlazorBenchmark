@@ -1,0 +1,80 @@
+@inject DialogService Dialog
+@inject ShopClient Api
+@inject NotificationService Notify
+
+<RadzenStack Gap="12px" Style="padding:8px 4px">
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Заказ" Style="font-size:.875rem" />
+        <RadzenDropDown TValue="int" Data="@_unpaidOptions" TextProperty="Label" ValueProperty="Id" @bind-Value="_orderId"
+                        Style="width:100%" Placeholder="Выберите заказ" />
+    </RadzenStack>
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Сумма, ₽" Style="font-size:.875rem" />
+        <RadzenNumeric TValue="decimal" @bind-Value="_amount" Min="0.01m" Style="width:100%" />
+    </RadzenStack>
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Способ оплаты" Style="font-size:.875rem" />
+        <RadzenDropDown TValue="PaymentMethod" Data="@_methods" TextProperty="Text" ValueProperty="Value" @bind-Value="_method" Style="width:100%" />
+    </RadzenStack>
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="8px" Style="margin-top:8px">
+    <RadzenButton Text="Отмена" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialog.Close())" />
+    <RadzenButton Text="Принять" Icon="paid" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Disabled="_saving" Click="@CreateAsync" />
+</RadzenStack>
+
+@code {
+    private List<Order>? _orders;
+    private int _orderId;
+    private decimal _amount;
+    private PaymentMethod _method = PaymentMethod.Card;
+    private bool _saving;
+
+    private sealed record MethodOption(string Text, PaymentMethod Value);
+    private readonly List<MethodOption> _methods =
+    [
+        new("Карта", PaymentMethod.Card),
+        new("Наличные", PaymentMethod.Cash),
+        new("Перевод", PaymentMethod.Transfer),
+    ];
+
+    private sealed record UnpaidOption(int Id, string Label);
+
+    private List<UnpaidOption> _unpaidOptions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+        _unpaidOptions = [.. (_orders ?? [])
+            .Where(o => o.Status != OrderStatus.Cancelled && o.Paid < o.Total)
+            .Select(o => new UnpaidOption(o.Id, $"№{o.Id} — {o.CustomerName} (осталось {ShopLabels.Money(o.Total - o.Paid)})"))];
+        _orderId = _unpaidOptions.FirstOrDefault()?.Id ?? 0;
+        var first = (_orders ?? []).FirstOrDefault(o => o.Id == _orderId);
+        if (first is not null) _amount = first.Total - first.Paid;
+    }
+
+    private async Task CreateAsync()
+    {
+        if (_orderId == 0 || _amount <= 0)
+        {
+            Notify.Notify(NotificationSeverity.Warning, "Проверка", "Выберите заказ и сумму");
+            return;
+        }
+        _saving = true;
+        try
+        {
+            await Api.CreatePaymentAsync(new PaymentInput { OrderId = _orderId, Amount = _amount, Method = _method });
+            Notify.Notify(NotificationSeverity.Success, "Готово", "Оплата проведена");
+            Dialog.Close(true);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Notify.Notify(NotificationSeverity.Warning, "Отказ", "Сумма больше остатка по заказу");
+        }
+        catch (HttpRequestException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+        }
+        finally { _saving = false; }
+    }
+}

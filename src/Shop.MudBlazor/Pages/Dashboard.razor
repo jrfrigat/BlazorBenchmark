@@ -76,7 +76,7 @@ else
                         <MudListItem>
                             <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                                 <MudStack RowSpacing="0">
-                                    <MudText Typo="Typo.body2">@index. @item.Name</MudText>
+                                    <MudText Typo="Typo.body2">@(index + 1). @item.Name</MudText>
                                     <MudText Typo="Typo.caption">@item.Quantity шт.</MudText>
                                 </MudStack>
                                 <MudText Typo="Typo.body2">@ShopLabels.Money(item.Revenue)</MudText>

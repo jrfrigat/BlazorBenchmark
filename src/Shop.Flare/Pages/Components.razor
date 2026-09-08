@@ -1,0 +1,263 @@
+@page "/components"
+@inject ISnackbarService Snackbar
+@inject IMessageBoxService MessageBox
+
+<PageTitle>Компоненты — Flare</PageTitle>
+
+<FlareStack Gap="FlareSpacing.Large">
+    <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Medium" Wrap="true">
+        <FlareText Element="h1" Typo="TypographyScale.HeadlineSmall">Компоненты</FlareText>
+        <FlareSpacer />
+        <FlareBadge Standalone="true" Text="Flare · Material Design 2" Color="FlareColor.Secondary" />
+    </FlareStack>
+
+    @* ---------- Кнопки ---------- *@
+    <FlareCard Variant="CardVariant.Outlined">
+        <FlareCardHeader Title="Кнопки" Subtitle="Filled / Outlined / Text / иконка / загрузка / переключатель" />
+        <FlareCardContent>
+            <FlareStack Row Gap="FlareSpacing.Small" Wrap="true" Align="FlareAlignItems.Center">
+                <FlareButton Variant="ButtonVariant.Filled" OnClick="@(() => Snackbar.Show("Нажата основная кнопка", SnackbarSeverity.Info))">Основная</FlareButton>
+                <FlareButton Variant="ButtonVariant.Outlined">Контурная</FlareButton>
+                <FlareButton Variant="ButtonVariant.Text">Текстовая</FlareButton>
+                <FlareButton Variant="ButtonVariant.Filled" Disabled="true">Недоступная</FlareButton>
+                <FlareButton Variant="ButtonVariant.Filled" OnClick="FakeLoadAsync" Loading="_loading">
+                    <LeadingIcon><FlareIconView Value="@FlareIcons.Save" /></LeadingIcon>
+                    <ChildContent>Сохранить</ChildContent>
+                </FlareButton>
+                <FlareIconButton AriaLabel="Изменить" Color="FlareColor.Primary"><FlareIconView Value="@FlareIcons.Edit" /></FlareIconButton>
+                <FlareToggleIconButton Toggled="@_toggleFavorite" ToggledChanged="OnToggleFavorite" AriaLabel="В избранное">
+                    <FlareIconView Value="@(_toggleFavorite ? FlareIcons.Favorite : FlareIcons.Favorite)" />
+                </FlareToggleIconButton>
+                <FlareToggleButton Toggled="@_toggleBold" ToggledChanged="OnToggleBold">Жирный</FlareToggleButton>
+            </FlareStack>
+        </FlareCardContent>
+    </FlareCard>
+
+    @* ---------- Переключатели ---------- *@
+    <FlareCard Variant="CardVariant.Outlined">
+        <FlareCardHeader Title="Переключатели" Subtitle="Switch / Checkbox / Radio / Slider" />
+        <FlareCardContent>
+            <FlareGrid Gap="FlareSpacing.Large">
+                <FlareCol Xs="12" Md="6">
+                    <FlareStack Gap="FlareSpacing.Medium">
+                        <FlareSwitch @bind-Value="_switch" Label="Уведомления о заказах" />
+                        <FlareCheckbox @bind-Value="_check" Label="Подписка на рассылку" />
+                        <FlareCheckbox Value="false" Label="Недоступный пункт" Disabled="true" />
+                        <FlareSlider @bind-Value="_slider" Label="Скидка, %" Min="0" Max="100" Indicator="true" />
+                    </FlareStack>
+                </FlareCol>
+                <FlareCol Xs="12" Md="6">
+                    <FlareRadioGroup TValue="string" @bind-Value="_city" Label="Город доставки" Inline="true">
+                        @foreach (var city in ShowcaseData.Cities.Take(3))
+                        {
+                            <FlareRadio TValue="string" Value="@city" Label="@city" />
+                        }
+                    </FlareRadioGroup>
+                </FlareCol>
+            </FlareGrid>
+        </FlareCardContent>
+    </FlareCard>
+
+    @* ---------- Поля ввода ---------- *@
+    <FlareCard Variant="CardVariant.Outlined">
+        <FlareCardHeader Title="Поля ввода" Subtitle="Текст / число / дата / выбор / многострочный" />
+        <FlareCardContent>
+            <FlareGrid Gap="FlareSpacing.Medium">
+                <FlareCol Xs="12" Md="6" Lg="4">
+                    <FlareTextField Label="Название товара" @bind-Value="_text" HelperText="Подсказка под полем" />
+                </FlareCol>
+                <FlareCol Xs="12" Md="6" Lg="4">
+                    <FlareNumericField TValue="decimal" Label="Количество, шт." @bind-Value="_number" Min="0" ShowStepper="true" />
+                </FlareCol>
+                <FlareCol Xs="12" Md="6" Lg="4">
+                    <FlareDatePicker TValue="DateOnly?" Label="Дата поставки" @bind-Value="_date" />
+                </FlareCol>
+                <FlareCol Xs="12" Md="6" Lg="4">
+                    <FlareSelect TValue="string" Label="Город" Items="@ShowcaseData.Cities" @bind-Value="_city" Searchable="true" />
+                </FlareCol>
+                <FlareCol Xs="12" Md="6" Lg="8">
+                    <FlareTextArea Label="Комментарий" @bind-Value="_comment" />
+                </FlareCol>
+            </FlareGrid>
+            <FlareStack Row Gap="FlareSpacing.Medium" Style="margin-top:8px">
+                <FlareText Typo="TypographyScale.BodyMedium" Color="FlareColor.OnSurfaceVariant">
+                    Текст: @(_text ?? "—") · Число: @_number · Дата: @(_date?.ToString("dd.MM.yyyy") ?? "—") · Город: @_city · Слайдер: @_slider
+                </FlareText>
+            </FlareStack>
+        </FlareCardContent>
+    </FlareCard>
+
+    @* ---------- Чипы и бейджи ---------- *@
+    <FlareCard Variant="CardVariant.Outlined">
+        <FlareCardHeader Title="Чипы и бейджи" />
+        <FlareCardContent>
+            <FlareStack Row Gap="FlareSpacing.Small" Wrap="true" Align="FlareAlignItems.Center">
+                @foreach (var category in ShowcaseData.Categories)
+                {
+                    <FlareChip Variant="ChipVariant.Filled" Color="FlareColor.Secondary">@category</FlareChip>
+                }
+                <FlareChip Variant="ChipVariant.Outlined">Очередь</FlareChip>
+                <FlareBadge Standalone="true" Text="Новое" Color="FlareColor.Error" />
+                <FlareBadge Standalone="true" Text="12" Color="FlareColor.Primary" />
+                <FlareBadge Standalone="true" Text="OK" Color="FlareColor.Success" />
+            </FlareStack>
+        </FlareCardContent>
+    </FlareCard>
+
+    @* ---------- Индикаторы и вкладки ---------- *@
+    <FlareCard Variant="CardVariant.Outlined">
+        <FlareCardHeader Title="Индикаторы и вкладки" Subtitle="Прогресс (линейный/круговой) и Tabs" />
+        <FlareCardContent>
+            <FlareGrid Gap="FlareSpacing.Large">
+                <FlareCol Xs="12" Md="6">
+                    <FlareStack Gap="FlareSpacing.Medium">
+                        <FlareProgress Value="@_slider" />
+                        <FlareProgress Value="null" Variant="ProgressVariant.Circular" />
+                        <FlareProgress Value="65" Color="FlareColor.Success" />
+                    </FlareStack>
+                </FlareCol>
+                <FlareCol Xs="12" Md="6">
+                    <FlareTabs>
+                        <FlareTab Label="Заказы">
+                            <FlareText Typo="TypographyScale.BodyMedium">Содержимое вкладки «Заказы».</FlareText>
+                        </FlareTab>
+                        <FlareTab Label="Товары" Badge="6">
+                            <FlareText Typo="TypographyScale.BodyMedium">Содержимое вкладки «Товары».</FlareText>
+                        </FlareTab>
+                        <FlareTab Label="Клиенты">
+                            <FlareText Typo="TypographyScale.BodyMedium">Содержимое вкладки «Клиенты».</FlareText>
+                        </FlareTab>
+                    </FlareTabs>
+                </FlareCol>
+            </FlareGrid>
+        </FlareCardContent>
+    </FlareCard>
+
+    @* ---------- Таблица ---------- *@
+    <FlareCard Variant="CardVariant.Outlined">
+        <FlareCardHeader Title="Таблица (DataGrid)" Subtitle="Сортировка по колонкам" />
+        <FlareCardContent>
+            <FlareDataGrid Items="@ShowcaseData.Products" Height="auto" ShowPager="false" Hoverable="true">
+                <Columns>
+                    <FlareColumn Title="Название" Field="@(p => p.Name)" Sortable="true" />
+                    <FlareColumn Title="Категория">
+                        <Template Context="p"><FlareChip Variant="ChipVariant.Outlined">@p.Category</FlareChip></Template>
+                    </FlareColumn>
+                    <FlareColumn Title="Цена" Field="@(p => p.Price)" Sortable="true" Format="N0" />
+                    <FlareColumn Title="Остаток">
+                        <Template Context="p">
+                            <FlareBadge Standalone="true" Text="@p.Stock.ToString()" Color="@(p.Stock <= 10 ? FlareColor.Warning : FlareColor.Success)" />
+                        </Template>
+                    </FlareColumn>
+                </Columns>
+            </FlareDataGrid>
+        </FlareCardContent>
+    </FlareCard>
+
+    @* ---------- Графики ---------- *@
+    <FlareCard Variant="CardVariant.Outlined">
+        <FlareCardHeader Title="Графики" Subtitle="Линия / столбцы / пончик" />
+        <FlareCardContent>
+            <FlareGrid Gap="FlareSpacing.Medium">
+                <FlareCol Xs="12" Md="4">
+                    <FlareChart Type="ChartType.Line" Height="200" Title="Выручка, тыс. ₽" Data="@_line" ShowLegend="false" Smooth="true" Area="true" />
+                </FlareCol>
+                <FlareCol Xs="12" Md="4">
+                    <FlareChart Type="ChartType.Bar" Height="200" Title="Заказы, шт." Data="@_bar" ShowLegend="false" />
+                </FlareCol>
+                <FlareCol Xs="12" Md="4">
+                    <FlareChart Type="ChartType.Donut" Height="200" Title="Доли категорий, %" Data="@_pie" />
+                </FlareCol>
+            </FlareGrid>
+        </FlareCardContent>
+    </FlareCard>
+
+    @* ---------- Диалоги и уведомления ---------- *@
+    <FlareCard Variant="CardVariant.Outlined">
+        <FlareCardHeader Title="Диалоги и уведомления" Subtitle="Диалог / подтверждение / snackbar / tooltip" />
+        <FlareCardContent>
+            <FlareStack Row Gap="FlareSpacing.Small" Wrap="true">
+                <FlareButton Variant="ButtonVariant.Filled" OnClick="@(() => _dialogOpen = true)">Открыть диалог</FlareButton>
+                <FlareButton Variant="ButtonVariant.Outlined" OnClick="ConfirmAsync">Подтверждение…</FlareButton>
+                <FlareButton Variant="ButtonVariant.Outlined" OnClick="@(() => Snackbar.Show("Уведомление: заказ №1001 оплачен", SnackbarSeverity.Success))">Snackbar</FlareButton>
+                <FlareTooltip Content="Это подсказка — tooltip">
+                    <FlareButton Variant="ButtonVariant.Text">Наведи на меня</FlareButton>
+                </FlareTooltip>
+            </FlareStack>
+        </FlareCardContent>
+    </FlareCard>
+</FlareStack>
+
+@* ---------- Демонстрационный диалог ---------- *@
+<FlareDialog @bind-Visible="_dialogOpen" Title="Демонстрационный диалог" Size="DialogSize.Sm">
+    <ChildContent>
+        <FlareStack Gap="FlareSpacing.Small">
+            <FlareTextField Label="Название" @bind-Value="_text" />
+            <FlareNumericField TValue="decimal" Label="Количество" @bind-Value="_number" Min="0" />
+            <FlareSelect TValue="string" Label="Категория" Items="@ShowcaseData.Categories" @bind-Value="_dialogCategory" />
+        </FlareStack>
+    </ChildContent>
+    <ActionsContent>
+        <FlareButton Variant="ButtonVariant.Text" OnClick="@(() => _dialogOpen = false)">Отмена</FlareButton>
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="@(() => { _dialogOpen = false; Snackbar.Show($"Сохранено: {_text}, {_number}, {_dialogCategory}", SnackbarSeverity.Success); })">
+            Сохранить
+        </FlareButton>
+    </ActionsContent>
+</FlareDialog>
+
+@code {
+    private bool _switch = true;
+    private bool _check;
+    private bool _toggleFavorite;
+    private bool _toggleBold;
+    private double _slider = 30;
+    private string _city = ShowcaseData.Cities[0];
+    private string? _text = "Ноутбук Air 13";
+    private decimal _number = 5;
+    private DateOnly? _date = DateOnly.FromDateTime(DateTime.Today.AddDays(3));
+    private string? _comment;
+    private string _dialogCategory = ShowcaseData.Categories[0];
+    private bool _dialogOpen;
+    private bool _loading;
+
+    private ChartData? _line;
+    private ChartData? _bar;
+    private ChartData? _pie;
+
+    protected override void OnInitialized()
+    {
+        _line = new ChartData(
+            [new ChartSeries("Выручка", [.. ShowcaseData.Monthly.Select(m => m.Revenue)])],
+            [.. ShowcaseData.Monthly.Select(m => m.Month)]);
+        _bar = new ChartData(
+            [new ChartSeries("Заказы", [.. ShowcaseData.Monthly.Select(m => m.Orders)])],
+            [.. ShowcaseData.Monthly.Select(m => m.Month)]);
+        _pie = new ChartData(
+            [new ChartSeries("Доля, %", [.. ShowcaseData.CategoryShare.Select(v => (double)v)])],
+            [.. ShowcaseData.Categories]);
+    }
+
+    private void OnToggleFavorite(bool value)
+    {
+        _toggleFavorite = value;
+        Snackbar.Show(value ? "Добавлено в избранное" : "Убрано из избранного", SnackbarSeverity.Info);
+    }
+
+    private void OnToggleBold(bool value) => _toggleBold = value;
+
+    private async Task FakeLoadAsync()
+    {
+        _loading = true;
+        await Task.Delay(1200);
+        _loading = false;
+        Snackbar.Show("«Сохранить» с индикатором загрузки выполнено", SnackbarSeverity.Success);
+    }
+
+    private async Task ConfirmAsync()
+    {
+        if (await MessageBox.ConfirmAsync("Подтверждение", "Провести оплату заказа №1001?", "Провести", "Отмена"))
+            Snackbar.Show("Оплата подтверждена", SnackbarSeverity.Success);
+        else
+            Snackbar.Show("Действие отменено", SnackbarSeverity.Warning);
+    }
+}

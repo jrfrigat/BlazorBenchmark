@@ -1,0 +1,290 @@
+@page "/components"
+@inject DialogService Dialog
+@inject NotificationService Notify
+
+<PageTitle>Компоненты — Radzen</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+        <RadzenHeading Size="H5" Style="margin:0" Text="Компоненты" />
+        <RadzenBadge BadgeStyle="BadgeStyle.Secondary" IsPill="true" Text="Radzen · Material" />
+    </RadzenStack>
+
+    @* ---------- Кнопки ---------- *@
+    <RadzenCard>
+        <RadzenLabel Text="Кнопки" Style="font-weight:500" />
+        <RadzenLabel Text="Filled / Outlined / Text / иконка / загрузка / переключатель" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="8px" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.Center" Style="margin-top:12px">
+            <RadzenButton Text="Основная" Icon="check" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(() => Notify.Notify(NotificationSeverity.Info, "Кнопки", "Нажата основная кнопка"))" />
+            <RadzenButton Text="Контурная" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Primary" />
+            <RadzenButton Text="Текстовая" Variant="Variant.Text" ButtonStyle="ButtonStyle.Primary" />
+            <RadzenButton Text="Недоступная" Disabled="true" />
+            <RadzenButton Text="Сохранить" Icon="save" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Disabled="_loading" Click="@FakeLoadAsync" />
+            @if (_loading)
+            {
+                <RadzenProgressBarCircular Value="@_slider" Size="ProgressBarCircularSize.Small" ShowValue="false" Style="width:28px;height:28px" />
+            }
+            <RadzenButton Icon="edit" Variant="Variant.Text" ButtonStyle="ButtonStyle.Primary" title="Изменить" />
+            <RadzenToggleButton T="bool" @bind-Value="_toggleFavorite" Icon="@(_toggleFavorite ? "favorite" : "favorite_border")"
+                                Text="@(_toggleFavorite ? "В избранном" : "В избранное")" Change="@OnToggleFavorite"
+                                Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Secondary" />
+            <RadzenSwitch T="bool" @bind-Value="_toggleBold" Change="@OnToggleBold" />
+            <RadzenLabel Text="Жирный" Style="font-size:.875rem" />
+        </RadzenStack>
+    </RadzenCard>
+
+    @* ---------- Переключатели ---------- *@
+    <RadzenCard>
+        <RadzenLabel Text="Переключатели" Style="font-weight:500" />
+        <RadzenLabel Text="Switch / Checkbox / Radio / Slider" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+        <RadzenRow Gap="1rem" Style="margin-top:12px">
+            <RadzenColumn SizeMD="6" SizeXS="12">
+                <RadzenStack Gap="12px">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="8px" AlignItems="AlignItems.Center">
+                        <RadzenSwitch T="bool" @bind-Value="_switch" />
+                        <RadzenLabel Text="Уведомления о заказах" Style="font-size:.875rem" />
+                    </RadzenStack>
+                    <RadzenCheckBox T="bool" @bind-Value="_check" Name="check-subscribe" />
+                    <RadzenLabel Text="Подписка на рассылку" Style="font-size:.875rem" />
+                    <RadzenCheckBox T="bool" Value="false" Disabled="true" Name="check-disabled" />
+                    <RadzenLabel Text="Недоступный пункт" Style="font-size:.875rem;color:var(--rz-text-secondary-color)" />
+                    <RadzenSlider T="double" @bind-Value="_slider" Min="0" Max="100" Step="1" Style="width:90%" />
+                    <RadzenLabel Text="@($"Скидка: {_slider}%")" Style="font-size:.8rem" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="6" SizeXS="12">
+                <RadzenLabel Text="Город доставки" Style="font-size:.875rem" />
+                <RadzenRadioButtonList T="string" @bind-Value="_city" Name="city-group" Style="margin-top:8px">
+                    @foreach (var city in ShowcaseData.Cities.Take(3))
+                    {
+                        <RadzenRadioButtonListItem T="string" Value="@city" Label="@city" />
+                    }
+                </RadzenRadioButtonList>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+
+    @* ---------- Поля ввода ---------- *@
+    <RadzenCard>
+        <RadzenLabel Text="Поля ввода" Style="font-weight:500" />
+        <RadzenLabel Text="Текст / число / дата / выбор / многострочный" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+        <RadzenRow Gap="1rem" Style="margin-top:12px">
+            <RadzenColumn SizeMD="6" SizeLG="4" SizeXS="12">
+                <RadzenStack Gap="4px">
+                    <RadzenLabel Text="Название товара" Style="font-size:.875rem" />
+                    <RadzenTextBox T="string" @bind-Value="_text" Style="width:100%" />
+                    <RadzenLabel Text="Подсказка под полем" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="6" SizeLG="4" SizeXS="12">
+                <RadzenStack Gap="4px">
+                    <RadzenLabel Text="Количество, шт." Style="font-size:.875rem" />
+                    <RadzenNumeric TValue="int" @bind-Value="_numberInt" Min="0" Style="width:100%" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="6" SizeLG="4" SizeXS="12">
+                <RadzenStack Gap="4px">
+                    <RadzenLabel Text="Дата поставки" Style="font-size:.875rem" />
+                    <RadzenDatePicker TValue="DateTime?" @bind-Value="_date" DateFormat="dd.MM.yyyy" Style="width:100%" ShowClear="true" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="6" SizeLG="4" SizeXS="12">
+                <RadzenStack Gap="4px">
+                    <RadzenLabel Text="Город" Style="font-size:.875rem" />
+                    <RadzenDropDown TValue="string" Data="@ShowcaseData.Cities" @bind-Value="_city" AllowFiltering="true" Style="width:100%" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="6" SizeLG="8" SizeXS="12">
+                <RadzenStack Gap="4px">
+                    <RadzenLabel Text="Комментарий" Style="font-size:.875rem" />
+                    <RadzenTextArea T="string" @bind-Value="_comment" Rows="3" Style="width:100%" />
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+        <RadzenLabel Text="@($"Текст: {(string.IsNullOrWhiteSpace(_text) ? "—" : _text)} · Число: {_numberInt} · Дата: {_date?.ToString("dd.MM.yyyy") ?? "—"} · Город: {_city} · Слайдер: {_slider}")"
+                     Style="font-size:.8rem;color:var(--rz-text-secondary-color);margin-top:8px" />
+    </RadzenCard>
+
+    @* ---------- Чипы и бейджи ---------- *@
+    <RadzenCard>
+        <RadzenLabel Text="Чипы и бейджи" Style="font-weight:500" />
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="8px" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.Center" Style="margin-top:12px">
+            @foreach (var category in ShowcaseData.Categories)
+            {
+                <RadzenBadge BadgeStyle="BadgeStyle.Secondary" IsPill="true" Text="@category" />
+            }
+            <RadzenBadge BadgeStyle="BadgeStyle.Light" IsPill="true" Text="Очередь" />
+            <RadzenBadge BadgeStyle="BadgeStyle.Danger" IsPill="true" Text="Новое" />
+            <RadzenBadge BadgeStyle="BadgeStyle.Primary" IsPill="true" Text="12" />
+            <RadzenBadge BadgeStyle="BadgeStyle.Success" IsPill="true" Text="OK" />
+        </RadzenStack>
+    </RadzenCard>
+
+    @* ---------- Индикаторы и вкладки ---------- *@
+    <RadzenCard>
+        <RadzenLabel Text="Индикаторы и вкладки" Style="font-weight:500" />
+        <RadzenLabel Text="Прогресс (линейный/круговой) и Tabs" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+        <RadzenRow Gap="1rem" Style="margin-top:12px">
+            <RadzenColumn SizeMD="6" SizeXS="12">
+                <RadzenStack Gap="16px">
+                    <RadzenProgressBar Value="@_slider" Style="height:8px" ShowValue="false" />
+                    <RadzenProgressBar Value="100" Mode="ProgressBarMode.Indeterminate" Style="height:8px" ShowValue="false" />
+                    <RadzenProgressBarCircular Value="65" Size="ProgressBarCircularSize.Medium" />
+                </RadzenStack>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="6" SizeXS="12">
+                <RadzenTabs>
+                    <Tabs>
+                        <RadzenTabsItem Text="Заказы">
+                            <RadzenLabel Text="Содержимое вкладки «Заказы»." Style="font-size:.875rem" />
+                        </RadzenTabsItem>
+                        <RadzenTabsItem Text="Товары">
+                            <RadzenLabel Text="Содержимое вкладки «Товары»." Style="font-size:.875rem" />
+                        </RadzenTabsItem>
+                        <RadzenTabsItem Text="Клиенты">
+                            <RadzenLabel Text="Содержимое вкладки «Клиенты»." Style="font-size:.875rem" />
+                        </RadzenTabsItem>
+                    </Tabs>
+                </RadzenTabs>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+
+    @* ---------- Таблица ---------- *@
+    <RadzenCard>
+        <RadzenLabel Text="Таблица (DataGrid)" Style="font-weight:500" />
+        <RadzenLabel Text="Сортировка по колонкам" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+        <RadzenDataGrid TItem="ShowcaseData.DemoProduct" Data="@ShowcaseData.Products" AllowSorting="true" AllowPaging="false"
+                        AllowFiltering="false" Density="Density.Default" Style="width:100%;margin-top:12px">
+            <Columns>
+                <RadzenDataGridColumn TItem="ShowcaseData.DemoProduct" Property="Name" Title="Название" Sortable="true" />
+                <RadzenDataGridColumn TItem="ShowcaseData.DemoProduct" Title="Категория">
+                    <Template Context="p">
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" IsPill="true" Text="@p.Category" />
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ShowcaseData.DemoProduct" Property="Price" Title="Цена" Sortable="true" Align="TextAlign.Right">
+                    <Template Context="p">@ShopLabels.Money(p.Price)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ShowcaseData.DemoProduct" Title="Остаток" Width="110px" Align="TextAlign.Center">
+                    <Template Context="p">
+                        <RadzenBadge BadgeStyle="@(p.Stock <= 10 ? BadgeStyle.Warning : BadgeStyle.Success)" IsPill="true" Text="@p.Stock.ToString()" />
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenCard>
+
+    @* ---------- Графики ---------- *@
+    <RadzenCard>
+        <RadzenLabel Text="Графики" Style="font-weight:500" />
+        <RadzenLabel Text="Линия / столбцы / пончик" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+        <RadzenRow Gap="1rem" Style="margin-top:12px">
+            <RadzenColumn SizeMD="4" SizeXS="12">
+                <RadzenLabel Text="Выручка, тыс. ₽" Style="font-size:.8rem" />
+                <RadzenChart Style="height:200px">
+                    <RadzenLineSeries Data="@ShowcaseData.Monthly" CategoryProperty="Month" ValueProperty="Revenue" Smooth="true" />
+                    <RadzenCategoryAxis />
+                    <RadzenValueAxis />
+                </RadzenChart>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="4" SizeXS="12">
+                <RadzenLabel Text="Заказы, шт." Style="font-size:.8rem" />
+                <RadzenChart Style="height:200px">
+                    <RadzenColumnSeries Data="@ShowcaseData.Monthly" CategoryProperty="Month" ValueProperty="Orders" />
+                    <RadzenCategoryAxis />
+                    <RadzenValueAxis />
+                </RadzenChart>
+            </RadzenColumn>
+            <RadzenColumn SizeMD="4" SizeXS="12">
+                <RadzenLabel Text="Доли категорий, %" Style="font-size:.8rem" />
+                <RadzenChart Style="height:200px">
+                    <RadzenDonutSeries Data="@_pieData" CategoryProperty="Category" ValueProperty="Value" Fills="@_fills" />
+                    <RadzenLegend Position="LegendPosition.Bottom" />
+                </RadzenChart>
+            </RadzenColumn>
+        </RadzenRow>
+    </RadzenCard>
+
+    @* ---------- Диалоги и уведомления ---------- *@
+    <RadzenCard>
+        <RadzenLabel Text="Диалоги и уведомления" Style="font-weight:500" />
+        <RadzenLabel Text="Диалог / подтверждение / уведомление / tooltip" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="8px" Wrap="FlexWrap.Wrap" Style="margin-top:12px">
+            <RadzenButton Text="Открыть диалог" Icon="open_in_new" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenDialog())" />
+            <RadzenButton Text="Подтверждение…" Icon="help" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await ConfirmAsync())" />
+            <RadzenButton Text="Уведомление" Icon="notifications" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Info"
+                          Click="@(() => Notify.Notify(NotificationSeverity.Success, "Уведомление", "Заказ №1001 оплачен"))" />
+            <RadzenHtml ToolTip="Это подсказка — tooltip">
+                <RadzenButton Text="Наведи на меня" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" />
+            </RadzenHtml>
+        </RadzenStack>
+    </RadzenCard>
+</RadzenStack>
+
+@code {
+    private bool _switch = true;
+    private bool _check;
+    private bool _toggleFavorite;
+    private bool _toggleBold;
+    private double _slider = 30;
+    private string _city = ShowcaseData.Cities[0];
+    private string? _text = "Ноутбук Air 13";
+    private int _numberInt = 5;
+    private DateTime? _date = DateTime.Today.AddDays(3);
+    private string? _comment;
+    private bool _loading;
+
+    private static readonly string[] _fills = ["#3F51B5", "#009688", "#FF9800"];
+
+    private sealed record PieRow(string Category, double Value);
+    private readonly List<PieRow> _pieData =
+    [
+        new(ShowcaseData.Categories[0], (double)ShowcaseData.CategoryShare[0]),
+        new(ShowcaseData.Categories[1], (double)ShowcaseData.CategoryShare[1]),
+        new(ShowcaseData.Categories[2], (double)ShowcaseData.CategoryShare[2]),
+    ];
+
+    private void OnToggleFavorite(bool value) =>
+        Notify.Notify(NotificationSeverity.Info, "Избранное", value ? "Добавлено в избранное" : "Убрано из избранного");
+
+    private void OnToggleBold(bool value) => _toggleBold = value;
+
+
+
+    private async Task FakeLoadAsync()
+    {
+        _loading = true;
+        await Task.Delay(1200);
+        _loading = false;
+        Notify.Notify(NotificationSeverity.Success, "Кнопки", "«Сохранить» с индикатором загрузки выполнено");
+    }
+
+    private async Task OpenDialog()
+    {
+        var result = await Dialog.OpenAsync<ShowcaseDialog>("Демонстрационный диалог",
+            new Dictionary<string, object>
+            {
+                ["InitialText"] = _text,
+                ["InitialNumber"] = _numberInt,
+                ["InitialCategory"] = ShowcaseData.Categories[0],
+            },
+            new DialogOptions { Width = "460px" });
+        if (result is (string text, int number, string category))
+        {
+            _text = text;
+            _numberInt = number;
+            Notify.Notify(NotificationSeverity.Success, "Диалог", $"Сохранено: {text}, {number}, {category}");
+        }
+    }
+
+    private async Task ConfirmAsync()
+    {
+        var confirm = await Dialog.Confirm("Провести оплату заказа №1001?", "Подтверждение",
+            new ConfirmOptions { OkButtonText = "Провести", CancelButtonText = "Отмена" });
+        if (confirm == true)
+            Notify.Notify(NotificationSeverity.Success, "Подтверждение", "Оплата подтверждена");
+        else
+            Notify.Notify(NotificationSeverity.Warning, "Подтверждение", "Действие отменено");
+    }
+}

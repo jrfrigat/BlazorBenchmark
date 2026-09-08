@@ -15,19 +15,19 @@
     <Columns>
         <PropertyColumn Property="p => p.Sku" Title="Артикул" />
         <PropertyColumn Property="p => p.Name" Title="Название" />
-        <Column T="Product" Title="Категория">
-            <CellTemplate>
+        <TemplateColumn T="Product" Title="Категория">
+                <CellTemplate>
                 <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@context.Item.Category</MudChip>
             </CellTemplate>
-        </Column>
-        <PropertyColumn Property="p => p.Price" Title="Цена" Format="C0" />
-        <Column T="Product" Title="Остаток">
-            <CellTemplate>
+            </TemplateColumn>
+        <PropertyColumn Property="p => p.Price" Title="Цена" Format="N0" />
+        <TemplateColumn T="Product" Title="Остаток">
+                <CellTemplate>
                 <MudChip T="string" Size="Size.Small" Color="@(context.Item.Stock <= 5 ? Color.Error : Color.Success)">@context.Item.Stock</MudChip>
             </CellTemplate>
-        </Column>
-        <Column T="Product" Title="">
-            <CellTemplate>
+            </TemplateColumn>
+        <TemplateColumn T="Product" Title="">
+                <CellTemplate>
                 <MudStack Row Spacing="1">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" aria-label="Изменить"
                                    OnClick="@(() => OpenEdit(context.Item))" />
@@ -35,7 +35,7 @@
                                    OnClick="@(() => DeleteAsync(context.Item))" />
                 </MudStack>
             </CellTemplate>
-        </Column>
+            </TemplateColumn>
     </Columns>
     <PagerContent>
         <MudDataGridPager T="Product" RowsPerPageString="Строк на странице:" />

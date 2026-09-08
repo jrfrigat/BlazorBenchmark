@@ -48,7 +48,10 @@ public static class ShopLabels
         ? "Не оплачен"
         : (order.IsFullyPaid ? "Оплачен" : $"Оплачен {order.Paid / order.Total:P0}");
 
-    public static string Money(decimal value) => value.ToString("C0", RuCulture);
+    // Инвариантный формат + знак ₽: WASM-приложения по умолчанию запускаются с
+    // InvariantGlobalization (ICU не грузится — это честнее для сравнения размеров PWA),
+    // поэтому культуру ru-RU для чисел не используем.
+    public static string Money(decimal value) => $"{value.ToString("N0", CultureInfo.InvariantCulture)} ₽";
 
     public static readonly CultureInfo RuCulture = GetRuCulture();
 

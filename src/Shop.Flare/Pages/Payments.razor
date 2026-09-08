@@ -20,7 +20,7 @@
             <FlareColumn Title="Дата" Field="@(p => p.PaidAt)" Sortable="true" Format="dd.MM.yyyy HH:mm" Width="150px" />
             <FlareColumn Title="Заказ" Field="@(p => p.OrderId)" Sortable="true" Width="90px" />
             <FlareColumn Title="Клиент" Field="@(p => p.CustomerName)" Sortable="true" />
-            <FlareColumn Title="Сумма" Field="@(p => p.Amount)" Sortable="true" Format="C0" Width="130px" />
+            <FlareColumn Title="Сумма" Field="@(p => p.Amount)" Sortable="true" Format="N0" Width="130px" />
             <FlareColumn Title="Способ">
                 <Template Context="p">
                     <FlareChip Variant="ChipVariant.Outlined">@ShopLabels.PaymentMethodText(p.Method)</FlareChip>
@@ -49,7 +49,7 @@
 <FlareDialog @bind-Visible="_dialogOpen" Title="Принять оплату" Size="DialogSize.Sm">
     <ChildContent>
         <FlareStack Gap="FlareSpacing.Small">
-            <FlareSelect TValue="Order?" Items="@_unpaidOrders" ItemLabel="@(o => $"№{o!.Id} — {o.CustomerName} (осталось {(o.Total - o.Paid):C0})")"
+            <FlareSelect TValue="Order?" Items="@_unpaidOrders" ItemLabel="@(o => $"№{o!.Id} — {o.CustomerName} (осталось {ShopLabels.Money(o.Total - o.Paid)})")"
                          Label="Заказ" @bind-Value="_selectedOrder" />
             <FlareNumericField TValue="decimal" Label="Сумма, ₽" @bind-Value="_amount" Min="0.01" />
             <FlareSelect TValue="PaymentMethod" Items="@_methods" ItemLabel="@(m => ShopLabels.PaymentMethodText(m))"
@@ -122,7 +122,7 @@
 
     private async Task RefundAsync(Payment payment)
     {
-        if (!await MessageBox.ConfirmAsync("Возврат платежа", $"Вернуть {payment.Amount:C0} по заказу №{payment.OrderId}?", "Вернуть", "Отмена"))
+        if (!await MessageBox.ConfirmAsync("Возврат платежа", $"Вернуть {ShopLabels.Money(payment.Amount)} по заказу №{payment.OrderId}?", "Вернуть", "Отмена"))
             return;
         try
         {

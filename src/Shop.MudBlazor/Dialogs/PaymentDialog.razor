@@ -4,10 +4,10 @@
             <MudSelect T="int" Label="Заказ" @bind-Value="_orderId" Variant="Variant.Outlined" Margin="Margin.Dense">
                 @foreach (var o in _unpaidOrders)
                 {
-                    <MudSelectItem T="int" Value="@o.Id">@($"№{o.Id} — {o.CustomerName} (осталось {(o.Total - o.Paid):C0})")</MudSelectItem>
+                    <MudSelectItem T="int" Value="@o.Id">@($"№{o.Id} — {o.CustomerName} (осталось {ShopLabels.Money(o.Total - o.Paid)})")</MudSelectItem>
                 }
             </MudSelect>
-            <MudNumericField TValue="decimal" Label="Сумма, ₽" @bind-Value="_amount" Min="0.01" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudNumericField T="decimal" Label="Сумма, ₽" @bind-Value="_amount" Min="0.01m" Variant="Variant.Outlined" Margin="Margin.Dense" />
             <MudSelect T="PaymentMethod" Label="Способ оплаты" @bind-Value="_method" Variant="Variant.Outlined" Margin="Margin.Dense">
                 @foreach (var m in Enum.GetValues<PaymentMethod>())
                 {

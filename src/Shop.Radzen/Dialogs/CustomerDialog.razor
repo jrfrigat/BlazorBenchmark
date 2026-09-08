@@ -1,0 +1,82 @@
+@inject DialogService Dialog
+@inject ShopClient Api
+@inject NotificationService Notify
+
+<RadzenStack Gap="12px" Style="padding:8px 4px">
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Имя" Style="font-size:.875rem" />
+        <RadzenTextBox @bind-Value="_model.Name" Style="width:100%" />
+        @if (_errors.TryGetValue("Name", out var nameError))
+        {
+            <RadzenLabel Text="@nameError" Style="color:var(--rz-danger);font-size:.75rem" />
+        }
+    </RadzenStack>
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Телефон" Style="font-size:.875rem" />
+        <RadzenTextBox @bind-Value="_model.Phone" Style="width:100%" Placeholder="+7 900 000-00-00" />
+        @if (_errors.TryGetValue("Phone", out var phoneError))
+        {
+            <RadzenLabel Text="@phoneError" Style="color:var(--rz-danger);font-size:.75rem" />
+        }
+    </RadzenStack>
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="E-mail" Style="font-size:.875rem" />
+        <RadzenTextBox @bind-Value="_model.Email" Style="width:100%" />
+        @if (_errors.TryGetValue("Email", out var emailError))
+        {
+            <RadzenLabel Text="@emailError" Style="color:var(--rz-danger);font-size:.75rem" />
+        }
+    </RadzenStack>
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="8px" Style="margin-top:8px">
+    <RadzenButton Text="Отмена" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialog.Close())" />
+    <RadzenButton Text="Сохранить" Icon="save" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Disabled="_saving" Click="@SaveAsync" />
+</RadzenStack>
+
+@code {
+    [Parameter] public int? CustomerId { get; set; }
+
+    private CustomerInput _model = new();
+    private Dictionary<string, string> _errors = [];
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CustomerId is { } id && await Api.GetCustomersAsync() is { } customers)
+        {
+            var customer = customers.FirstOrDefault(c => c.Id == id);
+            if (customer is not null)
+            {
+                _model = new CustomerInput { Name = customer.Name, Phone = customer.Phone, Email = customer.Email };
+            }
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!ShopValidator.Validate(_model, out _errors))
+            return;
+
+        _saving = true;
+        try
+        {
+            if (CustomerId is null)
+            {
+                await Api.CreateCustomerAsync(_model);
+                Notify.Notify(NotificationSeverity.Success, "Сохранено", "Клиент добавлен");
+            }
+            else
+            {
+                await Api.UpdateCustomerAsync(CustomerId.Value, _model);
+                Notify.Notify(NotificationSeverity.Success, "Сохранено", "Клиент обновлён");
+            }
+            Dialog.Close(true);
+        }
+        catch (HttpRequestException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+        }
+        finally { _saving = false; }
+    }
+}

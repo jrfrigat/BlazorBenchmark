@@ -113,7 +113,7 @@
                             <Columns>
                                 <FlareColumn Title="№" Field="@(o => o.Id)" Width="80px" />
                                 <FlareColumn Title="Клиент" Field="@(o => o.CustomerName)" />
-                                <FlareColumn Title="Сумма" Field="@(o => o.Total)" Format="C0" />
+                                <FlareColumn Title="Сумма" Field="@(o => o.Total)" Format="N0" />
                                 <FlareColumn Title="Статус">
                                     <Template Context="o">
                                         <FlareChip Variant="ChipVariant.Outlined" Color="@Tone(ShopLabels.OrderStatusTone(o.Status))">@ShopLabels.OrderStatusText(o.Status)</FlareChip>

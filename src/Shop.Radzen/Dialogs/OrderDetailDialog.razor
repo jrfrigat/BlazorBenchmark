@@ -1,0 +1,123 @@
+@inject DialogService Dialog
+@inject ShopClient Api
+@inject NotificationService Notify
+
+@if (_order is not null)
+{
+    <RadzenStack Gap="12px" Style="padding:8px 4px">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="24px" Wrap="FlexWrap.Wrap">
+            <RadzenStack Gap="0">
+                <RadzenLabel Text="Клиент" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+                <RadzenLabel Text="@_order.CustomerName" Style="font-weight:500" />
+            </RadzenStack>
+            <RadzenStack Gap="0">
+                <RadzenLabel Text="Создан" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+                <RadzenLabel Text="@ShopLabels.DateTimeShort(_order.CreatedAt)" Style="font-weight:500" />
+            </RadzenStack>
+            <RadzenStack Gap="0">
+                <RadzenLabel Text="Статус" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+                <RadzenBadge BadgeStyle="@Tone(ShopLabels.OrderStatusTone(_order.Status))" IsPill="true" Text="@ShopLabels.OrderStatusText(_order.Status)" />
+            </RadzenStack>
+            <RadzenStack Gap="0">
+                <RadzenLabel Text="Оплачено" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+                <RadzenLabel Text="@($"{ShopLabels.Money(_order.Paid)} из {ShopLabels.Money(_order.Total)}")" Style="font-weight:500" />
+            </RadzenStack>
+        </RadzenStack>
+
+        <RadzenDataGrid TItem="OrderItem" Data="@_order.Items" Density="Density.Compact" AllowPaging="false" AllowSorting="false"
+                        AllowFiltering="false" Style="width:100%">
+            <Columns>
+                <RadzenDataGridColumn TItem="OrderItem" Property="ProductName" Title="Товар" />
+                <RadzenDataGridColumn TItem="OrderItem" Property="UnitPrice" Title="Цена" Align="TextAlign.Right">
+                    <Template Context="i">@ShopLabels.Money(i.UnitPrice)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="OrderItem" Property="Quantity" Title="Кол-во" Width="90px" Align="TextAlign.Center" />
+                <RadzenDataGridColumn TItem="OrderItem" Property="Total" Title="Сумма" Align="TextAlign.Right">
+                    <Template Context="i">@ShopLabels.Money(i.Total)</Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="8px">
+            @if (NextStatus(_order.Status) is { } next)
+            {
+                <RadzenButton Text="@NextStatusText(next)" Icon="arrow_forward" Variant="Variant.Filled"
+                              ButtonStyle="ButtonStyle.Primary" Click="@(() => AdvanceAsync(next))" />
+            }
+            @if (_order.Status is OrderStatus.New or OrderStatus.Processing)
+            {
+                <RadzenButton Text="Отменить" Icon="close" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Danger" Click="@CancelOrderAsync" />
+            }
+        </RadzenStack>
+    </RadzenStack>
+}
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="8px">
+    <RadzenButton Text="Закрыть" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialog.Close())" />
+</RadzenStack>
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+
+    private Order? _order;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var orders = await Api.GetOrdersAsync();
+        _order = orders?.FirstOrDefault(o => o.Id == OrderId);
+    }
+
+    private static BadgeStyle Tone(ShopLabels.StatusTone tone) => tone switch
+    {
+        ShopLabels.StatusTone.Info => BadgeStyle.Info,
+        ShopLabels.StatusTone.Success => BadgeStyle.Success,
+        ShopLabels.StatusTone.Warning => BadgeStyle.Warning,
+        ShopLabels.StatusTone.Error => BadgeStyle.Danger,
+        _ => BadgeStyle.Light,
+    };
+
+    private static OrderStatus? NextStatus(OrderStatus status) => status switch
+    {
+        OrderStatus.New => OrderStatus.Processing,
+        OrderStatus.Processing => OrderStatus.Shipped,
+        OrderStatus.Shipped => OrderStatus.Completed,
+        _ => null,
+    };
+
+    private static string NextStatusText(OrderStatus next) => next switch
+    {
+        OrderStatus.Processing => "В работу",
+        OrderStatus.Shipped => "Отправить",
+        _ => "Завершить",
+    };
+
+    private async Task ReloadAsync()
+    {
+        var orders = await Api.GetOrdersAsync();
+        _order = orders?.FirstOrDefault(o => o.Id == OrderId);
+    }
+
+    private async Task AdvanceAsync(OrderStatus next)
+    {
+        try
+        {
+            await Api.SetOrderStatusAsync(OrderId, next);
+            Notify.Notify(NotificationSeverity.Success, "Статус изменён", $"Заказ №{OrderId}: {ShopLabels.OrderStatusText(next)}");
+            await ReloadAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Notify.Notify(NotificationSeverity.Warning, "Отказ", "Переход статуса невозможен");
+        }
+    }
+
+    private async Task CancelOrderAsync()
+    {
+        var confirm = await Dialog.Confirm($"Отменить заказ №{OrderId}?", "Отмена заказа",
+            new ConfirmOptions { OkButtonText = "Отменить заказ", CancelButtonText = "Оставить" });
+        if (confirm != true) return;
+        await Api.SetOrderStatusAsync(OrderId, OrderStatus.Cancelled);
+        Notify.Notify(NotificationSeverity.Info, "Отменён", $"Заказ №{OrderId} отменён");
+        Dialog.Close(true);
+    }
+}

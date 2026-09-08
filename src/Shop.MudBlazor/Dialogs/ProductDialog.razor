@@ -7,9 +7,9 @@
                 <MudTextField Label="Артикул" For="() => _model.Sku" @bind-Value="_model.Sku" Variant="Variant.Outlined" Margin="Margin.Dense"
                               HelperText="3–12 символов: латиница, цифры, дефис" />
                 <MudTextField Label="Категория" For="() => _model.Category" @bind-Value="_model.Category" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <MudNumericField TValue="decimal" Label="Цена, ₽" For="() => _model.Price" @bind-Value="_model.Price"
-                                Min="0.01" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                <MudNumericField TValue="int" Label="Остаток, шт." For="() => _model.Stock" @bind-Value="_model.Stock"
+                <MudNumericField T="decimal" Label="Цена, ₽" For="() => _model.Price" @bind-Value="_model.Price"
+                                Min="0.01m" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField T="int" Label="Остаток, шт." For="() => _model.Stock" @bind-Value="_model.Stock"
                                  Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" />
             </MudStack>
         </EditForm>

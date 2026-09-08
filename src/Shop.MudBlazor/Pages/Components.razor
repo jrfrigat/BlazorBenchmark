@@ -1,0 +1,255 @@
+@page "/components"
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+
+<PageTitle>Компоненты — MudBlazor</PageTitle>
+
+<MudStack RowSpacing="4">
+    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Style="flex-wrap:wrap">
+        <MudText Typo="Typo.h5">Компоненты</MudText>
+        <MudChip T="string" Size="Size.Small" Color="Color.Secondary">MudBlazor · Material</MudChip>
+    </MudStack>
+
+    @* ---------- Кнопки ---------- *@
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Кнопки</MudText>
+        <MudText Typo="Typo.caption" Class="mb-3">Filled / Outlined / Text / иконка / загрузка / переключатель</MudText>
+        <MudStack Row Spacing="2" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Snackbar.Add("Нажата основная кнопка", Severity.Info))">Основная</MudButton>
+            <MudButton Variant="Variant.Outlined">Контурная</MudButton>
+            <MudButton Variant="Variant.Text">Текстовая</MudButton>
+            <MudButton Variant="Variant.Filled" Disabled="true">Недоступная</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="FakeLoadAsync" Loading="_loading">Сохранить</MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" aria-label="Изменить" />
+            <MudToggleIconButton Icon="@Icons.Material.Filled.FavoriteBorder" IconSize="Size.Medium" ToggledIcon="@Icons.Material.Filled.Favorite"
+                                 Toggled="@_toggleFavorite" ToggledChanged="OnToggleFavorite" Color="Color.Secondary" aria-label="В избранное" />
+            <MudToggleGroup T="bool" Toggled="@_toggleBold" ToggledChanged="OnToggleBold" Color="Color.Primary">
+                <MudToggleItem T="bool" ToggledValue="@true" Icon="@Icons.Material.Filled.FormatBold">Жирный</MudToggleItem>
+            </MudToggleGroup>
+        </MudStack>
+    </MudPaper>
+
+    @* ---------- Переключатели ---------- *@
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Переключатели</MudText>
+        <MudText Typo="Typo.caption" Class="mb-3">Switch / Checkbox / Radio / Slider</MudText>
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="6">
+                <MudStack RowSpacing="2">
+                    <MudSwitch @bind-Value="_switch" Color="Color.Primary" Label="Уведомления о заказах" />
+                    <MudCheckBox @bind-Value="_check" Color="Color.Primary" Label="Подписка на рассылку" />
+                    <MudCheckBox Value="false" Label="Недоступный пункт" Disabled="true" />
+                    <MudSlider T="double" @bind-Value="_slider" Min="0" Max="100" Step="1" Color="Color.Primary" />
+                    <MudText Typo="Typo.caption">Скидка: @_slider%</MudText>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudRadioGroup T="string" @bind-Value="_city" Inline="true">
+                    <MudLabel Class="mb-1">Город доставки</MudLabel>
+                    @foreach (var city in ShowcaseData.Cities.Take(3))
+                    {
+                        <MudRadio T="string" Value="@city" Color="Color.Primary" Label="@city" />
+                    }
+                </MudRadioGroup>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @* ---------- Поля ввода ---------- *@
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Поля ввода</MudText>
+        <MudText Typo="Typo.caption" Class="mb-3">Текст / число / дата / выбор / многострочный</MudText>
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="6" lg="4">
+                <MudTextField Label="Название товара" @bind-Value="_text" Variant="Variant.Outlined" HelperText="Подсказка под полем" />
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudNumericField T="decimal" Label="Количество, шт." @bind-Value="_number" Min="0" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudDatePicker T="DateTime?" Label="Дата поставки" @bind-Date="_date" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudSelect T="string" Label="Город" @bind-Value="_city" Variant="Variant.Outlined">
+                    @foreach (var city in ShowcaseData.Cities)
+                    {
+                        <MudSelectItem T="string" Value="@city">@city</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6" lg="8">
+                <MudTextField T="string" Label="Комментарий" @bind-Value="_comment" Variant="Variant.Outlined" Lines="3" />
+            </MudItem>
+        </MudGrid>
+        <MudText Typo="Typo.body2" Class="mt-2">Текст: @(string.IsNullOrWhiteSpace(_text) ? "—" : _text) · Число: @_number · Дата: @(_date?.ToString("dd.MM.yyyy") ?? "—") · Город: @_city · Слайдер: @_slider</MudText>
+    </MudPaper>
+
+    @* ---------- Чипы и бейджи ---------- *@
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-3">Чипы и бейджи</MudText>
+        <MudStack Row Spacing="2" Wrap="Wrap.Wrap" AlignItems="AlignItems.Center">
+            @foreach (var category in ShowcaseData.Categories)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@category</MudChip>
+            }
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">Очередь</MudChip>
+            <MudBadge BContent="Новое" Color="Color.Error" Overlap="true" />
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary">12</MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Success">OK</MudChip>
+        </MudStack>
+    </MudPaper>
+
+    @* ---------- Индикаторы и вкладки ---------- *@
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Индикаторы и вкладки</MudText>
+        <MudText Typo="Typo.caption" Class="mb-3">Прогресс (линейный/круговой) и Tabs</MudText>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudStack RowSpacing="4">
+                    <MudProgressLinear Value="@_slider" Color="Color.Primary" Style="height:8px" />
+                    <MudProgressIndeterminate Color="Color.Primary" />
+                    <MudProgressCircular Value="65" Size="Size.Medium" Color="Color.Success" />
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary">
+                    <MudTabPanel Text="Заказы">
+                        <MudText Typo="Typo.body2">Содержимое вкладки «Заказы».</MudText>
+                    </MudTabPanel>
+                    <MudTabPanel Text="Товары" BadgeData="6">
+                        <MudText Typo="Typo.body2">Содержимое вкладки «Товары».</MudText>
+                    </MudTabPanel>
+                    <MudTabPanel Text="Клиенты">
+                        <MudText Typo="Typo.body2">Содержимое вкладки «Клиенты».</MudText>
+                    </MudTabPanel>
+                </MudTabs>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @* ---------- Таблица ---------- *@
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Таблица (DataGrid)</MudText>
+        <MudText Typo="Typo.caption" Class="mb-3">Сортировка по колонкам</MudText>
+        <MudDataGrid T="ShowcaseData.DemoProduct" Items="@ShowcaseData.Products" Hover="true" Elevation="0" Outlined="true"
+                     RowsPerPage="10" HidePagination="true" SortMode="SortMode.Single" Filterable="false">
+            <Columns>
+                <PropertyColumn Property="p => p.Name" Title="Название" Sortable="true" />
+                <TemplateColumn T="ShowcaseData.DemoProduct" Title="Категория">
+                    <CellTemplate>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@context.Item.Category</MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="p => p.Price" Title="Цена" Format="N0" Sortable="true" />
+                <TemplateColumn T="ShowcaseData.DemoProduct" Title="Остаток">
+                    <CellTemplate>
+                        <MudChip T="string" Size="Size.Small" Color="@(context.Item.Stock <= 10 ? Color.Warning : Color.Success)">@context.Item.Stock</MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+
+    @* ---------- Графики ---------- *@
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Графики</MudText>
+        <MudText Typo="Typo.caption" Class="mb-3">Линия / столбцы / пончик</MudText>
+        <MudGrid Spacing="2">
+            <MudItem xs="12" md="4">
+                <MudChart T="double" ChartType="ChartType.Line" ChartSeries="@_line" ChartLabels="@_labels" Width="100%" Height="200" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudChart T="double" ChartType="ChartType.Bar" ChartSeries="@_barSeries" ChartLabels="@_labels" Width="100%" Height="200" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudChart T="double" ChartType="ChartType.Donut" ChartSeries="@_pieSeries" ChartLabels="@_pieLabels" Width="100%" Height="200" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @* ---------- Диалоги и уведомления ---------- *@
+    <MudPaper Class="pa-4" Elevation="0" Outlined="true">
+        <MudText Typo="Typo.subtitle1" Class="mb-1">Диалоги и уведомления</MudText>
+        <MudText Typo="Typo.caption" Class="mb-3">Диалог / подтверждение / snackbar / tooltip</MudText>
+        <MudStack Row Spacing="2" Wrap="Wrap.Wrap">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenDialog">Открыть диалог</MudButton>
+            <MudButton Variant="Variant.Outlined" OnClick="ConfirmAsync">Подтверждение…</MudButton>
+            <MudButton Variant="Variant.Outlined" OnClick="@(() => Snackbar.Add("Уведомление: заказ №1001 оплачен", Severity.Success))">Snackbar</MudButton>
+            <MudTooltip Text="Это подсказка — tooltip">
+                <MudButton Variant="Variant.Text">Наведи на меня</MudButton>
+            </MudTooltip>
+        </MudStack>
+    </MudPaper>
+</MudStack>
+
+@code {
+    private bool _switch = true;
+    private bool _check;
+    private bool _toggleFavorite;
+    private bool _toggleBold;
+    private double _slider = 30;
+    private string _city = ShowcaseData.Cities[0];
+    private string? _text = "Ноутбук Air 13";
+    private decimal _number = 5;
+    private DateTime? _date = DateTime.Today.AddDays(3);
+    private string? _comment;
+    private bool _loading;
+
+    private string[] _labels = [.. ShowcaseData.Monthly.Select(m => m.Month)];
+    private string[] _pieLabels = [.. ShowcaseData.Categories];
+    private List<ChartSeries<double>> _line = [];
+    private List<ChartSeries<double>> _barSeries = [];
+    private List<ChartSeries<double>> _pieSeries = [];
+
+    protected override void OnInitialized()
+    {
+        _line = [new ChartSeries<double> { Name = "Выручка", Data = new ChartData<double>([.. ShowcaseData.Monthly.Select(m => m.Revenue)]) }];
+        _barSeries = [new ChartSeries<double> { Name = "Заказы", Data = new ChartData<double>([.. ShowcaseData.Monthly.Select(m => m.Orders)]) }];
+        _pieSeries = [new ChartSeries<double> { Name = "Доля, %", Data = new ChartData<double>([.. ShowcaseData.CategoryShare.Select(v => (double)v)]) }];
+    }
+
+    private void OnToggleFavorite(bool value)
+    {
+        _toggleFavorite = value;
+        Snackbar.Add(value ? "Добавлено в избранное" : "Убрано из избранного", Severity.Info);
+    }
+
+    private void OnToggleBold(bool value) => _toggleBold = value;
+
+    private async Task FakeLoadAsync()
+    {
+        _loading = true;
+        await Task.Delay(1200);
+        _loading = false;
+        Snackbar.Add("«Сохранить» с индикатором загрузки выполнено", Severity.Success);
+    }
+
+    private async Task OpenDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            ["InitialText"] = _text,
+            ["InitialNumber"] = _number,
+        };
+        var dialog = await Dialog.ShowAsync<ShowcaseDialog>("Демонстрационный диалог", parameters,
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        var result = await dialog.Result;
+        if (result?.Data is (string text, decimal number))
+        {
+            _text = text;
+            _number = number;
+            Snackbar.Add($"Сохранено: {text}, {number}", Severity.Success);
+        }
+    }
+
+    private async Task ConfirmAsync()
+    {
+        var confirm = await Dialog.ShowAsync<ConfirmDialog>("Подтверждение",
+            new DialogParameters { ["Message"] = "Провести оплату заказа №1001?", ["YesText"] = "Провести" },
+            new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+        if (!(await confirm.Result).Canceled)
+            Snackbar.Add("Оплата подтверждена", Severity.Success);
+        else
+            Snackbar.Add("Действие отменено", Severity.Warning);
+    }
+}

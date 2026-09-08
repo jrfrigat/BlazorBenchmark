@@ -1,0 +1,142 @@
+@page "/"
+@inject ShopClient Api
+
+<PageTitle>Обзор — Radzen</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
+    <RadzenHeading Size="H5" Style="margin:0" Text="Обзор" />
+    <RadzenButton Text="Обновить" Icon="refresh" Variant="Variant.Outlined" Click="@(LoadAsync)" ButtonStyle="ButtonStyle.Light" />
+</RadzenStack>
+
+@if (_data is null)
+{
+    <RadzenLabel Text="Загрузка…" />
+}
+else
+{
+    <RadzenRow Gap="0.5rem">
+        <RadzenColumn SizeMD="3" SizeXS="12">
+            <RadzenCard Style="margin-bottom:12px">
+                <RadzenLabel Text="Выручка сегодня" Style="color:var(--rz-text-secondary-color);font-size:.875rem" />
+                <RadzenHeading Size="H4" Style="margin:4px 0;color:var(--rz-primary)" Text="@ShopLabels.Money(_data.RevenueToday)" />
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn SizeMD="3" SizeXS="12">
+            <RadzenCard Style="margin-bottom:12px">
+                <RadzenLabel Text="Заказов сегодня" Style="color:var(--rz-text-secondary-color);font-size:.875rem" />
+                <RadzenHeading Size="H4" Style="margin:4px 0" Text="@_data.OrdersToday.ToString()" />
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn SizeMD="3" SizeXS="12">
+            <RadzenCard Style="margin-bottom:12px">
+                <RadzenLabel Text="Товаров на складе" Style="color:var(--rz-text-secondary-color);font-size:.875rem" />
+                <RadzenHeading Size="H4" Style="margin:4px 0" Text="@_data.ProductsTotal.ToString()" />
+                @if (_data.LowStockCount > 0)
+                {
+                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" IsPill="true" Text="@($"Мало: {_data.LowStockCount}")" />
+                }
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn SizeMD="3" SizeXS="12">
+            <RadzenCard Style="margin-bottom:12px">
+                <RadzenLabel Text="Долг по заказам" Style="color:var(--rz-text-secondary-color);font-size:.875rem" />
+                <RadzenHeading Size="H4" Style="margin:4px 0" Text="@ShopLabels.Money(_data.UnpaidAmount)" />
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow Gap="0.5rem">
+        <RadzenColumn SizeLG="7" SizeXS="12">
+            <RadzenCard Style="margin-bottom:12px">
+                <RadzenLabel Text="Выручка за 14 дней" Style="font-weight:500" />
+                <RadzenChart Style="height:260px">
+                    <RadzenColumnSeries Data="@_revenue" CategoryProperty="Date" ValueProperty="Revenue" Title="Выручка, ₽" />
+                    <RadzenCategoryAxis />
+                    <RadzenValueAxis />
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn SizeLG="5" SizeXS="12">
+            <RadzenCard Style="margin-bottom:12px">
+                <RadzenLabel Text="Продажи по категориям" Style="font-weight:500" />
+                <RadzenChart Style="height:260px">
+                    <RadzenDonutSeries Data="@_categories" CategoryProperty="Category" ValueProperty="Revenue" Title="Доля" Fills="@_fills" />
+                    <RadzenLegend Position="LegendPosition.Bottom" />
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow Gap="0.5rem">
+        <RadzenColumn SizeLG="5" SizeXS="12">
+            <RadzenCard Style="margin-bottom:12px">
+                <RadzenLabel Text="Топ-5 товаров" Style="font-weight:500" />
+                <RadzenStack Gap="8px" Style="margin-top:8px">
+                    @foreach (var (item, index) in _data.TopProducts.Select((p, i) => (p, i)))
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                            <RadzenStack Gap="0">
+                                <RadzenLabel Text="@($"{index + 1}. {item.Name}")" Style="font-size:.875rem" />
+                                <RadzenLabel Text="@($"{item.Quantity} шт.")" Style="font-size:.75rem;color:var(--rz-text-secondary-color)" />
+                            </RadzenStack>
+                            <RadzenLabel Text="@ShopLabels.Money(item.Revenue)" Style="font-weight:500" />
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn SizeLG="7" SizeXS="12">
+            <RadzenCard Style="margin-bottom:12px">
+                <RadzenLabel Text="Последние заказы" Style="font-weight:500" />
+                <RadzenDataGrid TItem="RecentOrder" Data="@_data.RecentOrders" Density="Density.Compact" Style="margin-top:8px;width:100%"
+                                AllowPaging="false" AllowSorting="false" AllowFiltering="false">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="RecentOrder" Property="Id" Title="№" Width="70px" />
+                        <RadzenDataGridColumn TItem="RecentOrder" Property="CustomerName" Title="Клиент" />
+                        <RadzenDataGridColumn TItem="RecentOrder" Property="Total" Title="Сумма" Align="TextAlign.Right">
+                            <Template Context="o">@ShopLabels.Money(o.Total)</Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="RecentOrder" Property="Status" Title="Статус">
+                            <Template Context="o">
+                                <RadzenBadge BadgeStyle="@Tone(ShopLabels.OrderStatusTone(o.Status))" IsPill="true" Text="@ShopLabels.OrderStatusText(o.Status)" />
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+}
+
+@code {
+    private DashboardData? _data;
+    private List<RevenueView> _revenue = [];
+    private List<CategoryView> _categories = [];
+
+    private static readonly string[] _fills =
+    [
+        "#3F51B5", "#009688", "#FF9800", "#E91E63", "#4CAF50", "#9C27B0", "#795548", "#607D8B",
+    ];
+
+    private sealed record RevenueView(string Date, double Revenue);
+    private sealed record CategoryView(string Category, double Revenue);
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _data = await Api.GetDashboardAsync();
+        if (_data is null) return;
+        _revenue = [.. _data.RevenueByDay.Select(d => new RevenueView(d.Date, (double)Math.Round(d.Revenue)))];
+        _categories = [.. _data.SalesByCategory.Select(c => new CategoryView(c.Category, (double)Math.Round(c.Revenue)))];
+    }
+
+    private static BadgeStyle Tone(ShopLabels.StatusTone tone) => tone switch
+    {
+        ShopLabels.StatusTone.Info => BadgeStyle.Info,
+        ShopLabels.StatusTone.Success => BadgeStyle.Success,
+        ShopLabels.StatusTone.Warning => BadgeStyle.Warning,
+        ShopLabels.StatusTone.Error => BadgeStyle.Danger,
+        _ => BadgeStyle.Light,
+    };
+}

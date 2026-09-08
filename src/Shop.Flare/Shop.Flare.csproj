@@ -14,9 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Flare.Blazor" Version="0.31.1-preview.24" />
-    <PackageReference Include="Flare.Theme.MaterialDesign2" Version="0.31.1-preview.24" />
-    <PackageReference Include="Flare.Icons.MaterialDesign2.Svg" Version="0.31.1-preview.24" />
+    <PackageReference Include="Flare.Blazor" Version="0.33.0" />
+    <PackageReference Include="Flare.Theme.MaterialDesign2" Version="0.33.0" />
+    <PackageReference Include="Flare.Icons.MaterialDesign2.Svg" Version="0.33.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -17,28 +17,28 @@
         <PropertyColumn Property="p => p.PaidAt" Title="Дата" Format="dd.MM.yyyy HH:mm" />
         <PropertyColumn Property="p => p.OrderId" Title="Заказ" />
         <PropertyColumn Property="p => p.CustomerName" Title="Клиент" />
-        <PropertyColumn Property="p => p.Amount" Title="Сумма" Format="C0" />
-        <Column T="Payment" Title="Способ">
-            <CellTemplate>
+        <PropertyColumn Property="p => p.Amount" Title="Сумма" Format="N0" />
+        <TemplateColumn T="Payment" Title="Способ">
+                <CellTemplate>
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@ShopLabels.PaymentMethodText(context.Item.Method)</MudChip>
             </CellTemplate>
-        </Column>
-        <Column T="Payment" Title="Статус">
-            <CellTemplate>
+            </TemplateColumn>
+        <TemplateColumn T="Payment" Title="Статус">
+                <CellTemplate>
                 <MudChip T="string" Size="Size.Small" Color="@(context.Item.Refunded ? Color.Warning : Color.Success)">
                     @(context.Item.Refunded ? "Возврат" : "Проведён")
                 </MudChip>
             </CellTemplate>
-        </Column>
-        <Column T="Payment" Title="">
-            <CellTemplate>
+            </TemplateColumn>
+        <TemplateColumn T="Payment" Title="">
+                <CellTemplate>
                 @if (!context.Item.Refunded)
                 {
                     <MudIconButton Icon="@Icons.Material.Filled.Reply" Size="Size.Small" Color="Color.Warning" aria-label="Вернуть"
                                    OnClick="@(() => RefundAsync(context.Item))" />
                 }
             </CellTemplate>
-        </Column>
+            </TemplateColumn>
     </Columns>
     <PagerContent>
         <MudDataGridPager T="Payment" RowsPerPageString="Строк на странице:" />
@@ -69,7 +69,7 @@
 
     private async Task RefundAsync(Payment payment)
     {
-        var confirm = await Dialog.ShowAsync<ConfirmDialog>("Возврат платежа", new DialogParameters { ["Message"] = $"Вернуть {payment.Amount:C0} по заказу №{payment.OrderId}?", ["YesText"] = "Вернуть" }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+        var confirm = await Dialog.ShowAsync<ConfirmDialog>("Возврат платежа", new DialogParameters { ["Message"] = $"Вернуть {ShopLabels.Money(payment.Amount)} по заказу №{payment.OrderId}?", ["YesText"] = "Вернуть" }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
         if ((await confirm.Result).Canceled) return;
         try
         {

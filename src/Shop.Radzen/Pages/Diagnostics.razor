@@ -1,0 +1,54 @@
+@page "/diagnostics"
+@inject DiagnosticsService Diag
+
+<PageTitle>Диагностика — Radzen</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
+    <RadzenHeading Size="H5" Style="margin:0" Text="Диагностика" />
+    <RadzenButton Text="Собрать метрики" Icon="refresh" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Light" Click="@(CollectAsync)" />
+</RadzenStack>
+
+<RadzenLabel Text="Метрики нагрузки приложения: тайминги загрузки страницы, объём загруженных ресурсов, размер DOM и JS-кучи. Страница идентична во всех трёх приложениях бенчмарка — снимайте показатели после полной загрузки и обхода страниц."
+             Style="color:var(--rz-text-secondary-color);font-size:.875rem;margin-bottom:16px" />
+
+@if (_report is null)
+{
+    <RadzenLabel Text="Нажмите «Собрать метрики»…" />
+}
+else
+{
+    <RadzenCard Style="padding:0">
+        <RadzenDataGrid TItem="MetricRow" Data="@Rows" Density="Density.Compact" AllowPaging="false" AllowSorting="false"
+                        AllowFiltering="false" Style="width:100%">
+            <Columns>
+                <RadzenDataGridColumn TItem="MetricRow" Property="Name" Title="Показатель" Width="300px" />
+                <RadzenDataGridColumn TItem="MetricRow" Property="Value" Title="Значение" />
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenCard>
+}
+
+@code {
+    private DiagnosticsReport? _report;
+
+    private sealed record MetricRow(string Name, string Value);
+
+    private IEnumerable<MetricRow> Rows => _report is null ? [] :
+    [
+        new("DOM interactive, мс", _report.DomInteractiveMs?.ToString() ?? "—"),
+        new("DOMContentLoaded, мс", _report.DomContentLoadedMs?.ToString() ?? "—"),
+        new("Load event, мс", _report.LoadEventMs?.ToString() ?? "—"),
+        new("Ресурсов загружено", _report.ResourceCount.ToString()),
+        new("Объём ресурсов (transfer)", DiagnosticsReport.Bytes(_report.ResourceTransferBytes)),
+        new("Узлов в DOM", _report.DomNodes.ToString()),
+        new("JS-куча (used)", _report.UsedJsHeapBytes is { } used ? DiagnosticsReport.Bytes(used) : "нет данных"),
+        new("JS-куча (total)", _report.TotalJsHeapBytes is { } total ? DiagnosticsReport.Bytes(total) : "нет данных"),
+        new("Device pixel ratio", _report.DevicePixelRatio.ToString("0.##")),
+        new("User agent", _report.UserAgent),
+    ];
+
+    private async Task CollectAsync()
+    {
+        _report = await Diag.CollectAsync();
+    }
+}

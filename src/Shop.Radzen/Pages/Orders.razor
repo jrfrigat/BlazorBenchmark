@@ -1,0 +1,133 @@
+@page "/orders"
+@inject ShopClient Api
+@inject DialogService Dialog
+@inject NotificationService Notify
+
+<PageTitle>Заказы — Radzen</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
+    <RadzenHeading Size="H5" Style="margin:0" Text="Заказы" />
+    <RadzenDropDown TValue="OrderStatus?" Data="@_statusOptions" TextProperty="Text" ValueProperty="Value"
+                    @bind-Value="_statusFilter" Placeholder="Все статусы" AllowClear="true" Style="min-width:200px" />
+    <RadzenButton Text="Новый заказ" Icon="add" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenCreate())" />
+</RadzenStack>
+
+<RadzenCard Style="padding:0">
+    <RadzenDataGrid TItem="Order" Data="@_filtered" AllowSorting="true" AllowPaging="true" PageSize="12"
+                    AllowFiltering="false" Style="width:100%">
+        <Columns>
+            <RadzenDataGridColumn TItem="Order" Property="Id" Title="№" Width="80px" Sortable="true" />
+            <RadzenDataGridColumn TItem="Order" Property="CustomerName" Title="Клиент" Sortable="true" />
+            <RadzenDataGridColumn TItem="Order" Property="CreatedAt" Title="Создан" Width="130px">
+                <Template Context="o">@ShopLabels.DateTimeShort(o.CreatedAt)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Order" Title="Позиций" Width="90px" Align="TextAlign.Center">
+                <Template Context="o">@o.Items.Count</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Order" Property="Total" Title="Сумма" Align="TextAlign.Right" Sortable="true">
+                <Template Context="o">@ShopLabels.Money(o.Total)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Order" Title="Статус">
+                <Template Context="o">
+                    <RadzenBadge BadgeStyle="@Tone(ShopLabels.OrderStatusTone(o.Status))" IsPill="true" Text="@ShopLabels.OrderStatusText(o.Status)" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Order" Title="Оплата">
+                <Template Context="o">
+                    <RadzenBadge BadgeStyle="@(o.IsFullyPaid ? BadgeStyle.Success : o.Paid > 0 ? BadgeStyle.Warning : BadgeStyle.Light)"
+                                IsPill="true" Text="@ShopLabels.PaymentLabel(o)" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Order" Title="" Width="180px" Sortable="false">
+                <Template Context="o">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="4px" AlignItems="AlignItems.Center">
+                        @if (NextStatus(o.Status) is { } next)
+                        {
+                            <RadzenButton Text="@NextStatusText(next)" Size="ButtonSize.ExtraSmall" Variant="Variant.Outlined"
+                                          ButtonStyle="ButtonStyle.Primary" Click="@(async () => await AdvanceAsync(o, next))" />
+                        }
+                        <RadzenButton Icon="search" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light"
+                                      Click="@(async () => await ShowDetails(o))" title="Детали" />
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</RadzenCard>
+
+@code {
+    private List<Order>? _orders;
+    private OrderStatus? _statusFilter;
+
+    private sealed record StatusOption(string Text, OrderStatus? Value);
+    private List<StatusOption> _statusOptions =
+    [.. Enum.GetValues<OrderStatus>().Select(s => new StatusOption(ShopLabels.OrderStatusText(s), s))];
+
+    private IEnumerable<Order> _filtered => _orders?.Where(o => _statusFilter is null || o.Status == _statusFilter) ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+    }
+
+    private static BadgeStyle Tone(ShopLabels.StatusTone tone) => tone switch
+    {
+        ShopLabels.StatusTone.Info => BadgeStyle.Info,
+        ShopLabels.StatusTone.Success => BadgeStyle.Success,
+        ShopLabels.StatusTone.Warning => BadgeStyle.Warning,
+        ShopLabels.StatusTone.Error => BadgeStyle.Danger,
+        _ => BadgeStyle.Light,
+    };
+
+    private static OrderStatus? NextStatus(OrderStatus status) => status switch
+    {
+        OrderStatus.New => OrderStatus.Processing,
+        OrderStatus.Processing => OrderStatus.Shipped,
+        OrderStatus.Shipped => OrderStatus.Completed,
+        _ => null,
+    };
+
+    private static string NextStatusText(OrderStatus next) => next switch
+    {
+        OrderStatus.Processing => "В работу",
+        OrderStatus.Shipped => "Отправить",
+        _ => "Завершить",
+    };
+
+    private async Task OpenCreate()
+    {
+        await Dialog.OpenAsync<OrderCreateDialog>("Новый заказ", null, new DialogOptions { Width = "640px" });
+        await ReloadAsync();
+    }
+
+    private async Task ShowDetails(Order order)
+    {
+        await Dialog.OpenAsync<OrderDetailDialog>($"Заказ №{order.Id}",
+            new Dictionary<string, object> { { "OrderId", order.Id } },
+            new DialogOptions { Width = "640px" });
+        await ReloadAsync();
+    }
+
+    private async Task AdvanceAsync(Order order, OrderStatus next)
+    {
+        try
+        {
+            await Api.SetOrderStatusAsync(order.Id, next);
+            Notify.Notify(NotificationSeverity.Success, "Статус изменён", $"Заказ №{order.Id}: {ShopLabels.OrderStatusText(next)}");
+            await ReloadAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Notify.Notify(NotificationSeverity.Warning, "Отказ", "Переход статуса невозможен");
+        }
+        catch (HttpRequestException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+    }
+}

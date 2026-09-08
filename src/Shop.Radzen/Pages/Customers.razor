@@ -1,0 +1,74 @@
+@page "/customers"
+@inject ShopClient Api
+@inject DialogService Dialog
+@inject NotificationService Notify
+
+<PageTitle>Клиенты — Radzen</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
+    <RadzenHeading Size="H5" Style="margin:0" Text="Клиенты" />
+    <RadzenButton Text="Добавить клиента" Icon="person_add" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenEdit(null))" />
+</RadzenStack>
+
+<RadzenCard Style="padding:0">
+    <RadzenDataGrid TItem="Customer" Data="@_customers" AllowSorting="true" AllowPaging="true" PageSize="15"
+                    AllowFiltering="false" Style="width:100%">
+        <Columns>
+            <RadzenDataGridColumn TItem="Customer" Property="Name" Title="Имя" Sortable="true" />
+            <RadzenDataGridColumn TItem="Customer" Property="Phone" Title="Телефон" Width="180px" />
+            <RadzenDataGridColumn TItem="Customer" Property="Email" Title="E-mail" />
+            <RadzenDataGridColumn TItem="Customer" Property="OrdersCount" Title="Заказов" Width="110px" Align="TextAlign.Center" Sortable="true" />
+            <RadzenDataGridColumn TItem="Customer" Title="" Width="120px" Sortable="false">
+                <Template Context="c">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="4px">
+                        <RadzenButton Icon="edit" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Primary"
+                                      Click="@(async () => await OpenEdit(c))" title="Изменить" />
+                        <RadzenButton Icon="delete" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger"
+                                      Disabled="@(c.OrdersCount > 0)" Click="@(async () => await DeleteAsync(c))" title="Удалить" />
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</RadzenCard>
+
+@code {
+    private List<Customer>? _customers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customers = await Api.GetCustomersAsync();
+    }
+
+    private async Task OpenEdit(Customer? customer)
+    {
+        var result = await Dialog.OpenAsync<CustomerDialog>(customer is null ? "Новый клиент" : "Изменение клиента",
+            new Dictionary<string, object> { { "CustomerId", (int?)customer?.Id } },
+            new DialogOptions { Width = "460px" });
+        if (result is true)
+        {
+            _customers = await Api.GetCustomersAsync();
+        }
+    }
+
+    private async Task DeleteAsync(Customer customer)
+    {
+        var confirm = await Dialog.Confirm($"Удалить «{customer.Name}»?", "Удаление клиента",
+            new ConfirmOptions { OkButtonText = "Удалить", CancelButtonText = "Отмена" });
+        if (confirm != true) return;
+        try
+        {
+            await Api.DeleteCustomerAsync(customer.Id);
+            Notify.Notify(NotificationSeverity.Info, "Удалено", "Клиент удалён");
+            _customers = await Api.GetCustomersAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Notify.Notify(NotificationSeverity.Warning, "Отказ", "Нельзя удалить клиента с заказами");
+        }
+        catch (HttpRequestException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+        }
+    }
+}

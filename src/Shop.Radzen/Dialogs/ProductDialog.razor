@@ -1,0 +1,116 @@
+@inject DialogService Dialog
+@inject ShopClient Api
+@inject NotificationService Notify
+
+<RadzenStack Gap="12px" Style="padding:8px 4px">
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Название" Style="font-size:.875rem" />
+        <RadzenTextBox @bind-Value="_model.Name" Style="width:100%" />
+        @if (_errors.TryGetValue("Name", out var nameError))
+        {
+            <RadzenLabel Text="@nameError" Style="color:var(--rz-danger);font-size:.75rem" />
+        }
+    </RadzenStack>
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Артикул" Style="font-size:.875rem" />
+        <RadzenTextBox @bind-Value="_model.Sku" Style="width:100%" Placeholder="3–12 символов: латиница, цифры, дефис" />
+        @if (_errors.TryGetValue("Sku", out var skuError))
+        {
+            <RadzenLabel Text="@skuError" Style="color:var(--rz-danger);font-size:.75rem" />
+        }
+    </RadzenStack>
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Категория" Style="font-size:.875rem" />
+        <RadzenDropDown TValue="string" Data="@_categories" @bind-Value="_model.Category" AllowClear="true"
+                        Placeholder="Выберите или введите" AllowFiltering="true" Style="width:100%" />
+        @if (_errors.TryGetValue("Category", out var catError))
+        {
+            <RadzenLabel Text="@catError" Style="color:var(--rz-danger);font-size:.75rem" />
+        }
+    </RadzenStack>
+    <RadzenRow Gap="12px">
+        <RadzenColumn SizeMD="6">
+            <RadzenStack Gap="4px">
+                <RadzenLabel Text="Цена, ₽" Style="font-size:.875rem" />
+                <RadzenNumeric TValue="decimal" @bind-Value="_model.Price" Style="width:100%" />
+                @if (_errors.TryGetValue("Price", out var priceError))
+                {
+                    <RadzenLabel Text="@priceError" Style="color:var(--rz-danger);font-size:.75rem" />
+                }
+            </RadzenStack>
+        </RadzenColumn>
+        <RadzenColumn SizeMD="6">
+            <RadzenStack Gap="4px">
+                <RadzenLabel Text="Остаток, шт." Style="font-size:.875rem" />
+                <RadzenNumeric TValue="int" @bind-Value="_model.Stock" Style="width:100%" />
+                @if (_errors.TryGetValue("Stock", out var stockError))
+                {
+                    <RadzenLabel Text="@stockError" Style="color:var(--rz-danger);font-size:.75rem" />
+                }
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="8px" Style="margin-top:8px">
+    <RadzenButton Text="Отмена" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialog.Close())" ClickableIfDisabled="true" />
+    <RadzenButton Text="Сохранить" Icon="save" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Disabled="_saving" Click="@SaveAsync" />
+</RadzenStack>
+
+@code {
+    [Parameter] public int? ProductId { get; set; }
+
+    private ProductInput _model = new();
+    private List<string> _categories = [];
+    private Dictionary<string, string> _errors = [];
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var products = await Api.GetProductsAsync();
+        _categories = [.. (products ?? []).Select(p => p.Category).Distinct().OrderBy(c => c)];
+
+        if (ProductId is { } id && products is not null)
+        {
+            var product = products.FirstOrDefault(p => p.Id == id);
+            if (product is not null)
+            {
+                _model = new ProductInput
+                {
+                    Name = product.Name,
+                    Sku = product.Sku,
+                    Category = product.Category,
+                    Price = product.Price,
+                    Stock = product.Stock,
+                };
+            }
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!ShopValidator.Validate(_model, out _errors))
+            return;
+
+        _saving = true;
+        try
+        {
+            if (ProductId is null)
+            {
+                await Api.CreateProductAsync(_model);
+                Notify.Notify(NotificationSeverity.Success, "Сохранено", "Товар добавлен");
+            }
+            else
+            {
+                await Api.UpdateProductAsync(ProductId.Value, _model);
+                Notify.Notify(NotificationSeverity.Success, "Сохранено", "Товар обновлён");
+            }
+            Dialog.Close(true);
+        }
+        catch (HttpRequestException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+        }
+        finally { _saving = false; }
+    }
+}

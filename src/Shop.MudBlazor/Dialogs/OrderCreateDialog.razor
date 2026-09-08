@@ -21,10 +21,10 @@
                                    Placeholder="Товар">
                             @foreach (var p in _products)
                             {
-                                <MudSelectItem T="int" Value="@p.Id">@($"{p.Name} — {p.Price:C0}")</MudSelectItem>
+                                <MudSelectItem T="int" Value="@p.Id">@($"{p.Name} — {ShopLabels.Money(p.Price)}")</MudSelectItem>
                             }
                         </MudSelect>
-                        <MudNumericField TValue="int" @bind-Value="row.Quantity" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" Style="width:120px" />
+                        <MudNumericField T="int" @bind-Value="row.Quantity" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" Style="width:120px" />
                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="Убрать позицию"
                                        OnClick="@(() => _rows.Remove(row))" />
                     </MudStack>

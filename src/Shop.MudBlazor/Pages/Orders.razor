@@ -24,25 +24,25 @@
         <PropertyColumn Property="o => o.Id" Title="№" />
         <PropertyColumn Property="o => o.CustomerName" Title="Клиент" />
         <PropertyColumn Property="o => o.CreatedAt" Title="Создан" Format="dd.MM HH:mm" />
-        <Column T="Order" Title="Позиций">
-            <CellTemplate><MudText Typo="Typo.body2">@context.Item.Items.Count</MudText></CellTemplate>
-        </Column>
-        <PropertyColumn Property="o => o.Total" Title="Сумма" Format="C0" />
-        <Column T="Order" Title="Статус">
-            <CellTemplate>
+        <TemplateColumn T="Order" Title="Позиций">
+                <CellTemplate><MudText Typo="Typo.body2">@context.Item.Items.Count</MudText></CellTemplate>
+            </TemplateColumn>
+        <PropertyColumn Property="o => o.Total" Title="Сумма" Format="N0" />
+        <TemplateColumn T="Order" Title="Статус">
+                <CellTemplate>
                 <MudChip T="string" Size="Size.Small" Color="@Tone(ShopLabels.OrderStatusTone(context.Item.Status))">@ShopLabels.OrderStatusText(context.Item.Status)</MudChip>
             </CellTemplate>
-        </Column>
-        <Column T="Order" Title="Оплата">
-            <CellTemplate>
+            </TemplateColumn>
+        <TemplateColumn T="Order" Title="Оплата">
+                <CellTemplate>
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
                          Color="@(context.Item.IsFullyPaid ? Color.Success : context.Item.Paid > 0 ? Color.Warning : Color.Default)">
                     @ShopLabels.PaymentLabel(context.Item)
                 </MudChip>
             </CellTemplate>
-        </Column>
-        <Column T="Order" Title="">
-            <CellTemplate>
+            </TemplateColumn>
+        <TemplateColumn T="Order" Title="">
+                <CellTemplate>
                 <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
                     @if (NextStatus(context.Item.Status) is { } next)
                     {
@@ -52,7 +52,7 @@
                                    OnClick="@(() => ShowDetails(context.Item))" />
                 </MudStack>
             </CellTemplate>
-        </Column>
+            </TemplateColumn>
     </Columns>
     <PagerContent>
         <MudDataGridPager T="Order" RowsPerPageString="Строк на странице:" />

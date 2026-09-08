@@ -1,0 +1,80 @@
+@page "/products"
+@inject ShopClient Api
+@inject DialogService Dialog
+@inject NotificationService Notify
+
+<PageTitle>Товары — Radzen</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
+    <RadzenHeading Size="H5" Style="margin:0" Text="Товары" />
+    <RadzenButton Text="Добавить товар" Icon="add" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenEdit(null))" />
+</RadzenStack>
+
+<RadzenCard Style="padding:0">
+    <RadzenDataGrid TItem="Product" Data="@_filtered" AllowSorting="true" AllowPaging="true" PageSize="15" Density="Density.Default"
+                    AllowFiltering="false" Style="width:100%">
+        <Columns>
+            <RadzenDataGridColumn TItem="Product" Property="Sku" Title="Артикул" Width="110px" Sortable="true" />
+            <RadzenDataGridColumn TItem="Product" Property="Name" Title="Название" Sortable="true" />
+            <RadzenDataGridColumn TItem="Product" Title="Категория">
+                <Template Context="p">
+                    <RadzenBadge BadgeStyle="BadgeStyle.Secondary" IsPill="true" Text="@p.Category" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Product" Property="Price" Title="Цена" Align="TextAlign.Right" Sortable="true">
+                <Template Context="p">@ShopLabels.Money(p.Price)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Product" Title="Остаток" Width="110px" Align="TextAlign.Center">
+                <Template Context="p">
+                    <RadzenBadge BadgeStyle="@(p.Stock <= 5 ? BadgeStyle.Danger : BadgeStyle.Success)" IsPill="true" Text="@p.Stock.ToString()" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Product" Title="" Width="120px" Sortable="false" Filterable="false">
+                <Template Context="p">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="4px">
+                        <RadzenButton Icon="edit" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenEdit(p))" title="Изменить" />
+                        <RadzenButton Icon="delete" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="@(async () => await DeleteAsync(p))" title="Удалить" />
+                    </RadzenStack>
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</RadzenCard>
+
+@code {
+    private List<Product>? _products;
+
+    private IEnumerable<Product> _filtered => _products ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await Api.GetProductsAsync();
+    }
+
+    private async Task OpenEdit(Product? product)
+    {
+        var result = await Dialog.OpenAsync<ProductDialog>(product is null ? "Новый товар" : "Изменение товара",
+            new Dictionary<string, object> { { "ProductId", (int?)product?.Id } },
+            new DialogOptions { Width = "460px" });
+        if (result is true)
+        {
+            _products = await Api.GetProductsAsync();
+        }
+    }
+
+    private async Task DeleteAsync(Product product)
+    {
+        var confirm = await Dialog.Confirm($"Удалить «{product.Name}»?", "Удаление товара", new ConfirmOptions { OkButtonText = "Удалить", CancelButtonText = "Отмена" });
+        if (confirm != true) return;
+        try
+        {
+            await Api.DeleteProductAsync(product.Id);
+            Notify.Notify(NotificationSeverity.Info, "Удалено", "Товар удалён");
+            _products = await Api.GetProductsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+        }
+    }
+}

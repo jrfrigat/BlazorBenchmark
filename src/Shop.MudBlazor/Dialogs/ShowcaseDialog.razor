@@ -1,0 +1,39 @@
+<MudDialog>
+    <DialogContent>
+        <MudStack RowSpacing="2">
+            <MudTextField Label="Название" @bind-Value="_text" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudNumericField T="decimal" Label="Количество" @bind-Value="_number" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudSelect T="string" Label="Категория" @bind-Value="_category" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var c in ShowcaseData.Categories)
+                {
+                    <MudSelectItem T="string" Value="@c">@c</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string? InitialText { get; set; }
+    [Parameter] public decimal InitialNumber { get; set; }
+
+    private string? _text;
+    private decimal _number;
+    private string _category = ShowcaseData.Categories[0];
+
+    protected override void OnInitialized()
+    {
+        _text = InitialText;
+        _number = InitialNumber;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Save() => MudDialog.Close(DialogResult.Ok((_text ?? "", _number)));
+}

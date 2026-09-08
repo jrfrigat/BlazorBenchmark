@@ -1,0 +1,94 @@
+@inject DialogService Dialog
+@inject ShopClient Api
+@inject NotificationService Notify
+
+<RadzenStack Gap="12px" Style="padding:8px 4px">
+    <RadzenStack Gap="4px">
+        <RadzenLabel Text="Клиент" Style="font-size:.875rem" />
+        <RadzenDropDown TValue="int" Data="@_customers" TextProperty="Name" ValueProperty="Id" @bind-Value="_customerId"
+                        AllowFiltering="true" Style="width:100%" Placeholder="Выберите клиента" />
+    </RadzenStack>
+
+    @if (_itemsError is not null)
+    {
+        <RadzenLabel Text="@_itemsError" Style="color:var(--rz-danger);font-size:.8rem" />
+    }
+
+    <RadzenStack Gap="8px">
+        @foreach (var row in _rows)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="8px" AlignItems="AlignItems.Center">
+                <RadzenDropDown TValue="int" Data="@_products" TextProperty="Label" ValueProperty="Id" @bind-Value="row.ProductId"
+                                AllowFiltering="true" Style="flex:1" Placeholder="Товар" />
+                <RadzenNumeric TValue="int" @bind-Value="row.Quantity" Min="1" Style="width:110px" />
+                <RadzenButton Icon="close" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger"
+                              Click="@(() => _rows.Remove(row))" title="Убрать позицию" />
+            </RadzenStack>
+        }
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+            <RadzenButton Text="Добавить позицию" Icon="add" Variant="Variant.Text" ButtonStyle="ButtonStyle.Primary" Click="@(() => _rows.Add(new()))" />
+            <RadzenLabel Text="@($"Итого: {ShopLabels.Money(_rows.Sum(r => (_products.FirstOrDefault(p => p.Id == r.ProductId)?.Price ?? 0) * r.Quantity))}")" Style="font-weight:500" />
+        </RadzenStack>
+    </RadzenStack>
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="8px" Style="margin-top:8px">
+    <RadzenButton Text="Отмена" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialog.Close())" />
+    <RadzenButton Text="Создать" Icon="check" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Disabled="_saving" Click="@CreateAsync" />
+</RadzenStack>
+
+@code {
+    private List<Customer>? _customers;
+    private List<Product>? _productsRaw;
+    private int _customerId;
+    private string? _itemsError;
+    private bool _saving;
+    private readonly List<Row> _rows = [new()];
+
+    private sealed class Row
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; } = 1;
+    }
+
+    private sealed record ProductOption(int Id, string Label, decimal Price);
+
+    private List<ProductOption> _products = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customers = await Api.GetCustomersAsync();
+        _productsRaw = await Api.GetProductsAsync();
+        _products = [.. (_productsRaw ?? []).Select(p => new ProductOption(p.Id, $"{p.Name} — {ShopLabels.Money(p.Price)}", p.Price))];
+        _customerId = _customers?.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private async Task CreateAsync()
+    {
+        _itemsError = null;
+        if (_customerId == 0) { _itemsError = "Выберите клиента"; return; }
+        if (_rows.Count == 0 || _rows.Any(r => r.ProductId == 0)) { _itemsError = "Заполните все позиции"; return; }
+
+        var input = new OrderInput
+        {
+            CustomerId = _customerId,
+            Items = _rows.Select(r => new OrderItemInput { ProductId = r.ProductId, Quantity = r.Quantity }).ToList(),
+        };
+        _saving = true;
+        try
+        {
+            await Api.CreateOrderAsync(input);
+            Notify.Notify(NotificationSeverity.Success, "Готово", "Заказ создан");
+            Dialog.Close(true);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            _itemsError = "Проверьте позиции: товара может не быть в наличии";
+        }
+        catch (HttpRequestException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+        }
+        finally { _saving = false; }
+    }
+}

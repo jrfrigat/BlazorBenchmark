@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
-using Shop.MudBlazor;
+using ShopMudBlazor;
 using Shop.Shared;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);

@@ -1,3 +1,30 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-@Body
+<RadzenLayout>
+    <RadzenSidebar>
+        <RadzenPanelMenu>
+            <RadzenPanelMenuItem Text="Обзор" Icon="dashboard" Path="/" Match="NavLinkMatch.All" />
+            <RadzenPanelMenuItem Text="Товары" Icon="inventory_2" Path="/products" />
+            <RadzenPanelMenuItem Text="Заказы" Icon="shopping_cart" Path="/orders" />
+            <RadzenPanelMenuItem Text="Оплаты" Icon="receipt_long" Path="/payments" />
+            <RadzenPanelMenuItem Text="Клиенты" Icon="people" Path="/customers" />
+            <RadzenPanelMenuItem Text="Компоненты" Icon="widgets" Path="/components" />
+            <RadzenPanelMenuItem Text="Диагностика" Icon="speed" Path="/diagnostics" />
+        </RadzenPanelMenu>
+    </RadzenSidebar>
+
+    <RadzenMain>
+        <RadzenHeader Style="display:flex;align-items:center;gap:8px;padding:8px 16px;min-height:48px">
+            <RadzenSidebarToggle Style="float:left" />
+            <RadzenLabel Text="Мини-Магазин" Style="font-size:1.25rem;font-weight:500;margin:0" />
+            <span style="flex:1"></span>
+            <RadzenBadge BadgeStyle="BadgeStyle.Secondary" IsPill="true" Text="Radzen · Material" />
+        </RadzenHeader>
+        <RadzenBody Style="padding:24px">
+            @Body
+        </RadzenBody>
+    </RadzenMain>
+</RadzenLayout>
+
+<RadzenDialog />
+<RadzenNotification />

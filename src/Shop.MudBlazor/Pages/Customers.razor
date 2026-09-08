@@ -19,8 +19,8 @@
         <PropertyColumn Property="c => c.Phone" Title="Телефон" />
         <PropertyColumn Property="c => c.Email" Title="E-mail" />
         <PropertyColumn Property="c => c.OrdersCount" Title="Заказов" />
-        <Column T="Customer" Title="">
-            <CellTemplate>
+        <TemplateColumn T="Customer" Title="">
+                <CellTemplate>
                 <MudStack Row Spacing="1">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" aria-label="Изменить"
                                    OnClick="@(() => OpenEdit(context.Item))" />
@@ -29,7 +29,7 @@
                                    OnClick="@(() => DeleteAsync(context.Item))" />
                 </MudStack>
             </CellTemplate>
-        </Column>
+            </TemplateColumn>
     </Columns>
     <PagerContent>
         <MudDataGridPager T="Customer" RowsPerPageString="Строк на странице:" />

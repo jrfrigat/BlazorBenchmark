@@ -1,0 +1,92 @@
+@page "/payments"
+@inject ShopClient Api
+@inject DialogService Dialog
+@inject NotificationService Notify
+
+<PageTitle>Оплаты — Radzen</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
+    <RadzenHeading Size="H5" Style="margin:0" Text="Оплаты" />
+    <RadzenButton Text="Принять оплату" Icon="payments" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary"
+                  Disabled="@(_unpaidOrders.Count == 0)" Click="@(async () => await OpenCreate())" />
+</RadzenStack>
+
+<RadzenCard Style="padding:0">
+    <RadzenDataGrid TItem="Payment" Data="@_payments" AllowSorting="true" AllowPaging="true" PageSize="12"
+                    AllowFiltering="false" Style="width:100%">
+        <Columns>
+            <RadzenDataGridColumn TItem="Payment" Property="PaidAt" Title="Дата" Width="160px" Sortable="true">
+                <Template Context="p">@p.PaidAt.ToString("dd.MM.yyyy HH:mm")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Payment" Property="OrderId" Title="Заказ" Width="90px" Sortable="true" />
+            <RadzenDataGridColumn TItem="Payment" Property="CustomerName" Title="Клиент" Sortable="true" />
+            <RadzenDataGridColumn TItem="Payment" Property="Amount" Title="Сумма" Align="TextAlign.Right" Sortable="true">
+                <Template Context="p">@ShopLabels.Money(p.Amount)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Payment" Title="Способ">
+                <Template Context="p">
+                    <RadzenBadge BadgeStyle="BadgeStyle.Info" IsPill="false" Text="@ShopLabels.PaymentMethodText(p.Method)" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Payment" Title="Статус">
+                <Template Context="p">
+                    <RadzenBadge BadgeStyle="@(p.Refunded ? BadgeStyle.Warning : BadgeStyle.Success)" IsPill="true"
+                                Text="@(p.Refunded ? "Возврат" : "Проведён")" />
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Payment" Title="" Width="80px" Sortable="false">
+                <Template Context="p">
+                    @if (!p.Refunded)
+                    {
+                        <RadzenButton Icon="undo" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Warning"
+                                      Click="@(async () => await RefundAsync(p))" title="Вернуть" />
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+</RadzenCard>
+
+@code {
+    private List<Payment>? _payments;
+    private List<Order>? _orders;
+
+    private List<Order> _unpaidOrders => _orders?
+        .Where(o => o.Status != OrderStatus.Cancelled && o.Paid < o.Total)
+        .ToList() ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+        _payments = await Api.GetPaymentsAsync();
+    }
+
+    private async Task OpenCreate()
+    {
+        await Dialog.OpenAsync<PaymentDialog>("Принять оплату", null, new DialogOptions { Width = "460px" });
+        await ReloadAsync();
+    }
+
+    private async Task RefundAsync(Payment payment)
+    {
+        var confirm = await Dialog.Confirm($"Вернуть {ShopLabels.Money(payment.Amount)} по заказу №{payment.OrderId}?", "Возврат платежа",
+            new ConfirmOptions { OkButtonText = "Вернуть", CancelButtonText = "Отмена" });
+        if (confirm != true) return;
+        try
+        {
+            await Api.RefundPaymentAsync(payment.Id);
+            Notify.Notify(NotificationSeverity.Info, "Возврат", "Возврат оформлен");
+            await ReloadAsync();
+        }
+        catch (HttpRequestException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+        _payments = await Api.GetPaymentsAsync();
+    }
+}

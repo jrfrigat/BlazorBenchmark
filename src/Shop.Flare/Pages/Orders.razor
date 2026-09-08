@@ -23,7 +23,7 @@
             <FlareColumn Title="Клиент" Field="@(o => o.CustomerName)" Sortable="true" />
             <FlareColumn Title="Создан" Field="@(o => o.CreatedAt)" Format="dd.MM HH:mm" Width="120px" />
             <FlareColumn Title="Позиций" Field="@(o => o.Items.Count)" Width="90px" />
-            <FlareColumn Title="Сумма" Field="@(o => o.Total)" Sortable="true" Format="C0" Width="130px" />
+            <FlareColumn Title="Сумма" Field="@(o => o.Total)" Sortable="true" Format="N0" Width="130px" />
             <FlareColumn Title="Статус">
                 <Template Context="o">
                     <FlareChip Variant="ChipVariant.Filled" Color="@Tone(ShopLabels.OrderStatusTone(o.Status))">@ShopLabels.OrderStatusText(o.Status)</FlareChip>
@@ -66,7 +66,7 @@
                 @foreach (var row in _rows)
                 {
                     <FlareStack Row Gap="FlareSpacing.Small" Align="FlareAlignItems.Center">
-                        <FlareSelect TValue="Product?" Items="@_products" ItemLabel="@(p => $"{p!.Name} — {p.Price:C0}")"
+                        <FlareSelect TValue="Product?" Items="@_products" ItemLabel="@(p => $"{p!.Name} — {ShopLabels.Money(p.Price)}")"
                                      Searchable="true" Placeholder="Товар" @bind-Value="row.Product" />
                         <FlareNumericField TValue="int" @bind-Value="row.Quantity" Min="1" Style="width:110px" />
                         <FlareIconButton AriaLabel="Убрать позицию" Color="FlareColor.Error" OnClick="@(() => _rows.Remove(row))">
@@ -110,9 +110,9 @@
                 <FlareDataGrid Items="@_details.Items" Height="auto" ShowPager="false" Dense="true">
                     <Columns>
                         <FlareColumn Title="Товар" Field="@(i => i.ProductName)" />
-                        <FlareColumn Title="Цена" Field="@(i => i.UnitPrice)" Format="C0" Width="120px" />
+                        <FlareColumn Title="Цена" Field="@(i => i.UnitPrice)" Format="N0" Width="120px" />
                         <FlareColumn Title="Кол-во" Field="@(i => i.Quantity)" Width="90px" />
-                        <FlareColumn Title="Сумма" Field="@(i => i.Total)" Format="C0" Width="120px" />
+                        <FlareColumn Title="Сумма" Field="@(i => i.Total)" Format="N0" Width="120px" />
                     </Columns>
                 </FlareDataGrid>
 

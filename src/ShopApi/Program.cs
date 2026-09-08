@@ -76,7 +76,7 @@ app.MapGet("/api/products/{id:int}", (int id) =>
 
 app.MapPost("/api/products", (ProductInput input) =>
 {
-    if (!MiniValidate(input, out var errors)) return Results.BadRequest(errors);
+    if (!ShopValidator.Validate(input, out var errors)) return Results.BadRequest(errors);
 
     var product = new Product
     {
@@ -93,7 +93,7 @@ app.MapPost("/api/products", (ProductInput input) =>
 
 app.MapPut("/api/products/{id:int}", (int id, ProductInput input) =>
 {
-    if (!MiniValidate(input, out var errors)) return Results.BadRequest(errors);
+    if (!ShopValidator.Validate(input, out var errors)) return Results.BadRequest(errors);
 
     var product = store.Products.FirstOrDefault(p => p.Id == id);
     if (product is null) return Results.NotFound();
@@ -124,7 +124,7 @@ app.MapGet("/api/customers", () => store.Customers.Select(c =>
 
 app.MapPost("/api/customers", (CustomerInput input) =>
 {
-    if (!MiniValidate(input, out var errors)) return Results.BadRequest(errors);
+    if (!ShopValidator.Validate(input, out var errors)) return Results.BadRequest(errors);
 
     var customer = new Customer
     {
@@ -139,7 +139,7 @@ app.MapPost("/api/customers", (CustomerInput input) =>
 
 app.MapPut("/api/customers/{id:int}", (int id, CustomerInput input) =>
 {
-    if (!MiniValidate(input, out var errors)) return Results.BadRequest(errors);
+    if (!ShopValidator.Validate(input, out var errors)) return Results.BadRequest(errors);
 
     var customer = store.Customers.FirstOrDefault(c => c.Id == id);
     if (customer is null) return Results.NotFound();
@@ -175,7 +175,7 @@ app.MapGet("/api/orders", () =>
 
 app.MapPost("/api/orders", (OrderInput input) =>
 {
-    if (!MiniValidate(input, out var errors)) return Results.BadRequest(errors);
+    if (!ShopValidator.Validate(input, out var errors)) return Results.BadRequest(errors);
 
     var customer = store.Customers.FirstOrDefault(c => c.Id == input.CustomerId);
     if (customer is null) return Results.BadRequest(new Dictionary<string, string> { ["CustomerId"] = "Клиент не найден" });
@@ -242,7 +242,7 @@ app.MapGet("/api/payments", () => store.Payments.OrderByDescending(p => p.PaidAt
 
 app.MapPost("/api/payments", (PaymentInput input) =>
 {
-    if (!MiniValidate(input, out var errors)) return Results.BadRequest(errors);
+    if (!ShopValidator.Validate(input, out var errors)) return Results.BadRequest(errors);
 
     var order = store.Orders.FirstOrDefault(o => o.Id == input.OrderId);
     if (order is null) return Results.BadRequest(new Dictionary<string, string> { ["OrderId"] = "Заказ не найден" });
@@ -277,18 +277,6 @@ app.MapPost("/api/payments/{id:int}/refund", (int id) =>
 });
 
 app.Run();
-
-/// <summary>Серверная валидация тех же DataAnnotations, что на клиентах. Ошибки — словарь поле → текст.</summary>
-static bool MiniValidate<T>(T input, out Dictionary<string, string> errors)
-{
-    var results = new List<ValidationResult>();
-    var ok = Validator.TryValidateObject(input!, new ValidationContext(input!), results, true);
-    errors = results
-        .Where(r => r.MemberNames?.Any() == true)
-        .GroupBy(r => r.MemberNames!.First())
-        .ToDictionary(g => g.Key, g => g.First().ErrorMessage ?? "Некорректное значение");
-    return ok;
-}
 
 /// <summary>Хранилище в памяти с детерминированным сидом (Random с фиксированным зерном).</summary>
 public class ShopStore
