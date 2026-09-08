@@ -1,0 +1,77 @@
+<MudDialog>
+    <DialogContent>
+        <EditForm EditContext="_context">
+            <DataAnnotationsValidator />
+            <MudStack RowSpacing="2">
+                <MudTextField Label="Название" For="() => _model.Name" @bind-Value="_model.Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudTextField Label="Артикул" For="() => _model.Sku" @bind-Value="_model.Sku" Variant="Variant.Outlined" Margin="Margin.Dense"
+                              HelperText="3–12 символов: латиница, цифры, дефис" />
+                <MudTextField Label="Категория" For="() => _model.Category" @bind-Value="_model.Category" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField TValue="decimal" Label="Цена, ₽" For="() => _model.Price" @bind-Value="_model.Price"
+                                Min="0.01" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudNumericField TValue="int" Label="Остаток, шт." For="() => _model.Stock" @bind-Value="_model.Stock"
+                                 Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </MudStack>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="SubmitAsync" Disabled="_saving">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private ShopClient Api { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [Parameter] public int? ProductId { get; set; }
+
+    private ProductInput _model = new();
+    private EditContext _context = null!;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ProductId is { } id && await Api.GetProductAsync(id) is { } product)
+        {
+            _model = new ProductInput
+            {
+                Name = product.Name,
+                Sku = product.Sku,
+                Category = product.Category,
+                Price = product.Price,
+                Stock = product.Stock,
+            };
+        }
+        _context = new EditContext(_model);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        if (!_context.Validate())
+            return;
+        _saving = true;
+        try
+        {
+            if (ProductId is null)
+            {
+                await Api.CreateProductAsync(_model);
+                Snackbar.Add("Товар добавлен", Severity.Success);
+            }
+            else
+            {
+                await Api.UpdateProductAsync(ProductId.Value, _model);
+                Snackbar.Add("Товар обновлён", Severity.Success);
+            }
+            MudDialog.Close();
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Нет связи с сервером", Severity.Error);
+        }
+        finally { _saving = false; }
+    }
+}

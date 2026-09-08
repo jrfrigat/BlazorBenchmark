@@ -1,0 +1,46 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout Elevation="0">
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+        <MudText Typo="Typo.h6" Class="ml-2">Мини-Магазин</MudText>
+        <MudSpacer />
+        <MudChip T="string" Size="Size.Small" Color="Color.Secondary">MudBlazor · Material</MudChip>
+    </MudAppBar>
+
+    <MudDrawer Open="@_drawerOpen" Elevation="1">
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Обзор</MudNavLink>
+            <MudNavLink Href="/products" Icon="@Icons.Material.Filled.Inventory2">Товары</MudNavLink>
+            <MudNavLink Href="/orders" Icon="@Icons.Material.Filled.ShoppingCart">Заказы</MudNavLink>
+            <MudNavLink Href="/payments" Icon="@Icons.Material.Filled.ReceiptLong">Оплаты</MudNavLink>
+            <MudNavLink Href="/customers" Icon="@Icons.Material.Filled.People">Клиенты</MudNavLink>
+            <MudNavLink Href="/diagnostics" Icon="@Icons.Material.Filled.Speed">Диагностика</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent Class="pa-6">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+
+    // Классическая палитра Material Design 2 (Indigo / Pink)
+    private readonly MudTheme _theme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#3F51B5",
+            Secondary = "#FF4081",
+            AppbarBackground = "#3F51B5",
+        },
+    };
+}

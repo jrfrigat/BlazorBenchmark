@@ -1,0 +1,17 @@
+# .NET
+bin/
+obj/
+artifacts/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+TestResults/
+
+# publish output
+publish/
+
+# OS
+Thumbs.db
+.DS_Store

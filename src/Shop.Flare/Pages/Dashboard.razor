@@ -1,0 +1,160 @@
+@page "/"
+@inject ShopClient Api
+
+<PageTitle>Обзор — Flare</PageTitle>
+
+<FlareStack Gap="FlareSpacing.Large">
+    <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Medium" Wrap="true">
+        <FlareText Element="h1" Typo="TypographyScale.HeadlineSmall">Обзор</FlareText>
+        <FlareSpacer />
+        <FlareButton Variant="ButtonVariant.Outlined" OnClick="LoadAsync">
+            <LeadingIcon><FlareIconView Value="@FlareIcons.Refresh" /></LeadingIcon>
+            <ChildContent>Обновить</ChildContent>
+        </FlareButton>
+    </FlareStack>
+
+    @if (_data is null)
+    {
+        <FlareText Color="FlareColor.OnSurfaceVariant">Загрузка…</FlareText>
+    }
+    else
+    {
+        <FlareGrid Gap="FlareSpacing.Medium">
+            <FlareCol Xs="12" Sm="6" Lg="3">
+                <FlareCard Variant="CardVariant.Elevated">
+                    <FlareCardContent>
+                        <FlareStack Gap="FlareSpacing.XSmall">
+                            <FlareText Color="FlareColor.OnSurfaceVariant" Typo="TypographyScale.BodyMedium">Выручка сегодня</FlareText>
+                            <FlareText Typo="TypographyScale.HeadlineMedium" Weight="FontWeight.Bold" Color="FlareColor.Primary">@ShopLabels.Money(_data.RevenueToday)</FlareText>
+                        </FlareStack>
+                    </FlareCardContent>
+                </FlareCard>
+            </FlareCol>
+            <FlareCol Xs="12" Sm="6" Lg="3">
+                <FlareCard Variant="CardVariant.Elevated">
+                    <FlareCardContent>
+                        <FlareStack Gap="FlareSpacing.XSmall">
+                            <FlareText Color="FlareColor.OnSurfaceVariant" Typo="TypographyScale.BodyMedium">Заказов сегодня</FlareText>
+                            <FlareText Typo="TypographyScale.HeadlineMedium" Weight="FontWeight.Bold">@_data.OrdersToday</FlareText>
+                        </FlareStack>
+                    </FlareCardContent>
+                </FlareCard>
+            </FlareCol>
+            <FlareCol Xs="12" Sm="6" Lg="3">
+                <FlareCard Variant="CardVariant.Elevated">
+                    <FlareCardContent>
+                        <FlareStack Gap="FlareSpacing.XSmall">
+                            <FlareText Color="FlareColor.OnSurfaceVariant" Typo="TypographyScale.BodyMedium">Товаров на складе</FlareText>
+                            <FlareText Typo="TypographyScale.HeadlineMedium" Weight="FontWeight.Bold">@_data.ProductsTotal</FlareText>
+                            @if (_data.LowStockCount > 0)
+                            {
+                                <FlareBadge Standalone="true" Text="@($"Мало: {_data.LowStockCount}")" Color="FlareColor.Error" />
+                            }
+                        </FlareStack>
+                    </FlareCardContent>
+                </FlareCard>
+            </FlareCol>
+            <FlareCol Xs="12" Sm="6" Lg="3">
+                <FlareCard Variant="CardVariant.Elevated">
+                    <FlareCardContent>
+                        <FlareStack Gap="FlareSpacing.XSmall">
+                            <FlareText Color="FlareColor.OnSurfaceVariant" Typo="TypographyScale.BodyMedium">Долг по заказам</FlareText>
+                            <FlareText Typo="TypographyScale.HeadlineMedium" Weight="FontWeight.Bold" Color="@(_data.UnpaidAmount > 0 ? FlareColor.Error : FlareColor.Success)">@ShopLabels.Money(_data.UnpaidAmount)</FlareText>
+                        </FlareStack>
+                    </FlareCardContent>
+                </FlareCard>
+            </FlareCol>
+        </FlareGrid>
+
+        <FlareGrid Gap="FlareSpacing.Medium">
+            <FlareCol Xs="12" Lg="7">
+                <FlareCard Variant="CardVariant.Outlined">
+                    <FlareCardContent>
+                        <FlareChart Type="ChartType.Bar" Height="260" Title="Выручка за 14 дней" Data="@_revenue"
+                                    YAxisFormat="N0" ShowValues="false" />
+                    </FlareCardContent>
+                </FlareCard>
+            </FlareCol>
+            <FlareCol Xs="12" Lg="5">
+                <FlareCard Variant="CardVariant.Outlined">
+                    <FlareCardContent>
+                        <FlareChart Type="ChartType.Donut" Height="260" Title="Продажи по категориям" Data="@_categories" />
+                    </FlareCardContent>
+                </FlareCard>
+            </FlareCol>
+        </FlareGrid>
+
+        <FlareGrid Gap="FlareSpacing.Medium">
+            <FlareCol Xs="12" Lg="5">
+                <FlareCard Variant="CardVariant.Outlined">
+                    <FlareCardHeader Title="Топ-5 товаров" />
+                    <FlareCardContent>
+                        <FlareStack Gap="FlareSpacing.Small">
+                            @foreach (var (item, index) in _data.TopProducts.Select((p, i) => (p, i)))
+                            {
+                                <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Small">
+                                    <FlareBadge Standalone="true" Text="@((index + 1).ToString())" Color="FlareColor.Primary" />
+                                    <FlareStack StretchFirst="true">
+                                        <FlareText Typo="TypographyScale.BodyMedium">@item.Name</FlareText>
+                                        <FlareText Typo="TypographyScale.BodySmall" Color="FlareColor.OnSurfaceVariant">@item.Quantity шт.</FlareText>
+                                    </FlareStack>
+                                    <FlareText Typo="TypographyScale.BodyMedium" Weight="FontWeight.Medium">@ShopLabels.Money(item.Revenue)</FlareText>
+                                </FlareStack>
+                            }
+                        </FlareStack>
+                    </FlareCardContent>
+                </FlareCard>
+            </FlareCol>
+            <FlareCol Xs="12" Lg="7">
+                <FlareCard Variant="CardVariant.Outlined">
+                    <FlareCardHeader Title="Последние заказы" />
+                    <FlareCardContent>
+                        <FlareDataGrid Items="@_data.RecentOrders" Height="auto" ShowPager="false" Dense="true" Hoverable="true">
+                            <Columns>
+                                <FlareColumn Title="№" Field="@(o => o.Id)" Width="80px" />
+                                <FlareColumn Title="Клиент" Field="@(o => o.CustomerName)" />
+                                <FlareColumn Title="Сумма" Field="@(o => o.Total)" Format="C0" />
+                                <FlareColumn Title="Статус">
+                                    <Template Context="o">
+                                        <FlareChip Variant="ChipVariant.Outlined" Color="@Tone(ShopLabels.OrderStatusTone(o.Status))">@ShopLabels.OrderStatusText(o.Status)</FlareChip>
+                                    </Template>
+                                </FlareColumn>
+                            </Columns>
+                        </FlareDataGrid>
+                    </FlareCardContent>
+                </FlareCard>
+            </FlareCol>
+        </FlareGrid>
+    }
+</FlareStack>
+
+@code {
+    private DashboardData? _data;
+    private ChartData? _revenue;
+    private ChartData? _categories;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _data = await Api.GetDashboardAsync();
+        if (_data is not null)
+        {
+            _revenue = new ChartData(
+                [new ChartSeries("Выручка, ₽", [.. _data.RevenueByDay.Select(d => (double)Math.Round(d.Revenue))])],
+                [.. _data.RevenueByDay.Select(d => d.Date)]);
+            _categories = new ChartData(
+                [new ChartSeries("Доля, %", [.. _data.SalesByCategory.Select(c => (double)Math.Round(c.Revenue))])],
+                [.. _data.SalesByCategory.Select(c => c.Category)]);
+        }
+    }
+
+    private static FlareColor Tone(ShopLabels.StatusTone tone) => tone switch
+    {
+        ShopLabels.StatusTone.Info => FlareColor.Info,
+        ShopLabels.StatusTone.Success => FlareColor.Success,
+        ShopLabels.StatusTone.Warning => FlareColor.Warning,
+        ShopLabels.StatusTone.Error => FlareColor.Error,
+        _ => FlareColor.Default,
+    };
+}

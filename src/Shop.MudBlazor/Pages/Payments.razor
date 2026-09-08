@@ -1,0 +1,91 @@
+@page "/payments"
+@inject ShopClient Api
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+<PageTitle>Оплаты — MudBlazor</PageTitle>
+
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+    <MudText Typo="Typo.h5">Оплаты</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Payments"
+               Disabled="@(_unpaidOrders.Count == 0)" OnClick="OpenCreate">Принять оплату</MudButton>
+</MudStack>
+
+<MudDataGrid T="Payment" Items="@_payments" Hover="true" Elevation="1" RowsPerPage="12" Filterable="false"
+             HidePagination="@(_payments is null || _payments.Count <= 12)">
+    <Columns>
+        <PropertyColumn Property="p => p.PaidAt" Title="Дата" Format="dd.MM.yyyy HH:mm" />
+        <PropertyColumn Property="p => p.OrderId" Title="Заказ" />
+        <PropertyColumn Property="p => p.CustomerName" Title="Клиент" />
+        <PropertyColumn Property="p => p.Amount" Title="Сумма" Format="C0" />
+        <Column T="Payment" Title="Способ">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@ShopLabels.PaymentMethodText(context.Item.Method)</MudChip>
+            </CellTemplate>
+        </Column>
+        <Column T="Payment" Title="Статус">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Color="@(context.Item.Refunded ? Color.Warning : Color.Success)">
+                    @(context.Item.Refunded ? "Возврат" : "Проведён")
+                </MudChip>
+            </CellTemplate>
+        </Column>
+        <Column T="Payment" Title="">
+            <CellTemplate>
+                @if (!context.Item.Refunded)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Reply" Size="Size.Small" Color="Color.Warning" aria-label="Вернуть"
+                                   OnClick="@(() => RefundAsync(context.Item))" />
+                }
+            </CellTemplate>
+        </Column>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Payment" RowsPerPageString="Строк на странице:" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    private List<Payment>? _payments;
+    private List<Order>? _orders;
+
+    private List<Order> _unpaidOrders => _orders?
+        .Where(o => o.Status != OrderStatus.Cancelled && o.Paid < o.Total)
+        .ToList() ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+        _payments = await Api.GetPaymentsAsync();
+    }
+
+    private async Task OpenCreate()
+    {
+        var dialog = await Dialog.ShowAsync<PaymentDialog>("Принять оплату",
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false })
+            await ReloadAsync();
+    }
+
+    private async Task RefundAsync(Payment payment)
+    {
+        var confirm = await Dialog.ShowAsync<ConfirmDialog>("Возврат платежа", new DialogParameters { ["Message"] = $"Вернуть {payment.Amount:C0} по заказу №{payment.OrderId}?", ["YesText"] = "Вернуть" }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+        if ((await confirm.Result).Canceled) return;
+        try
+        {
+            await Api.RefundPaymentAsync(payment.Id);
+            Snackbar.Add("Возврат оформлен", Severity.Info);
+            await ReloadAsync();
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Нет связи с сервером", Severity.Error);
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+        _payments = await Api.GetPaymentsAsync();
+    }
+}

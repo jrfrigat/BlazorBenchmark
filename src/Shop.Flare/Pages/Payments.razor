@@ -1,0 +1,139 @@
+@page "/payments"
+@inject ShopClient Api
+@inject ISnackbarService Snackbar
+@inject IMessageBoxService MessageBox
+
+<PageTitle>Оплаты — Flare</PageTitle>
+
+<FlareStack Gap="FlareSpacing.Medium">
+    <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Medium" Wrap="true">
+        <FlareText Element="h1" Typo="TypographyScale.HeadlineSmall">Оплаты</FlareText>
+        <FlareSpacer />
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="OpenCreate" Disabled="@(_unpaidOrders.Count == 0)">
+            <LeadingIcon><FlareIconView Value="@MaterialDesign2Icons.Payments" /></LeadingIcon>
+            <ChildContent>Принять оплату</ChildContent>
+        </FlareButton>
+    </FlareStack>
+
+    <FlareDataGrid Items="@_payments" Height="auto" Hoverable="true" PageSize="12">
+        <Columns>
+            <FlareColumn Title="Дата" Field="@(p => p.PaidAt)" Sortable="true" Format="dd.MM.yyyy HH:mm" Width="150px" />
+            <FlareColumn Title="Заказ" Field="@(p => p.OrderId)" Sortable="true" Width="90px" />
+            <FlareColumn Title="Клиент" Field="@(p => p.CustomerName)" Sortable="true" />
+            <FlareColumn Title="Сумма" Field="@(p => p.Amount)" Sortable="true" Format="C0" Width="130px" />
+            <FlareColumn Title="Способ">
+                <Template Context="p">
+                    <FlareChip Variant="ChipVariant.Outlined">@ShopLabels.PaymentMethodText(p.Method)</FlareChip>
+                </Template>
+            </FlareColumn>
+            <FlareColumn Title="Статус">
+                <Template Context="p">
+                    <FlareBadge Standalone="true" Text="@(p.Refunded ? "Возврат" : "Проведён")"
+                                Color="@(p.Refunded ? FlareColor.Warning : FlareColor.Success)" />
+                </Template>
+            </FlareColumn>
+            <FlareColumn Title="" Width="70px" FrozenRight="true">
+                <Template Context="p">
+                    @if (!p.Refunded)
+                    {
+                        <FlareIconButton AriaLabel="Вернуть" Color="FlareColor.Warning" OnClick="@(() => RefundAsync(p))">
+                            <FlareIconView Value="@FlareIcons.Reply" />
+                        </FlareIconButton>
+                    }
+                </Template>
+            </FlareColumn>
+        </Columns>
+    </FlareDataGrid>
+</FlareStack>
+
+<FlareDialog @bind-Visible="_dialogOpen" Title="Принять оплату" Size="DialogSize.Sm">
+    <ChildContent>
+        <FlareStack Gap="FlareSpacing.Small">
+            <FlareSelect TValue="Order?" Items="@_unpaidOrders" ItemLabel="@(o => $"№{o!.Id} — {o.CustomerName} (осталось {(o.Total - o.Paid):C0})")"
+                         Label="Заказ" @bind-Value="_selectedOrder" />
+            <FlareNumericField TValue="decimal" Label="Сумма, ₽" @bind-Value="_amount" Min="0.01" />
+            <FlareSelect TValue="PaymentMethod" Items="@_methods" ItemLabel="@(m => ShopLabels.PaymentMethodText(m))"
+                         Label="Способ оплаты" @bind-Value="_method" />
+        </FlareStack>
+    </ChildContent>
+    <ActionsContent>
+        <FlareButton Variant="ButtonVariant.Text" OnClick="@(() => _dialogOpen = false)">Отмена</FlareButton>
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="CreateAsync" Loading="_saving">
+            <LeadingIcon><FlareIconView Value="@MaterialDesign2Icons.Paid" /></LeadingIcon>
+            <ChildContent>Принять</ChildContent>
+        </FlareButton>
+    </ActionsContent>
+</FlareDialog>
+
+@code {
+    private List<Payment>? _payments;
+    private List<Order>? _orders;
+    private bool _dialogOpen;
+    private bool _saving;
+    private Order? _selectedOrder;
+    private decimal _amount;
+    private PaymentMethod _method;
+    private static readonly PaymentMethod[] _methods = Enum.GetValues<PaymentMethod>();
+
+    private List<Order> _unpaidOrders => _orders?
+        .Where(o => o.Status != OrderStatus.Cancelled && o.Paid < o.Total)
+        .ToList() ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+        _payments = await Api.GetPaymentsAsync();
+    }
+
+    private void OpenCreate()
+    {
+        _selectedOrder = _unpaidOrders.FirstOrDefault();
+        _amount = _selectedOrder is not null ? _selectedOrder.Total - _selectedOrder.Paid : 0;
+        _method = PaymentMethod.Card;
+        _dialogOpen = true;
+    }
+
+    private async Task CreateAsync()
+    {
+        if (_selectedOrder is null || _amount <= 0)
+        {
+            Snackbar.Show("Выберите заказ и сумму", SnackbarSeverity.Warning);
+            return;
+        }
+        _saving = true;
+        try
+        {
+            await Api.CreatePaymentAsync(new PaymentInput { OrderId = _selectedOrder.Id, Amount = _amount, Method = _method });
+            Snackbar.Show("Оплата проведена", SnackbarSeverity.Success);
+            _dialogOpen = false;
+            _orders = await Api.GetOrdersAsync();
+            _payments = await Api.GetPaymentsAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Show("Сумма больше остатка по заказу", SnackbarSeverity.Warning);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+        }
+        finally { _saving = false; }
+    }
+
+    private async Task RefundAsync(Payment payment)
+    {
+        if (!await MessageBox.ConfirmAsync("Возврат платежа", $"Вернуть {payment.Amount:C0} по заказу №{payment.OrderId}?", "Вернуть", "Отмена"))
+            return;
+        try
+        {
+            await Api.RefundPaymentAsync(payment.Id);
+            Snackbar.Show("Возврат оформлен", SnackbarSeverity.Info);
+            _orders = await Api.GetOrdersAsync();
+            _payments = await Api.GetPaymentsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+        }
+    }
+}

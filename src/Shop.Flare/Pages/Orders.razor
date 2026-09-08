@@ -1,0 +1,266 @@
+@page "/orders"
+@inject ShopClient Api
+@inject ISnackbarService Snackbar
+@inject IMessageBoxService MessageBox
+
+<PageTitle>Заказы — Flare</PageTitle>
+
+<FlareStack Gap="FlareSpacing.Medium">
+    <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Medium" Wrap="true">
+        <FlareText Element="h1" Typo="TypographyScale.HeadlineSmall">Заказы</FlareText>
+        <FlareSpacer />
+        <FlareSelect TValue="OrderStatus?" Items="@_statuses" ItemLabel="@(s => ShopLabels.OrderStatusText(s!.Value))"
+                     NullOption="Все статусы" @bind-Value="_statusFilter" Width="200px" />
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="OpenCreate">
+            <LeadingIcon><FlareIconView Value="@FlareIcons.Add" /></LeadingIcon>
+            <ChildContent>Новый заказ</ChildContent>
+        </FlareButton>
+    </FlareStack>
+
+    <FlareDataGrid Items="@_filtered" Height="auto" Hoverable="true" PageSize="12">
+        <Columns>
+            <FlareColumn Title="№" Field="@(o => o.Id)" Sortable="true" Width="80px" />
+            <FlareColumn Title="Клиент" Field="@(o => o.CustomerName)" Sortable="true" />
+            <FlareColumn Title="Создан" Field="@(o => o.CreatedAt)" Format="dd.MM HH:mm" Width="120px" />
+            <FlareColumn Title="Позиций" Field="@(o => o.Items.Count)" Width="90px" />
+            <FlareColumn Title="Сумма" Field="@(o => o.Total)" Sortable="true" Format="C0" Width="130px" />
+            <FlareColumn Title="Статус">
+                <Template Context="o">
+                    <FlareChip Variant="ChipVariant.Filled" Color="@Tone(ShopLabels.OrderStatusTone(o.Status))">@ShopLabels.OrderStatusText(o.Status)</FlareChip>
+                </Template>
+            </FlareColumn>
+            <FlareColumn Title="Оплата">
+                <Template Context="o">
+                    <FlareBadge Standalone="true" Text="@ShopLabels.PaymentLabel(o)"
+                                Color="@(o.IsFullyPaid ? FlareColor.Success : o.Paid > 0 ? FlareColor.Warning : FlareColor.Default)" />
+                </Template>
+            </FlareColumn>
+            <FlareColumn Title="" Width="170px" FrozenRight="true">
+                <Template Context="o">
+                    <FlareStack Row Gap="FlareSpacing.XSmall" Align="FlareAlignItems.Center">
+                        @if (NextStatus(o.Status) is { } next)
+                        {
+                            <FlareButton Size="ButtonSize.Sm" Variant="ButtonVariant.Outlined" OnClick="@(() => AdvanceAsync(o, next))">
+                                @NextStatusText(next)
+                            </FlareButton>
+                        }
+                        <FlareIconButton AriaLabel="Детали" OnClick="@(() => ShowDetails(o))">
+                            <FlareIconView Value="@FlareIcons.Search" />
+                        </FlareIconButton>
+                    </FlareStack>
+                </Template>
+            </FlareColumn>
+        </Columns>
+    </FlareDataGrid>
+</FlareStack>
+
+@* ----- Диалог нового заказа ----- *@
+<FlareDialog @bind-Visible="_createOpen" Title="Новый заказ" Size="DialogSize.Md">
+    <ChildContent>
+        <FlareStack Gap="FlareSpacing.Medium">
+            <FlareSelect TValue="Customer?" Items="@_customers" ItemLabel="@(c => c!.Name)"
+                         Label="Клиент" Searchable="true" Placeholder="Выберите клиента" @bind-Value="_newCustomer" />
+            <FlareText Typo="TypographyScale.BodySmall" Color="FlareColor.Error">@_itemsError</FlareText>
+
+            <FlareStack Gap="FlareSpacing.Small">
+                @foreach (var row in _rows)
+                {
+                    <FlareStack Row Gap="FlareSpacing.Small" Align="FlareAlignItems.Center">
+                        <FlareSelect TValue="Product?" Items="@_products" ItemLabel="@(p => $"{p!.Name} — {p.Price:C0}")"
+                                     Searchable="true" Placeholder="Товар" @bind-Value="row.Product" />
+                        <FlareNumericField TValue="int" @bind-Value="row.Quantity" Min="1" Style="width:110px" />
+                        <FlareIconButton AriaLabel="Убрать позицию" Color="FlareColor.Error" OnClick="@(() => _rows.Remove(row))">
+                            <FlareIconView Value="@FlareIcons.Delete" />
+                        </FlareIconButton>
+                    </FlareStack>
+                }
+                <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Medium">
+                    <FlareButton Variant="ButtonVariant.Text" OnClick="@(() => _rows.Add(new()))">
+                        <LeadingIcon><FlareIconView Value="@FlareIcons.Add" /></LeadingIcon>
+                        <ChildContent>Добавить позицию</ChildContent>
+                    </FlareButton>
+                    <FlareSpacer />
+                    <FlareText Typo="TypographyScale.BodyLarge" Weight="FontWeight.Medium">Итого: @ShopLabels.Money(_rows.Sum(r => (r.Product?.Price ?? 0) * r.Quantity))</FlareText>
+                </FlareStack>
+            </FlareStack>
+        </FlareStack>
+    </ChildContent>
+    <ActionsContent>
+        <FlareButton Variant="ButtonVariant.Text" OnClick="@(() => _createOpen = false)">Отмена</FlareButton>
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="CreateAsync" Loading="_saving">
+            <LeadingIcon><FlareIconView Value="@FlareIcons.Save" /></LeadingIcon>
+            <ChildContent>Создать</ChildContent>
+        </FlareButton>
+    </ActionsContent>
+</FlareDialog>
+
+@* ----- Диалог деталей заказа ----- *@
+<FlareDialog @bind-Visible="_detailsOpen" Title="@($"Заказ №{_details?.Id}")" Size="DialogSize.Md">
+    <ChildContent>
+        @if (_details is not null)
+        {
+            <FlareStack Gap="FlareSpacing.Medium">
+                <FlareDescriptionList>
+                    <FlareDescriptionItem Label="Клиент">@_details.CustomerName</FlareDescriptionItem>
+                    <FlareDescriptionItem Label="Создан">@ShopLabels.DateTimeShort(_details.CreatedAt)</FlareDescriptionItem>
+                    <FlareDescriptionItem Label="Статус">@ShopLabels.OrderStatusText(_details.Status)</FlareDescriptionItem>
+                    <FlareDescriptionItem Label="Оплачено">@($"{ShopLabels.Money(_details.Paid)} из {ShopLabels.Money(_details.Total)}")</FlareDescriptionItem>
+                </FlareDescriptionList>
+
+                <FlareDataGrid Items="@_details.Items" Height="auto" ShowPager="false" Dense="true">
+                    <Columns>
+                        <FlareColumn Title="Товар" Field="@(i => i.ProductName)" />
+                        <FlareColumn Title="Цена" Field="@(i => i.UnitPrice)" Format="C0" Width="120px" />
+                        <FlareColumn Title="Кол-во" Field="@(i => i.Quantity)" Width="90px" />
+                        <FlareColumn Title="Сумма" Field="@(i => i.Total)" Format="C0" Width="120px" />
+                    </Columns>
+                </FlareDataGrid>
+
+                <FlareStack Row Gap="FlareSpacing.Small">
+                    @if (NextStatus(_details.Status) is { } next)
+                    {
+                        <FlareButton Variant="ButtonVariant.Filled" OnClick="@(() => AdvanceAsync(_details, next))">@NextStatusText(next)</FlareButton>
+                    }
+                    @if (_details.Status is OrderStatus.New or OrderStatus.Processing)
+                    {
+                        <FlareButton Variant="ButtonVariant.Outlined" Color="FlareColor.Error" OnClick="@(() => CancelAsync(_details))">
+                            <LeadingIcon><FlareIconView Value="@FlareIcons.Close" /></LeadingIcon>
+                            <ChildContent>Отменить</ChildContent>
+                        </FlareButton>
+                    }
+                </FlareStack>
+            </FlareStack>
+        }
+    </ChildContent>
+    <ActionsContent>
+        <FlareButton Variant="ButtonVariant.Text" OnClick="@(() => _detailsOpen = false)">Закрыть</FlareButton>
+    </ActionsContent>
+</FlareDialog>
+
+@code {
+    private List<Order>? _orders;
+    private List<Customer>? _customers;
+    private List<Product>? _products;
+    private OrderStatus? _statusFilter;
+    private bool _createOpen;
+    private bool _detailsOpen;
+    private bool _saving;
+    private string? _itemsError;
+    private Customer? _newCustomer;
+    private Order? _details;
+    private readonly List<OrderRow> _rows = [];
+
+    private sealed class OrderRow
+    {
+        public Product? Product { get; set; }
+        public int Quantity { get; set; } = 1;
+    }
+
+    private static readonly OrderStatus?[] _statuses = Enum.GetValues<OrderStatus>().Cast<OrderStatus?>().ToArray();
+
+    private IEnumerable<Order>? _filtered => _orders?.Where(o => _statusFilter is null || o.Status == _statusFilter);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+        _customers = await Api.GetCustomersAsync();
+        _products = await Api.GetProductsAsync();
+    }
+
+    private static FlareColor Tone(ShopLabels.StatusTone tone) => tone switch
+    {
+        ShopLabels.StatusTone.Info => FlareColor.Info,
+        ShopLabels.StatusTone.Success => FlareColor.Success,
+        ShopLabels.StatusTone.Warning => FlareColor.Warning,
+        ShopLabels.StatusTone.Error => FlareColor.Error,
+        _ => FlareColor.Default,
+    };
+
+    private static OrderStatus? NextStatus(OrderStatus status) => status switch
+    {
+        OrderStatus.New => OrderStatus.Processing,
+        OrderStatus.Processing => OrderStatus.Shipped,
+        OrderStatus.Shipped => OrderStatus.Completed,
+        _ => null,
+    };
+
+    private static string NextStatusText(OrderStatus next) => next switch
+    {
+        OrderStatus.Processing => "В работу",
+        OrderStatus.Shipped => "Отправить",
+        _ => "Завершить",
+    };
+
+    private void OpenCreate()
+    {
+        _newCustomer = null;
+        _rows.Clear();
+        _rows.Add(new());
+        _itemsError = null;
+        _createOpen = true;
+    }
+
+    private async Task CreateAsync()
+    {
+        _itemsError = null;
+        if (_newCustomer is null) { _itemsError = "Выберите клиента"; return; }
+        if (_rows.Count == 0 || _rows.Any(r => r.Product is null)) { _itemsError = "Заполните все позиции"; return; }
+
+        var input = new OrderInput
+        {
+            CustomerId = _newCustomer.Id,
+            Items = _rows.Select(r => new OrderItemInput { ProductId = r.Product!.Id, Quantity = r.Quantity }).ToList(),
+        };
+        _saving = true;
+        try
+        {
+            await Api.CreateOrderAsync(input);
+            Snackbar.Show("Заказ создан", SnackbarSeverity.Success);
+            _createOpen = false;
+            _orders = await Api.GetOrdersAsync();
+            _products = await Api.GetProductsAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            _itemsError = "Проверьте позиции: товара может не быть в наличии";
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+        }
+        finally { _saving = false; }
+    }
+
+    private void ShowDetails(Order order)
+    {
+        _details = order;
+        _detailsOpen = true;
+    }
+
+    private async Task AdvanceAsync(Order order, OrderStatus next)
+    {
+        try
+        {
+            await Api.SetOrderStatusAsync(order.Id, next);
+            Snackbar.Show($"Заказ №{order.Id}: {ShopLabels.OrderStatusText(next)}", SnackbarSeverity.Success);
+            _orders = await Api.GetOrdersAsync();
+            _details = _orders?.FirstOrDefault(o => o.Id == order.Id) ?? order;
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Show("Переход статуса невозможен", SnackbarSeverity.Warning);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+        }
+    }
+
+    private async Task CancelAsync(Order order)
+    {
+        if (!await MessageBox.ConfirmAsync("Отмена заказа", $"Отменить заказ №{order.Id}?", "Отменить заказ", "Оставить"))
+            return;
+        await AdvanceAsync(order, OrderStatus.Cancelled);
+        _detailsOpen = false;
+    }
+}

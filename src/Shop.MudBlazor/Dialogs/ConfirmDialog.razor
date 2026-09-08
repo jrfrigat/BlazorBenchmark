@@ -1,0 +1,17 @@
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1">@Message</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Cancel())">@CancelText</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))">@YesText</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public string YesText { get; set; } = "ОК";
+    [Parameter] public string CancelText { get; set; } = "Отмена";
+}

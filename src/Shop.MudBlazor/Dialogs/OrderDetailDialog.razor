@@ -1,0 +1,125 @@
+<MudDialog>
+    <DialogContent>
+        @if (_order is not null)
+        {
+            <MudStack RowSpacing="3">
+                <MudStack Row Spacing="4">
+                    <MudStack RowSpacing="0">
+                        <MudText Typo="Typo.caption">Клиент</MudText>
+                        <MudText Typo="Typo.body1">@_order.CustomerName</MudText>
+                    </MudStack>
+                    <MudStack RowSpacing="0">
+                        <MudText Typo="Typo.caption">Создан</MudText>
+                        <MudText Typo="Typo.body1">@ShopLabels.DateTimeShort(_order.CreatedAt)</MudText>
+                    </MudStack>
+                    <MudStack RowSpacing="0">
+                        <MudText Typo="Typo.caption">Статус</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="@Tone(ShopLabels.OrderStatusTone(_order.Status))">@ShopLabels.OrderStatusText(_order.Status)</MudChip>
+                    </MudStack>
+                    <MudStack RowSpacing="0">
+                        <MudText Typo="Typo.caption">Оплачено</MudText>
+                        <MudText Typo="Typo.body1">@($"{ShopLabels.Money(_order.Paid)} из {ShopLabels.Money(_order.Total)}")</MudText>
+                    </MudStack>
+                </MudStack>
+
+                <MudSimpleTable Hover="true" Dense="true" Bordered="false" Style="width:100%">
+                    <thead>
+                        <tr><th>Товар</th><th>Цена</th><th>Кол-во</th><th>Сумма</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in _order.Items)
+                        {
+                            <tr>
+                                <td>@item.ProductName</td>
+                                <td>@ShopLabels.Money(item.UnitPrice)</td>
+                                <td>@item.Quantity</td>
+                                <td>@ShopLabels.Money(item.Total)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+
+                <MudStack Row Spacing="2">
+                    @if (NextStatus(_order.Status) is { } next)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => AdvanceAsync(next))">@NextStatusText(next)</MudButton>
+                    }
+                    @if (_order.Status is OrderStatus.New or OrderStatus.Processing)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Close" OnClick="CancelOrderAsync">Отменить</MudButton>
+                    }
+                </MudStack>
+            </MudStack>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => MudDialog.Close())">Закрыть</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private ShopClient Api { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [Parameter] public int OrderId { get; set; }
+
+    private Order? _order;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var orders = await Api.GetOrdersAsync();
+        _order = orders?.FirstOrDefault(o => o.Id == OrderId);
+    }
+
+    private static Color Tone(ShopLabels.StatusTone tone) => tone switch
+    {
+        ShopLabels.StatusTone.Info => Color.Info,
+        ShopLabels.StatusTone.Success => Color.Success,
+        ShopLabels.StatusTone.Warning => Color.Warning,
+        ShopLabels.StatusTone.Error => Color.Error,
+        _ => Color.Default,
+    };
+
+    private static OrderStatus? NextStatus(OrderStatus status) => status switch
+    {
+        OrderStatus.New => OrderStatus.Processing,
+        OrderStatus.Processing => OrderStatus.Shipped,
+        OrderStatus.Shipped => OrderStatus.Completed,
+        _ => null,
+    };
+
+    private static string NextStatusText(OrderStatus next) => next switch
+    {
+        OrderStatus.Processing => "В работу",
+        OrderStatus.Shipped => "Отправить",
+        _ => "Завершить",
+    };
+
+    private async Task ReloadAsync()
+    {
+        var orders = await Api.GetOrdersAsync();
+        _order = orders?.FirstOrDefault(o => o.Id == OrderId);
+    }
+
+    private async Task AdvanceAsync(OrderStatus next)
+    {
+        try
+        {
+            await Api.SetOrderStatusAsync(OrderId, next);
+            Snackbar.Add($"Заказ №{OrderId}: {ShopLabels.OrderStatusText(next)}", Severity.Success);
+            await ReloadAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Add("Переход статуса невозможен", Severity.Warning);
+        }
+    }
+
+    private async Task CancelOrderAsync()
+    {
+        await Api.SetOrderStatusAsync(OrderId, OrderStatus.Cancelled);
+        Snackbar.Add($"Заказ №{OrderId} отменён", Severity.Info);
+        MudDialog.Close();
+    }
+}

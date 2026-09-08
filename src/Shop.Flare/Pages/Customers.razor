@@ -1,0 +1,141 @@
+@page "/customers"
+@inject ShopClient Api
+@inject ISnackbarService Snackbar
+@inject IMessageBoxService MessageBox
+
+<PageTitle>Клиенты — Flare</PageTitle>
+
+<FlareStack Gap="FlareSpacing.Medium">
+    <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Medium" Wrap="true">
+        <FlareText Element="h1" Typo="TypographyScale.HeadlineSmall">Клиенты</FlareText>
+        <FlareSpacer />
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="OpenCreate">
+            <LeadingIcon><FlareIconView Value="@FlareIcons.Add" /></LeadingIcon>
+            <ChildContent>Добавить клиента</ChildContent>
+        </FlareButton>
+    </FlareStack>
+
+    <FlareDataGrid Items="@_customers" Height="auto" Hoverable="true">
+        <ToolbarContent>
+            <FlareDataGridQuickFilter Placeholder="Поиск: имя, телефон, e-mail…" />
+        </ToolbarContent>
+        <Columns>
+            <FlareColumn Title="Имя" Field="@(c => c.Name)" Sortable="true" />
+            <FlareColumn Title="Телефон" Field="@(c => c.Phone)" Width="170px" />
+            <FlareColumn Title="E-mail" Field="@(c => c.Email)" />
+            <FlareColumn Title="Заказов" Field="@(c => c.OrdersCount)" Sortable="true" Width="100px" />
+            <FlareColumn Title="" Width="110px" FrozenRight="true">
+                <Template Context="c">
+                    <FlareStack Row Gap="FlareSpacing.XSmall">
+                        <FlareIconButton AriaLabel="Изменить" Color="FlareColor.Primary" OnClick="@(() => OpenEdit(c))">
+                            <FlareIconView Value="@FlareIcons.Edit" />
+                        </FlareIconButton>
+                        <FlareIconButton AriaLabel="Удалить" Color="FlareColor.Error" Disabled="@(c.OrdersCount > 0)" OnClick="@(() => DeleteAsync(c))">
+                            <FlareIconView Value="@FlareIcons.Delete" />
+                        </FlareIconButton>
+                    </FlareStack>
+                </Template>
+            </FlareColumn>
+        </Columns>
+    </FlareDataGrid>
+</FlareStack>
+
+<FlareDialog @bind-Visible="_dialogOpen" Title="@(_editingId is null ? "Новый клиент" : "Изменение клиента")" Size="DialogSize.Sm">
+    <ChildContent>
+        <EditForm EditContext="_context">
+            <DataAnnotationsValidator />
+            <FlareStack Gap="FlareSpacing.Small">
+                <FlareTextField Label="Имя" For="() => _model.Name" @bind-Value="_model.Name" />
+                <FlareTextField Label="Телефон" For="() => _model.Phone" @bind-Value="_model.Phone" />
+                <FlareTextField Label="E-mail" For="() => _model.Email" @bind-Value="_model.Email" />
+            </FlareStack>
+            <FlareValidationSummary />
+        </EditForm>
+    </ChildContent>
+    <ActionsContent>
+        <FlareButton Variant="ButtonVariant.Text" OnClick="@(() => _dialogOpen = false)">Отмена</FlareButton>
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="SubmitAsync" Loading="_saving">
+            <LeadingIcon><FlareIconView Value="@FlareIcons.Save" /></LeadingIcon>
+            <ChildContent>Сохранить</ChildContent>
+        </FlareButton>
+    </ActionsContent>
+</FlareDialog>
+
+@code {
+    private List<Customer>? _customers;
+    private bool _dialogOpen;
+    private bool _saving;
+    private int? _editingId;
+    private CustomerInput _model = new();
+    private EditContext _context = null!;
+
+    protected override void OnInitialized() => _context = new EditContext(_model);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customers = await Api.GetCustomersAsync();
+    }
+
+    private void OpenCreate()
+    {
+        _editingId = null;
+        _model = new CustomerInput();
+        _context = new EditContext(_model);
+        _dialogOpen = true;
+    }
+
+    private void OpenEdit(Customer customer)
+    {
+        _editingId = customer.Id;
+        _model = new CustomerInput { Name = customer.Name, Phone = customer.Phone, Email = customer.Email };
+        _context = new EditContext(_model);
+        _dialogOpen = true;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (!_context.Validate())
+            return;
+        _saving = true;
+        try
+        {
+            if (_editingId is null)
+            {
+                await Api.CreateCustomerAsync(_model);
+                Snackbar.Show("Клиент добавлен", SnackbarSeverity.Success);
+            }
+            else
+            {
+                await Api.UpdateCustomerAsync(_editingId.Value, _model);
+                Snackbar.Show("Клиент обновлён", SnackbarSeverity.Success);
+            }
+            _dialogOpen = false;
+            _customers = await Api.GetCustomersAsync();
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+        }
+        finally { _saving = false; }
+    }
+
+    private async Task DeleteAsync(Customer customer)
+    {
+        if (!await MessageBox.ConfirmAsync("Удаление клиента", $"Удалить «{customer.Name}»?", "Удалить", "Отмена"))
+            return;
+        try
+        {
+            await Api.DeleteCustomerAsync(customer.Id);
+            Snackbar.Show("Клиент удалён", SnackbarSeverity.Info);
+            _customers = await Api.GetCustomersAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Show("Нельзя удалить клиента с заказами", SnackbarSeverity.Warning);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+        }
+    }
+}

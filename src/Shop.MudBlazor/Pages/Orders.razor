@@ -1,0 +1,140 @@
+@page "/orders"
+@inject ShopClient Api
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+<PageTitle>Заказы — MudBlazor</PageTitle>
+
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+    <MudText Typo="Typo.h5">Заказы</MudText>
+    <MudSelect T="OrderStatus?" Value="@_statusFilter" ValueChanged="OnStatusChanged" Label="Статус"
+               Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:180px" Clearable="true">
+        <MudSelectItem T="OrderStatus?" Value="null">Все статусы</MudSelectItem>
+        @foreach (var s in Enum.GetValues<OrderStatus>())
+        {
+            <MudSelectItem T="OrderStatus?" Value="@s">@ShopLabels.OrderStatusText(s)</MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreate">Новый заказ</MudButton>
+</MudStack>
+
+<MudDataGrid T="Order" Items="@_filtered" Hover="true" Elevation="1" RowsPerPage="12" SortMode="SortMode.Multiple"
+             Filterable="false" HidePagination="@(_filtered is null || _filtered.Count() <= 12)">
+    <Columns>
+        <PropertyColumn Property="o => o.Id" Title="№" />
+        <PropertyColumn Property="o => o.CustomerName" Title="Клиент" />
+        <PropertyColumn Property="o => o.CreatedAt" Title="Создан" Format="dd.MM HH:mm" />
+        <Column T="Order" Title="Позиций">
+            <CellTemplate><MudText Typo="Typo.body2">@context.Item.Items.Count</MudText></CellTemplate>
+        </Column>
+        <PropertyColumn Property="o => o.Total" Title="Сумма" Format="C0" />
+        <Column T="Order" Title="Статус">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Color="@Tone(ShopLabels.OrderStatusTone(context.Item.Status))">@ShopLabels.OrderStatusText(context.Item.Status)</MudChip>
+            </CellTemplate>
+        </Column>
+        <Column T="Order" Title="Оплата">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                         Color="@(context.Item.IsFullyPaid ? Color.Success : context.Item.Paid > 0 ? Color.Warning : Color.Default)">
+                    @ShopLabels.PaymentLabel(context.Item)
+                </MudChip>
+            </CellTemplate>
+        </Column>
+        <Column T="Order" Title="">
+            <CellTemplate>
+                <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                    @if (NextStatus(context.Item.Status) is { } next)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="@(() => AdvanceAsync(context.Item, next))">@NextStatusText(next)</MudButton>
+                    }
+                    <MudIconButton Icon="@Icons.Material.Filled.Search" Size="Size.Small" aria-label="Детали"
+                                   OnClick="@(() => ShowDetails(context.Item))" />
+                </MudStack>
+            </CellTemplate>
+        </Column>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Order" RowsPerPageString="Строк на странице:" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    private List<Order>? _orders;
+    private OrderStatus? _statusFilter;
+
+    private IEnumerable<Order>? _filtered => _orders?.Where(o => _statusFilter is null || o.Status == _statusFilter);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+    }
+
+    private void OnStatusChanged(OrderStatus? value)
+    {
+        _statusFilter = value;
+    }
+
+    private static Color Tone(ShopLabels.StatusTone tone) => tone switch
+    {
+        ShopLabels.StatusTone.Info => Color.Info,
+        ShopLabels.StatusTone.Success => Color.Success,
+        ShopLabels.StatusTone.Warning => Color.Warning,
+        ShopLabels.StatusTone.Error => Color.Error,
+        _ => Color.Default,
+    };
+
+    private static OrderStatus? NextStatus(OrderStatus status) => status switch
+    {
+        OrderStatus.New => OrderStatus.Processing,
+        OrderStatus.Processing => OrderStatus.Shipped,
+        OrderStatus.Shipped => OrderStatus.Completed,
+        _ => null,
+    };
+
+    private static string NextStatusText(OrderStatus next) => next switch
+    {
+        OrderStatus.Processing => "В работу",
+        OrderStatus.Shipped => "Отправить",
+        _ => "Завершить",
+    };
+
+    private async Task OpenCreate()
+    {
+        var dialog = await Dialog.ShowAsync<OrderCreateDialog>("Новый заказ",
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        if (await dialog.Result is { Canceled: false })
+            await ReloadAsync();
+    }
+
+    private async Task ShowDetails(Order order)
+    {
+        await Dialog.ShowAsync<OrderDetailDialog>($"Заказ №{order.Id}",
+            new DialogParameters { ["OrderId"] = order.Id },
+            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseOnEscapeKey = true });
+        await ReloadAsync();
+    }
+
+    private async Task AdvanceAsync(Order order, OrderStatus next)
+    {
+        try
+        {
+            await Api.SetOrderStatusAsync(order.Id, next);
+            Snackbar.Add($"Заказ №{order.Id}: {ShopLabels.OrderStatusText(next)}", Severity.Success);
+            await ReloadAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Add("Переход статуса невозможен", Severity.Warning);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Нет связи с сервером", Severity.Error);
+        }
+    }
+
+    private async Task ReloadAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+    }
+}

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SupportedPlatforms>browser</SupportedPlatforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Sdk.Razor уже ссылается на shared framework Microsoft.AspNetCore.App; для IJSRuntime и
+         System.Net.Http.Json достаточно этого пакета -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.11" />
+  </ItemGroup>
+
+</Project>

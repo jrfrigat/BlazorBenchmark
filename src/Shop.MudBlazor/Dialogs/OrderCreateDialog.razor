@@ -1,0 +1,100 @@
+<MudDialog>
+    <DialogContent>
+        <MudStack RowSpacing="3">
+            <MudSelect T="int" Label="Клиент" @bind-Value="_customerId" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var c in _customers)
+                {
+                    <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (_itemsError is not null)
+            {
+                <MudText Typo="Typo.caption" Color="Color.Error">@_itemsError</MudText>
+            }
+
+            <MudStack RowSpacing="2">
+                @foreach (var row in _rows)
+                {
+                    <MudStack Row Spacing="2" AlignItems="AlignItems.Center">
+                        <MudSelect T="int" @bind-Value="row.ProductId" Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1"
+                                   Placeholder="Товар">
+                            @foreach (var p in _products)
+                            {
+                                <MudSelectItem T="int" Value="@p.Id">@($"{p.Name} — {p.Price:C0}")</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudNumericField TValue="int" @bind-Value="row.Quantity" Min="1" Variant="Variant.Outlined" Margin="Margin.Dense" Style="width:120px" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" aria-label="Убрать позицию"
+                                       OnClick="@(() => _rows.Remove(row))" />
+                    </MudStack>
+                }
+                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => _rows.Add(new()))">Добавить позицию</MudButton>
+                    <MudText Typo="Typo.body1">Итого: @ShopLabels.Money(_rows.Sum(r => (_products?.FirstOrDefault(p => p.Id == r.ProductId)?.Price ?? 0) * r.Quantity))</MudText>
+                </MudStack>
+            </MudStack>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="CreateAsync" Disabled="_saving">Создать</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private ShopClient Api { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private List<Customer>? _customers;
+    private List<Product>? _products;
+    private int _customerId;
+    private string? _itemsError;
+    private bool _saving;
+    private readonly List<Row> _rows = [new()];
+
+    private sealed class Row
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; } = 1;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customers = await Api.GetCustomersAsync();
+        _products = await Api.GetProductsAsync();
+        _customerId = _customers.FirstOrDefault()?.Id ?? 0;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task CreateAsync()
+    {
+        _itemsError = null;
+        if (_customerId == 0) { _itemsError = "Выберите клиента"; return; }
+        if (_rows.Count == 0 || _rows.Any(r => r.ProductId == 0)) { _itemsError = "Заполните все позиции"; return; }
+
+        var input = new OrderInput
+        {
+            CustomerId = _customerId,
+            Items = _rows.Select(r => new OrderItemInput { ProductId = r.ProductId, Quantity = r.Quantity }).ToList(),
+        };
+        _saving = true;
+        try
+        {
+            await Api.CreateOrderAsync(input);
+            Snackbar.Add("Заказ создан", Severity.Success);
+            MudDialog.Close();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            _itemsError = "Проверьте позиции: товара может не быть в наличии";
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Нет связи с сервером", Severity.Error);
+        }
+        finally { _saving = false; }
+    }
+}

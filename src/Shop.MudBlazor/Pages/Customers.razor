@@ -1,0 +1,91 @@
+@page "/customers"
+@inject ShopClient Api
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+<PageTitle>Клиенты — MudBlazor</PageTitle>
+
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+    <MudText Typo="Typo.h5">Клиенты</MudText>
+    <MudTextField @bind-Value="_search" Placeholder="Поиск…" Variant="Variant.Outlined" Margin="Margin.Dense"
+                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Style="max-width:320px" />
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenCreate">Добавить клиента</MudButton>
+</MudStack>
+
+<MudDataGrid T="Customer" Items="@_filtered" Hover="true" Elevation="1" RowsPerPage="15" Filterable="false"
+             HidePagination="@(_filtered is null || _filtered.Count() <= 15)">
+    <Columns>
+        <PropertyColumn Property="c => c.Name" Title="Имя" />
+        <PropertyColumn Property="c => c.Phone" Title="Телефон" />
+        <PropertyColumn Property="c => c.Email" Title="E-mail" />
+        <PropertyColumn Property="c => c.OrdersCount" Title="Заказов" />
+        <Column T="Customer" Title="">
+            <CellTemplate>
+                <MudStack Row Spacing="1">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" aria-label="Изменить"
+                                   OnClick="@(() => OpenEdit(context.Item))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Удалить"
+                                   Disabled="@(context.Item.OrdersCount > 0)"
+                                   OnClick="@(() => DeleteAsync(context.Item))" />
+                </MudStack>
+            </CellTemplate>
+        </Column>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Customer" RowsPerPageString="Строк на странице:" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    private List<Customer>? _customers;
+    private string _search = "";
+
+    private IEnumerable<Customer>? _filtered => _customers?.Where(c =>
+        string.IsNullOrWhiteSpace(_search)
+        || c.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || c.Phone.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || c.Email.Contains(_search, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _customers = await Api.GetCustomersAsync();
+    }
+
+    private async Task OpenCreate()
+    {
+        var dialog = await Dialog.ShowAsync<CustomerDialog>("Новый клиент",
+            new DialogParameters { ["CustomerId"] = null },
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false })
+            _customers = await Api.GetCustomersAsync();
+    }
+
+    private async Task OpenEdit(Customer customer)
+    {
+        var dialog = await Dialog.ShowAsync<CustomerDialog>("Изменение клиента",
+            new DialogParameters { ["CustomerId"] = customer.Id },
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false })
+            _customers = await Api.GetCustomersAsync();
+    }
+
+    private async Task DeleteAsync(Customer customer)
+    {
+        var confirm = await Dialog.ShowAsync<ConfirmDialog>("Удаление клиента", new DialogParameters { ["Message"] = $"Удалить «{customer.Name}»?", ["YesText"] = "Удалить" }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+        if ((await confirm.Result).Canceled) return;
+        try
+        {
+            await Api.DeleteCustomerAsync(customer.Id);
+            Snackbar.Add("Клиент удалён", Severity.Info);
+            _customers = await Api.GetCustomersAsync();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Add("Нельзя удалить клиента с заказами", Severity.Warning);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Нет связи с сервером", Severity.Error);
+        }
+    }
+}

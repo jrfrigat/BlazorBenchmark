@@ -1,0 +1,164 @@
+@page "/products"
+@inject ShopClient Api
+@inject ISnackbarService Snackbar
+@inject IMessageBoxService MessageBox
+
+<PageTitle>Товары — Flare</PageTitle>
+
+<FlareStack Gap="FlareSpacing.Medium">
+    <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Medium" Wrap="true">
+        <FlareText Element="h1" Typo="TypographyScale.HeadlineSmall">Товары</FlareText>
+        <FlareSpacer />
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="OpenCreate">
+            <LeadingIcon><FlareIconView Value="@FlareIcons.Add" /></LeadingIcon>
+            <ChildContent>Добавить товар</ChildContent>
+        </FlareButton>
+    </FlareStack>
+
+    <FlareDataGrid Items="@_products" Height="auto" Hoverable="true" Striped="false" Dense="false">
+        <ToolbarContent>
+            <FlareDataGridQuickFilter Placeholder="Поиск: название, артикул, категория…" />
+        </ToolbarContent>
+        <Columns>
+            <FlareColumn Title="Артикул" Field="@(p => p.Sku)" Sortable="true" Width="110px" />
+            <FlareColumn Title="Название" Field="@(p => p.Name)" Sortable="true" />
+            <FlareColumn Title="Категория">
+                <Template Context="p">
+                    <FlareChip Variant="ChipVariant.Filled" Color="FlareColor.Secondary">@p.Category</FlareChip>
+                </Template>
+            </FlareColumn>
+            <FlareColumn Title="Цена" Field="@(p => p.Price)" Sortable="true" Format="C0" Width="130px" />
+            <FlareColumn Title="Остаток">
+                <Template Context="p">
+                    <FlareBadge Standalone="true" Text="@p.Stock.ToString()"
+                                Color="@(p.Stock <= 5 ? FlareColor.Error : FlareColor.Success)" />
+                </Template>
+            </FlareColumn>
+            <FlareColumn Title="" Width="110px" FrozenRight="true">
+                <Template Context="p">
+                    <FlareStack Row Gap="FlareSpacing.XSmall">
+                        <FlareIconButton AriaLabel="Изменить" Color="FlareColor.Primary" OnClick="@(() => OpenEdit(p))">
+                            <FlareIconView Value="@FlareIcons.Edit" />
+                        </FlareIconButton>
+                        <FlareIconButton AriaLabel="Удалить" Color="FlareColor.Error" OnClick="@(() => DeleteAsync(p))">
+                            <FlareIconView Value="@FlareIcons.Delete" />
+                        </FlareIconButton>
+                    </FlareStack>
+                </Template>
+            </FlareColumn>
+        </Columns>
+    </FlareDataGrid>
+</FlareStack>
+
+<FlareDialog @bind-Visible="_dialogOpen" Title="@(_editingId is null ? "Новый товар" : "Изменение товара")" Size="DialogSize.Sm">
+    <ChildContent>
+        <EditForm EditContext="_context">
+            <DataAnnotationsValidator />
+            <FlareStack Gap="FlareSpacing.Small">
+                <FlareTextField Label="Название" For="() => _model.Name" @bind-Value="_model.Name" />
+                <FlareTextField Label="Артикул" For="() => _model.Sku" @bind-Value="_model.Sku" HelperText="3–12 символов: латиница, цифры, дефис" />
+                <FlareTextField Label="Категория" For="() => _model.Category" @bind-Value="_model.Category" />
+                <FlareNumericField TValue="decimal" Label="Цена, ₽" For="() => _model.Price" @bind-Value="_model.Price" Min="0.01" />
+                <FlareNumericField TValue="int" Label="Остаток, шт." For="() => _model.Stock" @bind-Value="_model.Stock" Min="0" ShowStepper="true" />
+            </FlareStack>
+            <FlareValidationSummary />
+        </EditForm>
+    </ChildContent>
+    <ActionsContent>
+        <FlareButton Variant="ButtonVariant.Text" OnClick="@(() => _dialogOpen = false)">Отмена</FlareButton>
+        <FlareButton Variant="ButtonVariant.Filled" OnClick="SubmitAsync" Loading="_saving">
+            <LeadingIcon><FlareIconView Value="@FlareIcons.Save" /></LeadingIcon>
+            <ChildContent>Сохранить</ChildContent>
+        </FlareButton>
+    </ActionsContent>
+</FlareDialog>
+
+@code {
+    private List<Product>? _products;
+    private bool _dialogOpen;
+    private bool _saving;
+    private int? _editingId;
+    private ProductInput _model = new();
+    private EditContext _context = null!;
+
+    protected override void OnInitialized() => _context = new EditContext(_model);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await Api.GetProductsAsync();
+    }
+
+    private void OpenCreate()
+    {
+        _editingId = null;
+        _model = new ProductInput();
+        _context = new EditContext(_model);
+        _dialogOpen = true;
+    }
+
+    private void OpenEdit(Product product)
+    {
+        _editingId = product.Id;
+        _model = new ProductInput
+        {
+            Name = product.Name,
+            Sku = product.Sku,
+            Category = product.Category,
+            Price = product.Price,
+            Stock = product.Stock,
+        };
+        _context = new EditContext(_model);
+        _dialogOpen = true;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (!_context.Validate())
+            return;
+        await SaveAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        try
+        {
+            if (_editingId is null)
+            {
+                await Api.CreateProductAsync(_model);
+                Snackbar.Show("Товар добавлен", SnackbarSeverity.Success);
+            }
+            else
+            {
+                await Api.UpdateProductAsync(_editingId.Value, _model);
+                Snackbar.Show("Товар обновлён", SnackbarSeverity.Success);
+            }
+            _dialogOpen = false;
+            _products = await Api.GetProductsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeleteAsync(Product product)
+    {
+        if (!await MessageBox.ConfirmAsync("Удаление товара", $"Удалить «{product.Name}»?", "Удалить", "Отмена"))
+            return;
+        try
+        {
+            await Api.DeleteProductAsync(product.Id);
+            Snackbar.Show("Товар удалён", SnackbarSeverity.Info);
+            _products = await Api.GetProductsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+        }
+    }
+}

@@ -1,0 +1,74 @@
+<MudDialog>
+    <DialogContent>
+        <MudStack RowSpacing="2">
+            <MudSelect T="int" Label="Заказ" @bind-Value="_orderId" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var o in _unpaidOrders)
+                {
+                    <MudSelectItem T="int" Value="@o.Id">@($"№{o.Id} — {o.CustomerName} (осталось {(o.Total - o.Paid):C0})")</MudSelectItem>
+                }
+            </MudSelect>
+            <MudNumericField TValue="decimal" Label="Сумма, ₽" @bind-Value="_amount" Min="0.01" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            <MudSelect T="PaymentMethod" Label="Способ оплаты" @bind-Value="_method" Variant="Variant.Outlined" Margin="Margin.Dense">
+                @foreach (var m in Enum.GetValues<PaymentMethod>())
+                {
+                    <MudSelectItem T="PaymentMethod" Value="@m">@ShopLabels.PaymentMethodText(m)</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Paid" OnClick="CreateAsync" Disabled="_saving">Принять</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private ShopClient Api { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    private List<Order>? _orders;
+    private int _orderId;
+    private decimal _amount;
+    private PaymentMethod _method = PaymentMethod.Card;
+    private bool _saving;
+
+    private List<Order> _unpaidOrders => _orders?
+        .Where(o => o.Status != OrderStatus.Cancelled && o.Paid < o.Total)
+        .ToList() ?? [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orders = await Api.GetOrdersAsync();
+        var first = _unpaidOrders.FirstOrDefault();
+        _orderId = first?.Id ?? 0;
+        if (first is not null) _amount = first.Total - first.Paid;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task CreateAsync()
+    {
+        if (_orderId == 0 || _amount <= 0)
+        {
+            Snackbar.Add("Выберите заказ и сумму", Severity.Warning);
+            return;
+        }
+        _saving = true;
+        try
+        {
+            await Api.CreatePaymentAsync(new PaymentInput { OrderId = _orderId, Amount = _amount, Method = _method });
+            Snackbar.Add("Оплата проведена", Severity.Success);
+            MudDialog.Close();
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        {
+            Snackbar.Add("Сумма больше остатка по заказу", Severity.Warning);
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Нет связи с сервером", Severity.Error);
+        }
+        finally { _saving = false; }
+    }
+}

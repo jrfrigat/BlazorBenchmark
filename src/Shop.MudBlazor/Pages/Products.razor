@@ -1,0 +1,92 @@
+@page "/products"
+@inject ShopClient Api
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+<PageTitle>Товары — MudBlazor</PageTitle>
+
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+    <MudText Typo="Typo.h5">Товары</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreate">Добавить товар</MudButton>
+</MudStack>
+
+<MudDataGrid T="Product" Items="@_products" QuickFilter="@QuickFilter" Hover="true" Elevation="1"
+             RowsPerPage="15" SortMode="SortMode.Multiple" Filterable="false" HidePagination="@(_products is null || _products.Count <= 15)">
+    <Columns>
+        <PropertyColumn Property="p => p.Sku" Title="Артикул" />
+        <PropertyColumn Property="p => p.Name" Title="Название" />
+        <Column T="Product" Title="Категория">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@context.Item.Category</MudChip>
+            </CellTemplate>
+        </Column>
+        <PropertyColumn Property="p => p.Price" Title="Цена" Format="C0" />
+        <Column T="Product" Title="Остаток">
+            <CellTemplate>
+                <MudChip T="string" Size="Size.Small" Color="@(context.Item.Stock <= 5 ? Color.Error : Color.Success)">@context.Item.Stock</MudChip>
+            </CellTemplate>
+        </Column>
+        <Column T="Product" Title="">
+            <CellTemplate>
+                <MudStack Row Spacing="1">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" aria-label="Изменить"
+                                   OnClick="@(() => OpenEdit(context.Item))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" aria-label="Удалить"
+                                   OnClick="@(() => DeleteAsync(context.Item))" />
+                </MudStack>
+            </CellTemplate>
+        </Column>
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Product" RowsPerPageString="Строк на странице:" />
+    </PagerContent>
+</MudDataGrid>
+
+@code {
+    private List<Product>? _products;
+    private string _search = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await Api.GetProductsAsync();
+    }
+
+    private bool QuickFilter(Product p) => string.IsNullOrWhiteSpace(_search)
+        || p.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || p.Sku.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || p.Category.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private async Task OpenCreate()
+    {
+        var dialog = await Dialog.ShowAsync<ProductDialog>("Новый товар",
+            new DialogParameters { ["ProductId"] = null },
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false })
+            _products = await Api.GetProductsAsync();
+    }
+
+    private async Task OpenEdit(Product product)
+    {
+        var dialog = await Dialog.ShowAsync<ProductDialog>("Изменение товара",
+            new DialogParameters { ["ProductId"] = product.Id },
+            new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (await dialog.Result is { Canceled: false })
+            _products = await Api.GetProductsAsync();
+    }
+
+    private async Task DeleteAsync(Product product)
+    {
+        var confirm = await Dialog.ShowAsync<ConfirmDialog>("Удаление товара", new DialogParameters { ["Message"] = $"Удалить «{product.Name}»?", ["YesText"] = "Удалить" }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
+        if ((await confirm.Result).Canceled) return;
+        try
+        {
+            await Api.DeleteProductAsync(product.Id);
+            Snackbar.Add("Товар удалён", Severity.Info);
+            _products = await Api.GetProductsAsync();
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Нет связи с сервером", Severity.Error);
+        }
+    }
+}

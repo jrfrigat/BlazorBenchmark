@@ -1,0 +1,69 @@
+<MudDialog>
+    <DialogContent>
+        <EditForm EditContext="_context">
+            <DataAnnotationsValidator />
+            <MudStack RowSpacing="2">
+                <MudTextField Label="Имя" For="() => _model.Name" @bind-Value="_model.Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudTextField Label="Телефон" For="() => _model.Phone" @bind-Value="_model.Phone" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                <MudTextField Label="E-mail" For="() => _model.Email" @bind-Value="_model.Email" Variant="Variant.Outlined" Margin="Margin.Dense" />
+            </MudStack>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Отмена</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="SubmitAsync" Disabled="_saving">Сохранить</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Inject] private ShopClient Api { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    [Parameter] public int? CustomerId { get; set; }
+
+    private CustomerInput _model = new();
+    private EditContext _context = null!;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CustomerId is { } id && await Api.GetCustomersAsync() is { } customers)
+        {
+            var customer = customers.FirstOrDefault(c => c.Id == id);
+            if (customer is not null)
+            {
+                _model = new CustomerInput { Name = customer.Name, Phone = customer.Phone, Email = customer.Email };
+            }
+        }
+        _context = new EditContext(_model);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SubmitAsync()
+    {
+        if (!_context.Validate())
+            return;
+        _saving = true;
+        try
+        {
+            if (CustomerId is null)
+            {
+                await Api.CreateCustomerAsync(_model);
+                Snackbar.Add("Клиент добавлен", Severity.Success);
+            }
+            else
+            {
+                await Api.UpdateCustomerAsync(CustomerId.Value, _model);
+                Snackbar.Add("Клиент обновлён", Severity.Success);
+            }
+            MudDialog.Close();
+        }
+        catch (HttpRequestException)
+        {
+            Snackbar.Add("Нет связи с сервером", Severity.Error);
+        }
+        finally { _saving = false; }
+    }
+}

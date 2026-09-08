@@ -1,0 +1,147 @@
+@page "/"
+@inject ShopClient Api
+
+<PageTitle>Обзор — MudBlazor</PageTitle>
+
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+    <MudText Typo="Typo.h5">Обзор</MudText>
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">Обновить</MudButton>
+</MudStack>
+
+@if (_data is null)
+{
+    <MudText Typo="Typo.body1">Загрузка…</MudText>
+}
+else
+{
+    <MudGrid Spacing="3">
+        <MudItem xs="12" sm="6" lg="3">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack RowSpacing="1">
+                    <MudText Typo="Typo.body2">Выручка сегодня</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Primary">@ShopLabels.Money(_data.RevenueToday)</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" lg="3">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack RowSpacing="1">
+                    <MudText Typo="Typo.body2">Заказов сегодня</MudText>
+                    <MudText Typo="Typo.h4">@_data.OrdersToday</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" lg="3">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack RowSpacing="1">
+                    <MudText Typo="Typo.body2">Товаров на складе</MudText>
+                    <MudText Typo="Typo.h4">@_data.ProductsTotal</MudText>
+                    @if (_data.LowStockCount > 0)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error">Мало: @_data.LowStockCount</MudChip>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" lg="3">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudStack RowSpacing="1">
+                    <MudText Typo="Typo.body2">Долг по заказам</MudText>
+                    <MudText Typo="Typo.h4" Color="@(_data.UnpaidAmount > 0 ? Color.Error : Color.Success)">@ShopLabels.Money(_data.UnpaidAmount)</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="7">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Выручка за 14 дней</MudText>
+                <MudChart T="double" ChartType="ChartType.Bar" ChartSeries="@_series" ChartLabels="@_labels"
+                          Width="100%" Height="260px" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" lg="5">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Продажи по категориям</MudText>
+                <MudChart T="double" ChartType="ChartType.Donut" ChartSeries="@_categorySeries" ChartLabels="@_categoryLabels"
+                          Width="100%" Height="260px" />
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="5">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Топ-5 товаров</MudText>
+                <MudList T="string" Dense="true" DisablePadding="true">
+                    @foreach (var (item, index) in _data.TopProducts.Select((p, i) => (p, i)))
+                    {
+                        <MudListItem>
+                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudStack RowSpacing="0">
+                                    <MudText Typo="Typo.body2">@index. @item.Name</MudText>
+                                    <MudText Typo="Typo.caption">@item.Quantity шт.</MudText>
+                                </MudStack>
+                                <MudText Typo="Typo.body2">@ShopLabels.Money(item.Revenue)</MudText>
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" lg="7">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">Последние заказы</MudText>
+                <MudSimpleTable Hover="true" Dense="true" Bordered="false" Style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>№</th><th>Клиент</th><th>Сумма</th><th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var o in _data.RecentOrders)
+                        {
+                            <tr>
+                                <td>@o.Id</td>
+                                <td>@o.CustomerName</td>
+                                <td>@ShopLabels.Money(o.Total)</td>
+                                <td><MudChip T="string" Size="Size.Small" Color="@Tone(ShopLabels.OrderStatusTone(o.Status))">@ShopLabels.OrderStatusText(o.Status)</MudChip></td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    private DashboardData? _data;
+    private List<ChartSeries<double>> _series = [];
+    private string[] _labels = [];
+    private List<ChartSeries<double>> _categorySeries = [];
+    private string[] _categoryLabels = [];
+
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _data = await Api.GetDashboardAsync();
+        if (_data is null) return;
+
+        _series =
+        [
+            new ChartSeries<double> { Name = "Выручка, ₽", Data = new ChartData<double>([.. _data.RevenueByDay.Select(d => (double)Math.Round(d.Revenue))]) },
+        ];
+        _labels = [.. _data.RevenueByDay.Select(d => d.Date)];
+        _categorySeries = [new ChartSeries<double> { Name = "Выручка", Data = new ChartData<double>([.. _data.SalesByCategory.Select(c => (double)Math.Round(c.Revenue))]) }];
+        _categoryLabels = [.. _data.SalesByCategory.Select(c => c.Category)];
+    }
+
+    private static Color Tone(ShopLabels.StatusTone tone) => tone switch
+    {
+        ShopLabels.StatusTone.Info => Color.Info,
+        ShopLabels.StatusTone.Success => Color.Success,
+        ShopLabels.StatusTone.Warning => Color.Warning,
+        ShopLabels.StatusTone.Error => Color.Error,
+        _ => Color.Default,
+    };
+}
