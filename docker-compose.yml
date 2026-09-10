@@ -8,14 +8,14 @@ networks:
 
 services:
   shop-api:
-    image: ${DOCKER_REGISTRY-}playlistshare.api
     build:
       context: .
       dockerfile: src/ShopApi/Dockerfile
+    image: shop-flare:latest
     environment:
       - ASPNETCORE_URLS=http://+:80
     networks:
-      - playlistshare_network
+      - benchmarkblazor_network
 
   shop-flare:
     build:
@@ -27,7 +27,7 @@ services:
       - shop-api
     networks:
       - proxy_network
-      - benchmarkblazor
+      - benchmarkblazor_network
 
   shop-mudblazor:
     build:
@@ -39,7 +39,7 @@ services:
       - shop-api
     networks:
       - proxy_network
-      - benchmarkblazor
+      - benchmarkblazor_network
 
   shop-radzen:
     build:
@@ -51,4 +51,4 @@ services:
       - shop-api
     networks:
       - proxy_network
-      - benchmarkblazor
+      - benchmarkblazor_network
