@@ -7,11 +7,12 @@
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
     <RadzenHeading Size="H5" Style="margin:0" Text="Клиенты" />
+    <RadzenTextBox T="string" @bind-Value="_search" Immediate="true" Placeholder="Поиск: имя, телефон, e-mail…" Style="min-width:260px" />
     <RadzenButton Text="Добавить клиента" Icon="person_add" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenEdit(null))" />
 </RadzenStack>
 
 <RadzenCard Style="padding:0">
-    <RadzenDataGrid TItem="Customer" Data="@_customers" AllowSorting="true" AllowPaging="true" PageSize="15"
+    <RadzenDataGrid TItem="Customer" Data="@_filtered" AllowSorting="true" AllowPaging="true" PageSize="15"
                     AllowFiltering="false" Style="width:100%">
         <Columns>
             <RadzenDataGridColumn TItem="Customer" Property="Name" Title="Имя" Sortable="true" />
@@ -34,6 +35,13 @@
 
 @code {
     private List<Customer>? _customers;
+    private string _search = "";
+
+    private IEnumerable<Customer> _filtered => _customers?.Where(c =>
+        string.IsNullOrWhiteSpace(_search)
+        || c.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || c.Phone.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || c.Email.Contains(_search, StringComparison.OrdinalIgnoreCase)) ?? [];
 
     protected override async Task OnInitializedAsync()
     {

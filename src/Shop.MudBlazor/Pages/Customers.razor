@@ -7,13 +7,13 @@
 
 <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
     <MudText Typo="Typo.h5">Клиенты</MudText>
-    <MudTextField @bind-Value="_search" Placeholder="Поиск…" Variant="Variant.Outlined" Margin="Margin.Dense"
+    <MudTextField @bind-Value="_search" Immediate="true" Placeholder="Поиск…" Variant="Variant.Outlined" Margin="Margin.Dense"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Style="max-width:320px" />
     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenCreate">Добавить клиента</MudButton>
 </MudStack>
 
-<MudDataGrid T="Customer" Items="@_filtered" Hover="true" Elevation="1" RowsPerPage="15" Filterable="false"
-             HidePagination="@(_filtered is null || _filtered.Count() <= 15)">
+<MudDataGrid T="Customer" Items="@_customers" QuickFilter="@_quickFilter" Hover="true" Elevation="1" RowsPerPage="15" Filterable="false"
+             HidePagination="@(_customers is null || _customers.Count <= 15)">
     <Columns>
         <PropertyColumn Property="c => c.Name" Title="Имя" />
         <PropertyColumn Property="c => c.Phone" Title="Телефон" />
@@ -40,11 +40,11 @@
     private List<Customer>? _customers;
     private string _search = "";
 
-    private IEnumerable<Customer>? _filtered => _customers?.Where(c =>
+    private Func<Customer, bool> _quickFilter => c =>
         string.IsNullOrWhiteSpace(_search)
         || c.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
         || c.Phone.Contains(_search, StringComparison.OrdinalIgnoreCase)
-        || c.Email.Contains(_search, StringComparison.OrdinalIgnoreCase));
+        || c.Email.Contains(_search, StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {

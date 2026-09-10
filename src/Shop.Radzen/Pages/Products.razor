@@ -7,6 +7,7 @@
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
     <RadzenHeading Size="H5" Style="margin:0" Text="Товары" />
+    <RadzenTextBox T="string" @bind-Value="_search" Immediate="true" Placeholder="Поиск: название, артикул, категория…" Style="min-width:260px" />
     <RadzenButton Text="Добавить товар" Icon="add" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenEdit(null))" />
 </RadzenStack>
 
@@ -43,8 +44,13 @@
 
 @code {
     private List<Product>? _products;
+    private string _search = "";
 
-    private IEnumerable<Product> _filtered => _products ?? [];
+    private IEnumerable<Product> _filtered => _products?.Where(p =>
+        string.IsNullOrWhiteSpace(_search)
+        || p.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || p.Sku.Contains(_search, StringComparison.OrdinalIgnoreCase)
+        || p.Category.Contains(_search, StringComparison.OrdinalIgnoreCase)) ?? [];
 
     protected override async Task OnInitializedAsync()
     {
