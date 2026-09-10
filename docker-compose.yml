@@ -1,0 +1,54 @@
+name: benchmarkblazor
+
+networks:
+  benchmarkblazor_network:
+    driver: bridge
+  proxy_network:
+    external: true
+
+services:
+  shop-api:
+    image: ${DOCKER_REGISTRY-}playlistshare.api
+    build:
+      context: .
+      dockerfile: src/ShopApi/Dockerfile
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+    networks:
+      - playlistshare_network
+
+  shop-flare:
+    build:
+      context: .
+      dockerfile: src/Shop.Flare/Dockerfile
+    image: shop-flare:latest
+    restart: unless-stopped
+    depends_on:
+      - shop-api
+    networks:
+      - proxy_network
+      - benchmarkblazor
+
+  shop-mudblazor:
+    build:
+      context: .
+      dockerfile: src/Shop.Mudblazor/Dockerfile
+    image: shop-mudblazor:latest
+    restart: unless-stopped
+    depends_on:
+      - shop-api
+    networks:
+      - proxy_network
+      - benchmarkblazor
+
+  shop-radzen:
+    build:
+      context: .
+      dockerfile: src/Shop.Radzen/Dockerfile
+    image: shop-radzen:latest
+    restart: unless-stopped
+    depends_on:
+      - shop-api
+    networks:
+      - proxy_network
+      - benchmarkblazor
