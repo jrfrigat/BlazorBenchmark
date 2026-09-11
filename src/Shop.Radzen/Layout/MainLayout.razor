@@ -4,14 +4,17 @@
 <RadzenLayout>
     @* Состояние панели держим в поле — иначе кнопка-гамбургер в шапке не управляет ею. *@
     <RadzenSidebar @bind-Expanded="_sidebarExpanded">
+        @* Ссылки БЕЗ ведущего слеша: с ним браузер считает их от корня сайта, и на GitHub Pages
+           переход уводит на /diagnostics вместо /BlazorBenchmark/radzen/diagnostics. Относительные
+           ссылки разрешаются от <base href> и работают и в корне, и в подкаталоге. *@
         <RadzenPanelMenu>
-            <RadzenPanelMenuItem Text="Обзор" Icon="dashboard" Path="/" Match="NavLinkMatch.All" />
-            <RadzenPanelMenuItem Text="Товары" Icon="inventory_2" Path="/products" />
-            <RadzenPanelMenuItem Text="Заказы" Icon="shopping_cart" Path="/orders" />
-            <RadzenPanelMenuItem Text="Оплаты" Icon="receipt_long" Path="/payments" />
-            <RadzenPanelMenuItem Text="Клиенты" Icon="people" Path="/customers" />
-            <RadzenPanelMenuItem Text="Компоненты" Icon="widgets" Path="/components" />
-            <RadzenPanelMenuItem Text="Диагностика" Icon="speed" Path="/diagnostics" />
+            <RadzenPanelMenuItem Text="Обзор" Icon="dashboard" Path="./" Match="NavLinkMatch.All" />
+            <RadzenPanelMenuItem Text="Товары" Icon="inventory_2" Path="products" />
+            <RadzenPanelMenuItem Text="Заказы" Icon="shopping_cart" Path="orders" />
+            <RadzenPanelMenuItem Text="Оплаты" Icon="receipt_long" Path="payments" />
+            <RadzenPanelMenuItem Text="Клиенты" Icon="people" Path="customers" />
+            <RadzenPanelMenuItem Text="Компоненты" Icon="widgets" Path="components" />
+            <RadzenPanelMenuItem Text="Диагностика" Icon="speed" Path="diagnostics" />
         </RadzenPanelMenu>
     </RadzenSidebar>
 

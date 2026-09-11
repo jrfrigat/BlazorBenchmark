@@ -12,32 +12,35 @@
     </FlareLayoutAppBar>
 
     <FlareLayoutDrawer @bind-Open="_navOpen" Variant="DrawerVariant.Persistent" Width="15rem">
+        @* Ссылки БЕЗ ведущего слеша: с ним браузер считает их от корня сайта, и на GitHub Pages
+           переход уводит на /diagnostics вместо /BlazorBenchmark/flare/diagnostics. Относительные
+           ссылки разрешаются от <base href> и работают и в корне, и в подкаталоге. *@
         <FlareNavMenu>
-            <FlareNavLink Href="/" Match="NavMatchMode.Exact" Tooltip="Обзор">
+            <FlareNavLink Href="" Match="NavMatchMode.Exact" Tooltip="Обзор">
                 <IconContent><FlareIconView Value="@MaterialDesign2Icons.Dashboard" /></IconContent>
                 <ChildContent>Обзор</ChildContent>
             </FlareNavLink>
-            <FlareNavLink Href="/products" Tooltip="Товары">
+            <FlareNavLink Href="products" Tooltip="Товары">
                 <IconContent><FlareIconView Value="@MaterialDesign2Icons.Inventory2" /></IconContent>
                 <ChildContent>Товары</ChildContent>
             </FlareNavLink>
-            <FlareNavLink Href="/orders" Tooltip="Заказы">
+            <FlareNavLink Href="orders" Tooltip="Заказы">
                 <IconContent><FlareIconView Value="@MaterialDesign2Icons.ShoppingCart" /></IconContent>
                 <ChildContent>Заказы</ChildContent>
             </FlareNavLink>
-            <FlareNavLink Href="/payments" Tooltip="Оплаты">
+            <FlareNavLink Href="payments" Tooltip="Оплаты">
                 <IconContent><FlareIconView Value="@MaterialDesign2Icons.ReceiptLong" /></IconContent>
                 <ChildContent>Оплаты</ChildContent>
             </FlareNavLink>
-            <FlareNavLink Href="/customers" Tooltip="Клиенты">
+            <FlareNavLink Href="customers" Tooltip="Клиенты">
                 <IconContent><FlareIconView Value="@MaterialDesign2Icons.People" /></IconContent>
                 <ChildContent>Клиенты</ChildContent>
             </FlareNavLink>
-            <FlareNavLink Href="/components" Tooltip="Компоненты">
+            <FlareNavLink Href="components" Tooltip="Компоненты">
                 <IconContent><FlareIconView Value="@MaterialDesign2Icons.Widgets" /></IconContent>
                 <ChildContent>Компоненты</ChildContent>
             </FlareNavLink>
-            <FlareNavLink Href="/diagnostics" Tooltip="Диагностика">
+            <FlareNavLink Href="diagnostics" Tooltip="Диагностика">
                 <IconContent><FlareIconView Value="@MaterialDesign2Icons.Speed" /></IconContent>
                 <ChildContent>Диагностика</ChildContent>
             </FlareNavLink>

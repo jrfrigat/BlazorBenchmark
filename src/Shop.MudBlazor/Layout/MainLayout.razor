@@ -16,14 +16,17 @@
     </MudAppBar>
 
     <MudDrawer Open="@_drawerOpen" Elevation="1">
+        @* Ссылки БЕЗ ведущего слеша: с ним браузер считает их от корня сайта, и на GitHub Pages
+           переход уводит на /diagnostics вместо /BlazorBenchmark/mudblazor/diagnostics. Относительные
+           ссылки разрешаются от <base href> и работают и в корне, и в подкаталоге. *@
         <MudNavMenu>
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Обзор</MudNavLink>
-            <MudNavLink Href="/products" Icon="@Icons.Material.Filled.Inventory2">Товары</MudNavLink>
-            <MudNavLink Href="/orders" Icon="@Icons.Material.Filled.ShoppingCart">Заказы</MudNavLink>
-            <MudNavLink Href="/payments" Icon="@Icons.Material.Filled.ReceiptLong">Оплаты</MudNavLink>
-            <MudNavLink Href="/customers" Icon="@Icons.Material.Filled.People">Клиенты</MudNavLink>
-            <MudNavLink Href="/components" Icon="@Icons.Material.Filled.Widgets">Компоненты</MudNavLink>
-            <MudNavLink Href="/diagnostics" Icon="@Icons.Material.Filled.Speed">Диагностика</MudNavLink>
+            <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Обзор</MudNavLink>
+            <MudNavLink Href="products" Icon="@Icons.Material.Filled.Inventory2">Товары</MudNavLink>
+            <MudNavLink Href="orders" Icon="@Icons.Material.Filled.ShoppingCart">Заказы</MudNavLink>
+            <MudNavLink Href="payments" Icon="@Icons.Material.Filled.ReceiptLong">Оплаты</MudNavLink>
+            <MudNavLink Href="customers" Icon="@Icons.Material.Filled.People">Клиенты</MudNavLink>
+            <MudNavLink Href="components" Icon="@Icons.Material.Filled.Widgets">Компоненты</MudNavLink>
+            <MudNavLink Href="diagnostics" Icon="@Icons.Material.Filled.Speed">Диагностика</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
 
