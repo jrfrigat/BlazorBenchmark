@@ -37,7 +37,8 @@ jobs:
       - name: Собрать сайт
         # Приложение на Pages живёт по адресу /<репозиторий>/<приложение>/ — базовый путь надо
         # прописать и в index.html, и в service-worker.js, иначе после первой же перезагрузки
-        # сервис-воркер отдаст ресурсы от чужого пути.
+        # сервис-воркер отдаст ресурсы от чужого пути. Прямые ссылки внутрь приложений
+        # разбирает landing/404.html: Pages отдаёт на неизвестный путь только корневой 404.html.
         run: |
           chmod +x scripts/set-base-href.sh
           repo='${{ github.event.repository.name }}'
@@ -49,8 +50,8 @@ jobs:
           done
           # Без .nojekyll Pages выбрасывает каталоги, начинающиеся с подчёркивания
           # (_framework, _content) — приложение просто не загрузится.
+          sed -i "s|<base href=\"[^\"]*\"|<base href=\"/$repo/\"|" site/404.html
           touch site/.nojekyll
-          cp site/index.html site/404.html
 
       - uses: actions/upload-pages-artifact@v3
         with:

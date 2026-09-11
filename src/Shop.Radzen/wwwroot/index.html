@@ -6,6 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Магазин — Radzen / Material</title>
     <base href="/" />
+    <script>
+        // Возвращаем адрес, который 404.html спрятал в строку запроса (?/orders), обратно в путь —
+        // до старта Blazor, чтобы маршрутизатор увидел уже нормальный /orders. На GitHub Pages это
+        // единственный способ открыть прямую ссылку внутрь приложения: Pages отдаёт на неизвестный
+        // путь только корневой 404.html. Локально и в Docker строки запроса нет, и код ничего не делает.
+        (function () {
+            if (location.search.charAt(1) !== '/') return;
+            var route = location.search.slice(2).split('&');
+            var path = route[0];
+            var query = route.length > 1 ? '?' + route.slice(1).join('&').replace(/~and~/g, '&') : '';
+            history.replaceState(null, '', location.pathname + path + query + location.hash);
+        })();
+    </script>
     <link rel="preload" id="webassembly" />
 
     <!-- PWA -->

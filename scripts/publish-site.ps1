@@ -49,13 +49,19 @@ foreach ($app in $apps) {
             Set-Content $worker -NoNewline -Encoding UTF8
     }
 
-    # GitHub Pages отдаёт 404.html на неизвестный путь — так работают прямые ссылки внутрь SPA.
+    # Копия index.html на случай хостинга, который ищет 404.html рядом со страницей.
+    # GitHub Pages смотрит только корневой 404.html — его даёт landing/404.html.
     Copy-Item $index (Join-Path $target '404.html') -Force
 }
 
+# Корневой 404.html приезжает из landing/: именно он разбирает прямые ссылки внутрь приложений,
+# а ссылка «На главную» в нём считается от <base>, поэтому базовый путь правим и здесь.
+$notFound = Join-Path $site '404.html'
+(Get-Content $notFound -Raw) -replace '<base href="[^"]*"', "<base href=`"$base/`"" |
+    Set-Content $notFound -NoNewline -Encoding UTF8
+
 # Без .nojekyll GitHub Pages выбрасывает каталоги _framework и _content.
 New-Item -ItemType File -Force -Path (Join-Path $site '.nojekyll') | Out-Null
-Copy-Item (Join-Path $site 'index.html') (Join-Path $site '404.html') -Force
 
 $total = (Get-ChildItem $site -Recurse -File | Measure-Object Length -Sum).Sum
 Write-Host ''
