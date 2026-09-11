@@ -1,7 +1,9 @@
 @inherits LayoutComponentBase
+@inject DiagnosticsService Diag
 
 <RadzenLayout>
-    <RadzenSidebar>
+    @* Состояние панели держим в поле — иначе кнопка-гамбургер в шапке не управляет ею. *@
+    <RadzenSidebar @bind-Expanded="_sidebarExpanded">
         <RadzenPanelMenu>
             <RadzenPanelMenuItem Text="Обзор" Icon="dashboard" Path="/" Match="NavLinkMatch.All" />
             <RadzenPanelMenuItem Text="Товары" Icon="inventory_2" Path="/products" />
@@ -28,3 +30,14 @@
 
 <RadzenDialog />
 <RadzenNotification />
+
+@code {
+    private bool _sidebarExpanded = true;
+
+    // Отмечаем момент, когда интерфейс приложения впервые готов: это главный показатель
+    // сравнения библиотек на странице «Диагностика».
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await Diag.MarkAppReadyAsync();
+    }
+}

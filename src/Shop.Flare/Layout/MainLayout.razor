@@ -1,4 +1,5 @@
 @inherits LayoutComponentBase
+@inject DiagnosticsService Diag
 
 <FlareLayout>
     <FlareLayoutAppBar DrawerToggle="true">
@@ -54,4 +55,11 @@
 
 @code {
     private bool _navOpen = true;
+
+    // Отмечаем момент, когда интерфейс приложения впервые готов: это главный показатель
+    // сравнения библиотек на странице «Диагностика».
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await Diag.MarkAppReadyAsync();
+    }
 }

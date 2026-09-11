@@ -1,15 +1,21 @@
 @page "/diagnostics"
 @inject DiagnosticsService Diag
+@inject NotificationService Notify
 
 <PageTitle>Диагностика — Radzen</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
     <RadzenHeading Size="H5" Style="margin:0" Text="Диагностика" />
-    <RadzenButton Text="Собрать метрики" Icon="refresh" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Light" Click="@(CollectAsync)" />
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="8px">
+        <RadzenButton Text="Скопировать отчёт" Icon="content_copy" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light"
+                      Disabled="@(_report is null)" Click="@(CopyAsync)" />
+        <RadzenButton Text="Собрать метрики" Icon="refresh" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Light"
+                      Click="@(CollectAsync)" />
+    </RadzenStack>
 </RadzenStack>
 
-<RadzenLabel Text="Метрики нагрузки приложения: тайминги загрузки страницы, объём загруженных ресурсов, размер DOM и JS-кучи. Страница идентична во всех трёх приложениях бенчмарка — снимайте показатели после полной загрузки и обхода страниц."
-             Style="color:var(--rz-text-secondary-color);font-size:.875rem;margin-bottom:16px" />
+<RadzenLabel Text="Метрики нагрузки приложения: тайминги загрузки и отрисовки, состав и вес ресурсов (рантайм .NET, пакет UI-библиотеки, шрифты), размер DOM и CSS, JS-куча, параметры устройства. Страница и скрипт идентичны во всех трёх приложениях бенчмарка — снимайте показатели после полной загрузки и обхода страниц."
+             Style="color:var(--rz-text-secondary-color);font-size:.875rem;margin-bottom:16px;display:block" />
 
 @if (_report is null)
 {
@@ -17,12 +23,34 @@
 }
 else
 {
+    @foreach (var section in _report.ToSections())
+    {
+        <RadzenCard Style="margin-bottom:16px;padding:0">
+            <RadzenText TextStyle="TextStyle.Subtitle1" Style="margin:16px 16px 8px">@section.Title</RadzenText>
+            <RadzenDataGrid TItem="DiagnosticsRow" Data="@section.Rows" Density="Density.Compact" AllowPaging="false"
+                            AllowSorting="false" AllowFiltering="false" Style="width:100%">
+                <Columns>
+                    <RadzenDataGridColumn TItem="DiagnosticsRow" Property="Name" Title="Показатель" Width="320px" />
+                    <RadzenDataGridColumn TItem="DiagnosticsRow" Property="Value" Title="Значение" />
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenCard>
+    }
+
     <RadzenCard Style="padding:0">
-        <RadzenDataGrid TItem="MetricRow" Data="@Rows" Density="Density.Compact" AllowPaging="false" AllowSorting="false"
-                        AllowFiltering="false" Style="width:100%">
+        <RadzenText TextStyle="TextStyle.Subtitle1" Style="margin:16px 16px 8px">Ресурсы по группам</RadzenText>
+        <RadzenDataGrid TItem="ResourceGroupInfo" Data="@_report.ResourceGroups" Density="Density.Compact" AllowPaging="false"
+                        AllowSorting="false" AllowFiltering="false" Style="width:100%">
             <Columns>
-                <RadzenDataGridColumn TItem="MetricRow" Property="Name" Title="Показатель" Width="300px" />
-                <RadzenDataGridColumn TItem="MetricRow" Property="Value" Title="Значение" />
+                <RadzenDataGridColumn TItem="ResourceGroupInfo" Property="Name" Title="Группа" Width="320px" />
+                <RadzenDataGridColumn TItem="ResourceGroupInfo" Property="Count" Title="Файлов" Width="100px" />
+                <RadzenDataGridColumn TItem="ResourceGroupInfo" Title="По сети">
+                    <Template Context="group">@DiagnosticsReport.Bytes(group.TransferBytes)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ResourceGroupInfo" Title="Распаковано">
+                    <Template Context="group">@DiagnosticsReport.Bytes(group.DecodedBytes)</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="ResourceGroupInfo" Property="CachedCount" Title="Из кэша" Width="100px" />
             </Columns>
         </RadzenDataGrid>
     </RadzenCard>
@@ -31,24 +59,15 @@ else
 @code {
     private DiagnosticsReport? _report;
 
-    private sealed record MetricRow(string Name, string Value);
+    private async Task CollectAsync() => _report = await Diag.CollectAsync("Radzen");
 
-    private IEnumerable<MetricRow> Rows => _report is null ? [] :
-    [
-        new("DOM interactive, мс", _report.DomInteractiveMs?.ToString() ?? "—"),
-        new("DOMContentLoaded, мс", _report.DomContentLoadedMs?.ToString() ?? "—"),
-        new("Load event, мс", _report.LoadEventMs?.ToString() ?? "—"),
-        new("Ресурсов загружено", _report.ResourceCount.ToString()),
-        new("Объём ресурсов (transfer)", DiagnosticsReport.Bytes(_report.ResourceTransferBytes)),
-        new("Узлов в DOM", _report.DomNodes.ToString()),
-        new("JS-куча (used)", _report.UsedJsHeapBytes is { } used ? DiagnosticsReport.Bytes(used) : "нет данных"),
-        new("JS-куча (total)", _report.TotalJsHeapBytes is { } total ? DiagnosticsReport.Bytes(total) : "нет данных"),
-        new("Device pixel ratio", _report.DevicePixelRatio.ToString("0.##")),
-        new("User agent", _report.UserAgent),
-    ];
-
-    private async Task CollectAsync()
+    private async Task CopyAsync()
     {
-        _report = await Diag.CollectAsync();
+        if (_report is null) return;
+        var copied = await Diag.CopyAsync(_report.ToPlainText());
+        if (copied)
+            Notify.Notify(NotificationSeverity.Success, "Готово", "Отчёт скопирован");
+        else
+            Notify.Notify(NotificationSeverity.Warning, "Отказ", "Браузер не дал доступ к буферу обмена");
     }
 }

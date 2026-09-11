@@ -1,16 +1,23 @@
 @page "/diagnostics"
 @inject DiagnosticsService Diag
+@inject ISnackbar Snackbar
 
 <PageTitle>Диагностика — MudBlazor</PageTitle>
 
-<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4" Style="flex-wrap:wrap">
     <MudText Typo="Typo.h5">Диагностика</MudText>
-    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh" OnClick="CollectAsync">Собрать метрики</MudButton>
+    <MudStack Row Spacing="2">
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ContentCopy"
+                   Disabled="@(_report is null)" OnClick="CopyAsync">Скопировать отчёт</MudButton>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="CollectAsync">Собрать метрики</MudButton>
+    </MudStack>
 </MudStack>
 
 <MudText Typo="Typo.body2" Class="mb-4">
-    Метрики нагрузки приложения: тайминги загрузки страницы, объём загруженных ресурсов, размер DOM и JS-кучи.
-    Страница идентична во всех трёх приложениях бенчмарка — снимайте показатели после полной загрузки и обхода страниц.
+    Метрики нагрузки приложения: тайминги загрузки и отрисовки, состав и вес ресурсов (рантайм .NET,
+    пакет UI-библиотеки, шрифты), размер DOM и CSS, JS-куча, параметры устройства. Страница и скрипт
+    идентичны во всех трёх приложениях бенчмарка — снимайте показатели после полной загрузки и обхода страниц.
 </MudText>
 
 @if (_report is null)
@@ -19,14 +26,45 @@
 }
 else
 {
+    @foreach (var section in _report.ToSections())
+    {
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudText Typo="Typo.subtitle1" Class="mb-2">@section.Title</MudText>
+            <MudSimpleTable Hover="true" Dense="true" Style="width:100%">
+                <tbody>
+                    @foreach (var row in section.Rows)
+                    {
+                        <tr>
+                            <td style="width:320px">@row.Name</td>
+                            <td>@row.Value</td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        </MudPaper>
+    }
+
     <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.subtitle1" Class="mb-2">Ресурсы по группам</MudText>
         <MudSimpleTable Hover="true" Dense="true" Style="width:100%">
+            <thead>
+                <tr>
+                    <th style="width:320px">Группа</th>
+                    <th>Файлов</th>
+                    <th>По сети</th>
+                    <th>Распаковано</th>
+                    <th>Из кэша</th>
+                </tr>
+            </thead>
             <tbody>
-                @foreach (var row in Rows)
+                @foreach (var group in _report.ResourceGroups)
                 {
                     <tr>
-                        <td Style="width:300px">@row.Name</td>
-                        <td>@row.Value</td>
+                        <td>@group.Name</td>
+                        <td>@group.Count</td>
+                        <td>@DiagnosticsReport.Bytes(group.TransferBytes)</td>
+                        <td>@DiagnosticsReport.Bytes(group.DecodedBytes)</td>
+                        <td>@group.CachedCount</td>
                     </tr>
                 }
             </tbody>
@@ -37,24 +75,13 @@ else
 @code {
     private DiagnosticsReport? _report;
 
-    private readonly record struct MetricRow(string Name, string Value);
+    private async Task CollectAsync() => _report = await Diag.CollectAsync("MudBlazor");
 
-    private IEnumerable<MetricRow> Rows => _report is null ? [] :
-    [
-        new("DOM interactive, мс", _report.DomInteractiveMs?.ToString() ?? "—"),
-        new("DOMContentLoaded, мс", _report.DomContentLoadedMs?.ToString() ?? "—"),
-        new("Load event, мс", _report.LoadEventMs?.ToString() ?? "—"),
-        new("Ресурсов загружено", _report.ResourceCount.ToString()),
-        new("Объём ресурсов (transfer)", DiagnosticsReport.Bytes(_report.ResourceTransferBytes)),
-        new("Узлов в DOM", _report.DomNodes.ToString()),
-        new("JS-куча (used)", _report.UsedJsHeapBytes is { } used ? DiagnosticsReport.Bytes(used) : "нет данных"),
-        new("JS-куча (total)", _report.TotalJsHeapBytes is { } total ? DiagnosticsReport.Bytes(total) : "нет данных"),
-        new("Device pixel ratio", _report.DevicePixelRatio.ToString("0.##")),
-        new("User agent", _report.UserAgent),
-    ];
-
-    private async Task CollectAsync()
+    private async Task CopyAsync()
     {
-        _report = await Diag.CollectAsync();
+        if (_report is null) return;
+        var copied = await Diag.CopyAsync(_report.ToPlainText());
+        Snackbar.Add(copied ? "Отчёт скопирован" : "Браузер не дал доступ к буферу обмена",
+            copied ? Severity.Success : Severity.Warning);
     }
 }
