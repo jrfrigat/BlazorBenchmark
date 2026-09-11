@@ -1,8 +1,6 @@
 # Публикация бенчмарка на GitHub Pages: лендинг в корне сайта и три приложения
 # в подкаталогах /flare/, /mudblazor/, /radzen/ — та же раскладка, что в Docker-образе.
 # Сервер не нужен: данные отдаёт Shop.Shared внутри браузера.
-#
-# Перед первым запуском включить Pages: Settings → Pages → Source: GitHub Actions.
 name: GitHub Pages
 
 on:
