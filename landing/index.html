@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blazor Benchmark — сравнение библиотек компонентов</title>
+    <meta name="description" content="Одно и то же приложение магазина на Flare, MudBlazor и Radzen: сравнение компонентов, веса PWA и скорости загрузки." />
+    <meta name="theme-color" content="#3F51B5" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🛒</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
+    <style>
+        :root {
+            --bg: #f5f6fa;
+            --surface: #ffffff;
+            --border: #e2e5ef;
+            --text: #1a1c24;
+            --muted: #5b6076;
+            --primary: #3f51b5;
+            --accent: #ff4081;
+            --shadow: 0 1px 2px rgba(16, 20, 40, .08), 0 8px 24px rgba(16, 20, 40, .06);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #14161d;
+                --surface: #1c1f29;
+                --border: #2b3040;
+                --text: #eceef5;
+                --muted: #a3a9bd;
+                --primary: #8c9eff;
+                --accent: #ff80ab;
+                --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0 24px 64px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Roboto, "Segoe UI", system-ui, sans-serif;
+            line-height: 1.55;
+        }
+
+        .wrap { max-width: 1080px; margin: 0 auto; }
+
+        header { padding: 64px 0 40px; }
+
+        h1 { margin: 0 0 12px; font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 700; letter-spacing: -.02em; }
+
+        .lead { margin: 0; max-width: 62ch; color: var(--muted); font-size: 1.05rem; }
+
+        h2 { margin: 48px 0 16px; font-size: 1.3rem; font-weight: 500; }
+
+        .apps { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+        .card {
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h3 { margin: 0 0 4px; font-size: 1.25rem; font-weight: 500; }
+
+        .card .theme { margin: 0 0 16px; color: var(--muted); font-size: .9rem; }
+
+        .card p.about { margin: 0 0 20px; color: var(--muted); font-size: .92rem; flex: 1; }
+
+        .meta { margin: 0 0 20px; padding: 0; list-style: none; font-size: .88rem; color: var(--muted); }
+
+        .meta li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px dashed var(--border); }
+
+        .meta li:last-child { border-bottom: 0; }
+
+        .meta b { color: var(--text); font-weight: 500; }
+
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+        a.btn {
+            display: inline-block;
+            padding: 9px 18px;
+            border-radius: 999px;
+            font-size: .9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: filter .15s ease;
+        }
+
+        a.btn:hover { filter: brightness(1.08); }
+
+        a.primary { background: var(--primary); color: #fff; }
+
+        a.ghost { border: 1px solid var(--border); color: var(--text); }
+
+        table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
+
+        th, td { padding: 12px 16px; text-align: left; font-size: .92rem; border-bottom: 1px solid var(--border); }
+
+        th { font-weight: 500; color: var(--muted); }
+
+        tr:last-child td { border-bottom: 0; }
+
+        .note { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 16px 20px; color: var(--muted); font-size: .92rem; }
+
+        footer { margin-top: 56px; color: var(--muted); font-size: .86rem; }
+
+        footer a { color: inherit; }
+
+        .scroll { overflow-x: auto; }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header>
+            <h1>Blazor Benchmark</h1>
+            <p class="lead">
+                Одно и то же приложение «Мини-Магазин» — товары, заказы, оплаты, клиенты, дашборд —
+                собрано на трёх библиотеках компонентов Blazor. Страницы, данные и бизнес-правила общие,
+                отличается только UI-слой: так видно, чем библиотеки различаются на одинаковой задаче.
+            </p>
+        </header>
+
+        <section class="apps">
+            <article class="card">
+                <h3>Flare</h3>
+                <p class="theme">Тема Material Design 2</p>
+                <p class="about">Библиотека с подключаемыми темами: компоненты не знают о конкретной теме, вся внешность задаётся токенами.</p>
+                <ul class="meta">
+                    <li><span>Пакет</span> <b>Flare.Blazor 0.33.0</b></li>
+                    <li><span>Лицензия</span> <b>MIT</b></li>
+                </ul>
+                <div class="actions">
+                    <a class="btn primary" href="flare/">Открыть</a>
+                    <a class="btn ghost" href="flare/diagnostics">Диагностика</a>
+                </div>
+            </article>
+
+            <article class="card">
+                <h3>MudBlazor</h3>
+                <p class="theme">Material Design</p>
+                <p class="about">Самая популярная Material-библиотека для Blazor: большой набор компонентов и утилитарные CSS-классы.</p>
+                <ul class="meta">
+                    <li><span>Пакет</span> <b>MudBlazor 9.9.0</b></li>
+                    <li><span>Лицензия</span> <b>MIT</b></li>
+                </ul>
+                <div class="actions">
+                    <a class="btn primary" href="mudblazor/">Открыть</a>
+                    <a class="btn ghost" href="mudblazor/diagnostics">Диагностика</a>
+                </div>
+            </article>
+
+            <article class="card">
+                <h3>Radzen</h3>
+                <p class="theme">Тема Material</p>
+                <p class="about">Набор с сильными «корпоративными» компонентами: гриды, планировщики, диаграммы и готовые темы.</p>
+                <ul class="meta">
+                    <li><span>Пакет</span> <b>Radzen.Blazor 11.3.2</b></li>
+                    <li><span>Лицензия</span> <b>MIT</b></li>
+                </ul>
+                <div class="actions">
+                    <a class="btn primary" href="radzen/">Открыть</a>
+                    <a class="btn ghost" href="radzen/diagnostics">Диагностика</a>
+                </div>
+            </article>
+        </section>
+
+        <h2>Что именно сравнивается</h2>
+        <div class="scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Страница</th>
+                        <th>Что смотреть</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Обзор</td><td>Карточки показателей и диаграммы: выручка по дням, продажи по категориям, топ товаров</td></tr>
+                    <tr><td>Товары и Клиенты</td><td>Грид с поиском и сортировкой, диалог формы, валидация DataAnnotations</td></tr>
+                    <tr><td>Заказы</td><td>Мастер создания заказа, переходы статусов, детали заказа в диалоге</td></tr>
+                    <tr><td>Оплаты</td><td>Приём оплаты, частичная оплата, возврат</td></tr>
+                    <tr><td>Компоненты</td><td>Витрина: кнопки, поля, переключатели, чипы, табы, диалоги, уведомления</td></tr>
+                    <tr><td>Диагностика</td><td>Тайминги загрузки и отрисовки, вес и состав ресурсов, размер DOM и CSS, JS-куча</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Как это работает</h2>
+        <p class="note">
+            Сервера нет: данные магазина живут в памяти браузера (проект <b>Shop.Shared</b> имитирует бэкенд —
+            детерминированный набор товаров, клиентов, заказов и оплат плюс те же правила валидации,
+            что были в API). Изменения теряются при перезагрузке страницы, и у каждого приложения свои данные.
+            Поэтому весь сайт — статика и целиком помещается на GitHub Pages.
+        </p>
+
+        <footer>
+            Исходный код: <a href="https://github.com/jrfrigat/BlazorBenchmark">github.com/jrfrigat/BlazorBenchmark</a>.
+            Все три библиотеки распространяются по лицензии MIT.
+        </footer>
+    </div>
+</body>
+
+</html>

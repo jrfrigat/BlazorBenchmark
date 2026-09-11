@@ -1,54 +1,17 @@
-name: benchmarkblazor
-
-networks:
-  benchmarkblazor_network:
-    driver: bridge
-  proxy_network:
-    external: true
+# Весь бенчмарк — один статический сайт: лендинг в корне и три приложения в подкаталогах,
+# та же раскладка, что на GitHub Pages. Отдельный сервер API больше не нужен — данные
+# отдаёт Shop.Shared прямо в браузере.
+#
+#   docker compose up -d --build   →   http://localhost:8080
+name: blazorbenchmark
 
 services:
-  shop-api:
+  site:
     build:
       context: .
-      dockerfile: src/ShopApi/Dockerfile
-    image: shop-flare:latest
-    environment:
-      - ASPNETCORE_URLS=http://+:80
-    networks:
-      - benchmarkblazor_network
-
-  shop-flare:
-    build:
-      context: .
-      dockerfile: src/Shop.Flare/Dockerfile
-    image: shop-flare:latest
+      dockerfile: Dockerfile
+    image: blazorbenchmark:latest
+    container_name: blazorbenchmark
     restart: unless-stopped
-    depends_on:
-      - shop-api
-    networks:
-      - proxy_network
-      - benchmarkblazor_network
-
-  shop-mudblazor:
-    build:
-      context: .
-      dockerfile: src/Shop.Mudblazor/Dockerfile
-    image: shop-mudblazor:latest
-    restart: unless-stopped
-    depends_on:
-      - shop-api
-    networks:
-      - proxy_network
-      - benchmarkblazor_network
-
-  shop-radzen:
-    build:
-      context: .
-      dockerfile: src/Shop.Radzen/Dockerfile
-    image: shop-radzen:latest
-    restart: unless-stopped
-    depends_on:
-      - shop-api
-    networks:
-      - proxy_network
-      - benchmarkblazor_network
+    ports:
+      - "8080:80"

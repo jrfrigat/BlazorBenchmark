@@ -1,11 +1,11 @@
 {
-  "name": "Shop.Radzen",
-  "short_name": "Shop.Radzen",
+  "name": "Магазин — Radzen",
+  "short_name": "Radzen",
   "id": "./",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#03173d",
+  "theme_color": "#3F51B5",
   "prefer_related_applications": false,
   "icons": [
     {

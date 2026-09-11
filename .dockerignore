@@ -6,10 +6,6 @@
 **/*.user
 **/node_modules
 **/TestResults
-**/nupkg
+artifacts
 .claude
-*.md
-!README.md
-# The Gallery embeds these as resources (single-source release notes) - keep them in the build context.
-!CHANGELOG.md
-!CHANGELOG.ru.md
+.github

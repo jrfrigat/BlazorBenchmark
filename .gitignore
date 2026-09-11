@@ -15,3 +15,8 @@ publish/
 # OS
 Thumbs.db
 .DS_Store
+
+# AI tooling — рабочий материал агентов, в историю репозитория не попадает
+.claude/
+CLAUDE.md
+.mcp.json
