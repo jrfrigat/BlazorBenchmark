@@ -220,13 +220,9 @@
             _orders = await Api.GetOrdersAsync();
             _products = await Api.GetProductsAsync();
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            _itemsError = "Проверьте позиции: товара может не быть в наличии";
-        }
-        catch (HttpRequestException)
-        {
-            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+            _itemsError = ex.Message;
         }
         finally { _saving = false; }
     }
@@ -246,13 +242,9 @@
             _orders = await Api.GetOrdersAsync();
             _details = _orders?.FirstOrDefault(o => o.Id == order.Id) ?? order;
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            Snackbar.Show("Переход статуса невозможен", SnackbarSeverity.Warning);
-        }
-        catch (HttpRequestException)
-        {
-            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+            Snackbar.Show(ex.Message, SnackbarSeverity.Warning);
         }
     }
 

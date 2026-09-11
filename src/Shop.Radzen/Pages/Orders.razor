@@ -116,13 +116,9 @@
             Notify.Notify(NotificationSeverity.Success, "Статус изменён", $"Заказ №{order.Id}: {ShopLabels.OrderStatusText(next)}");
             await ReloadAsync();
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            Notify.Notify(NotificationSeverity.Warning, "Отказ", "Переход статуса невозможен");
-        }
-        catch (HttpRequestException)
-        {
-            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+            Notify.Notify(NotificationSeverity.Warning, "Отказ", ex.Message);
         }
     }
 

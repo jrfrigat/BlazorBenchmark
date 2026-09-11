@@ -17,7 +17,7 @@ builder.Services.AddFlare(opts =>
     opts.DefaultMode = ThemeMode.Light;
 });
 
-builder.Services.AddShopClient(builder.Configuration["ShopApi"] ?? ShopApiDefaults.BaseUrl);
+builder.Services.AddShopClient();
 builder.Services.AddScoped<DiagnosticsService>();
 
 await builder.Build().RunAsync();

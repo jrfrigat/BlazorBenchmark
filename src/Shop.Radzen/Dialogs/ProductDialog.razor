@@ -107,9 +107,9 @@
             }
             Dialog.Close(true);
         }
-        catch (HttpRequestException)
+        catch (ShopException ex)
         {
-            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", ex.Message);
         }
         finally { _saving = false; }
     }

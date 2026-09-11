@@ -68,9 +68,9 @@
             }
             MudDialog.Close();
         }
-        catch (HttpRequestException)
+        catch (ShopException ex)
         {
-            Snackbar.Add("Нет связи с сервером", Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Error);
         }
         finally { _saving = false; }
     }

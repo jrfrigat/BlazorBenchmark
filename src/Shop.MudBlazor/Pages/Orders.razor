@@ -123,13 +123,9 @@
             Snackbar.Add($"Заказ №{order.Id}: {ShopLabels.OrderStatusText(next)}", Severity.Success);
             await ReloadAsync();
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            Snackbar.Add("Переход статуса невозможен", Severity.Warning);
-        }
-        catch (HttpRequestException)
-        {
-            Snackbar.Add("Нет связи с сервером", Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Warning);
         }
     }
 

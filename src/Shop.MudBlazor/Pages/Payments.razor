@@ -77,9 +77,9 @@
             Snackbar.Add("Возврат оформлен", Severity.Info);
             await ReloadAsync();
         }
-        catch (HttpRequestException)
+        catch (ShopException ex)
         {
-            Snackbar.Add("Нет связи с сервером", Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Error);
         }
     }
 

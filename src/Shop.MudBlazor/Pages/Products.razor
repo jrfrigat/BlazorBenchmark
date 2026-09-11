@@ -87,9 +87,9 @@
             Snackbar.Add("Товар удалён", Severity.Info);
             _products = await Api.GetProductsAsync();
         }
-        catch (HttpRequestException)
+        catch (ShopException ex)
         {
-            Snackbar.Add("Нет связи с сервером", Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Error);
         }
     }
 }

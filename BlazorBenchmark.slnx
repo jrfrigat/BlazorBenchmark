@@ -4,6 +4,5 @@
     <Project Path="src/Shop.MudBlazor/Shop.MudBlazor.csproj" />
     <Project Path="src/Shop.Radzen/Shop.Radzen.csproj" />
     <Project Path="src/Shop.Shared/Shop.Shared.csproj" />
-    <Project Path="src/ShopApi/ShopApi.csproj" />
   </Folder>
 </Solution>

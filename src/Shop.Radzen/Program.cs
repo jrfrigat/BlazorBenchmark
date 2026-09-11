@@ -9,7 +9,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddRadzenComponents();
-builder.Services.AddShopClient(builder.Configuration["ShopApi"] ?? ShopApiDefaults.BaseUrl);
+builder.Services.AddShopClient();
 builder.Services.AddScoped<DiagnosticsService>();
 
 await builder.Build().RunAsync();

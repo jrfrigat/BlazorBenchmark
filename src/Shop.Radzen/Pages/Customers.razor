@@ -70,13 +70,9 @@
             Notify.Notify(NotificationSeverity.Info, "Удалено", "Клиент удалён");
             _customers = await Api.GetCustomersAsync();
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            Notify.Notify(NotificationSeverity.Warning, "Отказ", "Нельзя удалить клиента с заказами");
-        }
-        catch (HttpRequestException)
-        {
-            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+            Notify.Notify(NotificationSeverity.Warning, "Отказ", ex.Message);
         }
     }
 }

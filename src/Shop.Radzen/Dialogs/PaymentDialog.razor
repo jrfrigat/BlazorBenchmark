@@ -67,13 +67,9 @@
             Notify.Notify(NotificationSeverity.Success, "Готово", "Оплата проведена");
             Dialog.Close(true);
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            Notify.Notify(NotificationSeverity.Warning, "Отказ", "Сумма больше остатка по заказу");
-        }
-        catch (HttpRequestException)
-        {
-            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+            Notify.Notify(NotificationSeverity.Warning, "Отказ", ex.Message);
         }
         finally { _saving = false; }
     }

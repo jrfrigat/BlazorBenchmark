@@ -136,9 +136,9 @@
             _dialogOpen = false;
             _products = await Api.GetProductsAsync();
         }
-        catch (HttpRequestException)
+        catch (ShopException ex)
         {
-            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+            Snackbar.Show(ex.Message, SnackbarSeverity.Error);
         }
         finally
         {
@@ -156,9 +156,9 @@
             Snackbar.Show("Товар удалён", SnackbarSeverity.Info);
             _products = await Api.GetProductsAsync();
         }
-        catch (HttpRequestException)
+        catch (ShopException ex)
         {
-            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+            Snackbar.Show(ex.Message, SnackbarSeverity.Error);
         }
     }
 }

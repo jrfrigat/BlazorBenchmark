@@ -61,13 +61,9 @@
             Snackbar.Add("Оплата проведена", Severity.Success);
             MudDialog.Close();
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            Snackbar.Add("Сумма больше остатка по заказу", Severity.Warning);
-        }
-        catch (HttpRequestException)
-        {
-            Snackbar.Add("Нет связи с сервером", Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Warning);
         }
         finally { _saving = false; }
     }

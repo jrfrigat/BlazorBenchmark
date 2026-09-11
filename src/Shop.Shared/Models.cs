@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Shop.Shared;
 
+// Клиент получает КОПИИ записей хранилища (Clone), как раньше получал копии через JSON по HTTP:
+// правка в гриде или диалоге не должна менять «серверные» данные в обход бизнес-правил.
+
 public class Product
 {
     public int Id { get; set; }
@@ -10,6 +13,8 @@ public class Product
     public string Category { get; set; } = "";
     public decimal Price { get; set; }
     public int Stock { get; set; }
+
+    public Product Clone() => (Product)MemberwiseClone();
 }
 
 public class Customer
@@ -19,6 +24,8 @@ public class Customer
     public string Phone { get; set; } = "";
     public string Email { get; set; } = "";
     public int OrdersCount { get; set; }
+
+    public Customer Clone() => (Customer)MemberwiseClone();
 }
 
 public enum OrderStatus
@@ -44,6 +51,8 @@ public class OrderItem
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; }
     public decimal Total => UnitPrice * Quantity;
+
+    public OrderItem Clone() => (OrderItem)MemberwiseClone();
 }
 
 public class Order
@@ -58,6 +67,13 @@ public class Order
     /// <summary>Оплачено по заказу (платежи без возвратов).</summary>
     public decimal Paid { get; set; }
     public bool IsFullyPaid => Paid >= Total;
+
+    public Order Clone()
+    {
+        var copy = (Order)MemberwiseClone();
+        copy.Items = Items.Select(i => i.Clone()).ToList();
+        return copy;
+    }
 }
 
 public class Payment
@@ -69,6 +85,8 @@ public class Payment
     public PaymentMethod Method { get; set; }
     public DateTime PaidAt { get; set; }
     public bool Refunded { get; set; }
+
+    public Payment Clone() => (Payment)MemberwiseClone();
 }
 
 // ----- Ввод (валидация DataAnnotations, одинаковая во всех фронтендах) -----

@@ -81,13 +81,9 @@
             Notify.Notify(NotificationSeverity.Success, "Готово", "Заказ создан");
             Dialog.Close(true);
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            _itemsError = "Проверьте позиции: товара может не быть в наличии";
-        }
-        catch (HttpRequestException)
-        {
-            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+            _itemsError = ex.Message;
         }
         finally { _saving = false; }
     }

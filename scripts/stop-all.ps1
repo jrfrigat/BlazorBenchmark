@@ -1,6 +1,6 @@
 # Останавливает все процессы бенчмарка: по именам приложений и по владельцам портов
 # (dotnet-хосты WASM-приложений не всегда называются как проект, поэтому порт — надёжнее).
-$ports = 5100, 5201, 5202, 5203
+$ports = 5201, 5202, 5203
 
 foreach ($p in $ports) {
     Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue |
@@ -14,6 +14,6 @@ foreach ($p in $ports) {
         }
 }
 
-foreach ($n in 'ShopApi', 'Shop.Flare', 'Shop.MudBlazor', 'Shop.Radzen') {
+foreach ($n in 'Shop.Flare', 'Shop.MudBlazor', 'Shop.Radzen') {
     Get-Process -Name $n -ErrorAction SilentlyContinue | Stop-Process -Force
 }

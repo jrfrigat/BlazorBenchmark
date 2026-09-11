@@ -87,13 +87,9 @@
             Snackbar.Add("Заказ создан", Severity.Success);
             MudDialog.Close();
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            _itemsError = "Проверьте позиции: товара может не быть в наличии";
-        }
-        catch (HttpRequestException)
-        {
-            Snackbar.Add("Нет связи с сервером", Severity.Error);
+            _itemsError = ex.Message;
         }
         finally { _saving = false; }
     }

@@ -78,9 +78,9 @@
             Notify.Notify(NotificationSeverity.Info, "Возврат", "Возврат оформлен");
             await ReloadAsync();
         }
-        catch (HttpRequestException)
+        catch (ShopException ex)
         {
-            Notify.Notify(NotificationSeverity.Error, "Ошибка", "Нет связи с сервером");
+            Notify.Notify(NotificationSeverity.Error, "Ошибка", ex.Message);
         }
     }
 

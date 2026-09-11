@@ -1,4 +1,4 @@
-# Запускает бэкенд и все три фронтенда бенчмарка.
+# Запускает все три приложения бенчмарка (бэкенд не нужен: данные отдаёт Shop.Shared в браузере).
 # Использование: powershell -File scripts/run-all.ps1 [-Build]
 param([switch]$Build)
 
@@ -11,7 +11,6 @@ if ($Build) {
 }
 
 $jobs = @(
-    @{ Name = 'ShopApi';       Project = 'src/ShopApi/ShopApi.csproj';               Url = 'http://localhost:5100' },
     @{ Name = 'Shop.Flare';    Project = 'src/Shop.Flare/Shop.Flare.csproj';         Url = 'http://localhost:5201' },
     @{ Name = 'Shop.MudBlazor';Project = 'src/Shop.MudBlazor/Shop.MudBlazor.csproj'; Url = 'http://localhost:5202' },
     @{ Name = 'Shop.Radzen';   Project = 'src/Shop.Radzen/Shop.Radzen.csproj';       Url = 'http://localhost:5203' }
@@ -24,7 +23,6 @@ foreach ($j in $jobs) {
 }
 
 Write-Host ''
-Write-Host 'Бэкенд:   http://localhost:5100'
 Write-Host 'Flare:    http://localhost:5201'
 Write-Host 'MudBlazor:http://localhost:5202'
 Write-Host 'Radzen:   http://localhost:5203'

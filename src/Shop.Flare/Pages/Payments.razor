@@ -109,13 +109,9 @@
             _orders = await Api.GetOrdersAsync();
             _payments = await Api.GetPaymentsAsync();
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is System.Net.HttpStatusCode.BadRequest)
+        catch (ShopException ex)
         {
-            Snackbar.Show("Сумма больше остатка по заказу", SnackbarSeverity.Warning);
-        }
-        catch (HttpRequestException)
-        {
-            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+            Snackbar.Show(ex.Message, SnackbarSeverity.Warning);
         }
         finally { _saving = false; }
     }
@@ -131,9 +127,9 @@
             _orders = await Api.GetOrdersAsync();
             _payments = await Api.GetPaymentsAsync();
         }
-        catch (HttpRequestException)
+        catch (ShopException ex)
         {
-            Snackbar.Show("Нет связи с сервером", SnackbarSeverity.Error);
+            Snackbar.Show(ex.Message, SnackbarSeverity.Error);
         }
     }
 }
