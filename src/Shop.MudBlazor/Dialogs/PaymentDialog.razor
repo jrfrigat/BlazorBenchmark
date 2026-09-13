@@ -1,6 +1,6 @@
 <MudDialog>
     <DialogContent>
-        <MudStack RowSpacing="2">
+        <MudStack Spacing="2">
             <MudSelect T="int" Label="Заказ" @bind-Value="_orderId" Variant="Variant.Outlined" Margin="Margin.Dense">
                 @foreach (var o in _unpaidOrders)
                 {

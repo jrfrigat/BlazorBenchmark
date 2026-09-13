@@ -4,8 +4,8 @@
 
 <PageTitle>Компоненты — MudBlazor</PageTitle>
 
-<MudStack RowSpacing="4">
-    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Style="flex-wrap:wrap">
+<MudStack Spacing="4">
+    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Spacing="2" Style="flex-wrap:wrap">
         <MudText Typo="Typo.h5">Компоненты</MudText>
         <MudChip T="string" Size="Size.Small" Color="Color.Secondary">MudBlazor · Material</MudChip>
     </MudStack>
@@ -19,12 +19,18 @@
             <MudButton Variant="Variant.Outlined">Контурная</MudButton>
             <MudButton Variant="Variant.Text">Текстовая</MudButton>
             <MudButton Variant="Variant.Filled" Disabled="true">Недоступная</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="FakeLoadAsync" Loading="_loading">Сохранить</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@(_loading ? null : Icons.Material.Filled.Save)" OnClick="FakeLoadAsync" Disabled="_loading">
+                @if (_loading)
+                {
+                    <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                }
+                Сохранить
+            </MudButton>
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" aria-label="Изменить" />
-            <MudToggleIconButton Icon="@Icons.Material.Filled.FavoriteBorder" IconSize="Size.Medium" ToggledIcon="@Icons.Material.Filled.Favorite"
+            <MudToggleIconButton Icon="@Icons.Material.Filled.FavoriteBorder" Size="Size.Medium" ToggledIcon="@Icons.Material.Filled.Favorite"
                                  Toggled="@_toggleFavorite" ToggledChanged="OnToggleFavorite" Color="Color.Secondary" aria-label="В избранное" />
-            <MudToggleGroup T="bool" Toggled="@_toggleBold" ToggledChanged="OnToggleBold" Color="Color.Primary">
-                <MudToggleItem T="bool" ToggledValue="@true" Icon="@Icons.Material.Filled.FormatBold">Жирный</MudToggleItem>
+            <MudToggleGroup T="bool" Value="@_toggleBold" ValueChanged="OnToggleBold" SelectionMode="SelectionMode.ToggleSelection" Color="Color.Primary">
+                <MudToggleItem T="bool" Value="@true" UnselectedIcon="@Icons.Material.Filled.FormatBold" SelectedIcon="@Icons.Material.Filled.FormatBold" Text="Жирный" />
             </MudToggleGroup>
         </MudStack>
     </MudPaper>
@@ -35,7 +41,7 @@
         <MudText Typo="Typo.caption" Class="mb-3">Switch / Checkbox / Radio / Slider</MudText>
         <MudGrid Spacing="2">
             <MudItem xs="12" md="6">
-                <MudStack RowSpacing="2">
+                <MudStack Spacing="2">
                     <MudSwitch @bind-Value="_switch" Color="Color.Primary" Label="Уведомления о заказах" />
                     <MudCheckBox @bind-Value="_check" Color="Color.Primary" Label="Подписка на рассылку" />
                     <MudCheckBox Value="false" Label="Недоступный пункт" Disabled="true" />
@@ -44,12 +50,14 @@
                 </MudStack>
             </MudItem>
             <MudItem xs="12" md="6">
-                <MudRadioGroup T="string" @bind-Value="_city" Inline="true">
-                    <MudLabel Class="mb-1">Город доставки</MudLabel>
-                    @foreach (var city in ShowcaseData.Cities.Take(3))
-                    {
-                        <MudRadio T="string" Value="@city" Color="Color.Primary" Label="@city" />
-                    }
+                <MudText Typo="Typo.body2" Class="mb-1">Город доставки</MudText>
+                <MudRadioGroup T="string" @bind-Value="_city">
+                    <MudStack Row Spacing="0" Wrap="Wrap.Wrap">
+                        @foreach (var city in ShowcaseData.Cities.Take(3))
+                        {
+                            <MudRadio T="string" Value="@city" Color="Color.Primary" Label="@city" />
+                        }
+                    </MudStack>
                 </MudRadioGroup>
             </MudItem>
         </MudGrid>
@@ -67,7 +75,7 @@
                 <MudNumericField T="decimal" Label="Количество, шт." @bind-Value="_number" Min="0" Variant="Variant.Outlined" />
             </MudItem>
             <MudItem xs="12" md="6" lg="4">
-                <MudDatePicker T="DateTime?" Label="Дата поставки" @bind-Date="_date" Variant="Variant.Outlined" />
+                <MudDatePicker Label="Дата поставки" @bind-Date="_date" Variant="Variant.Outlined" />
             </MudItem>
             <MudItem xs="12" md="6" lg="4">
                 <MudSelect T="string" Label="Город" @bind-Value="_city" Variant="Variant.Outlined">
@@ -93,7 +101,7 @@
                 <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@category</MudChip>
             }
             <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">Очередь</MudChip>
-            <MudBadge BContent="Новое" Color="Color.Error" Overlap="true" />
+            <MudChip T="string" Size="Size.Small" Color="Color.Error">Новое</MudChip>
             <MudChip T="string" Size="Size.Small" Color="Color.Primary">12</MudChip>
             <MudChip T="string" Size="Size.Small" Color="Color.Success">OK</MudChip>
         </MudStack>
@@ -105,9 +113,9 @@
         <MudText Typo="Typo.caption" Class="mb-3">Прогресс (линейный/круговой) и Tabs</MudText>
         <MudGrid Spacing="3">
             <MudItem xs="12" md="6">
-                <MudStack RowSpacing="4">
+                <MudStack Spacing="4">
                     <MudProgressLinear Value="@_slider" Color="Color.Primary" Style="height:8px" />
-                    <MudProgressIndeterminate Color="Color.Primary" />
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
                     <MudProgressCircular Value="65" Size="Size.Medium" Color="Color.Success" />
                 </MudStack>
             </MudItem>
@@ -132,7 +140,7 @@
         <MudText Typo="Typo.subtitle1" Class="mb-1">Таблица (DataGrid)</MudText>
         <MudText Typo="Typo.caption" Class="mb-3">Сортировка по колонкам</MudText>
         <MudDataGrid T="ShowcaseData.DemoProduct" Items="@ShowcaseData.Products" Hover="true" Elevation="0" Outlined="true"
-                     RowsPerPage="10" HidePagination="true" SortMode="SortMode.Single" Filterable="false">
+                     RowsPerPage="10" SortMode="SortMode.Single" Filterable="false">
             <Columns>
                 <PropertyColumn Property="p => p.Name" Title="Название" Sortable="true" />
                 <TemplateColumn T="ShowcaseData.DemoProduct" Title="Категория">
@@ -247,7 +255,7 @@
         var confirm = await Dialog.ShowAsync<ConfirmDialog>("Подтверждение",
             new DialogParameters { ["Message"] = "Провести оплату заказа №1001?", ["YesText"] = "Провести" },
             new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
-        if (!(await confirm.Result).Canceled)
+        if (await confirm.Result is { Canceled: false })
             Snackbar.Add("Оплата подтверждена", Severity.Success);
         else
             Snackbar.Add("Действие отменено", Severity.Warning);

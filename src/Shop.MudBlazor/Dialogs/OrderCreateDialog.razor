@@ -1,8 +1,8 @@
 <MudDialog>
     <DialogContent>
-        <MudStack RowSpacing="3">
+        <MudStack Spacing="3">
             <MudSelect T="int" Label="Клиент" @bind-Value="_customerId" Variant="Variant.Outlined" Margin="Margin.Dense">
-                @foreach (var c in _customers)
+                @foreach (var c in _customers ?? [])
                 {
                     <MudSelectItem T="int" Value="@c.Id">@c.Name</MudSelectItem>
                 }
@@ -13,13 +13,13 @@
                 <MudText Typo="Typo.caption" Color="Color.Error">@_itemsError</MudText>
             }
 
-            <MudStack RowSpacing="2">
+            <MudStack Spacing="2">
                 @foreach (var row in _rows)
                 {
                     <MudStack Row Spacing="2" AlignItems="AlignItems.Center">
                         <MudSelect T="int" @bind-Value="row.ProductId" Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1"
                                    Placeholder="Товар">
-                            @foreach (var p in _products)
+                            @foreach (var p in _products ?? [])
                             {
                                 <MudSelectItem T="int" Value="@p.Id">@($"{p.Name} — {ShopLabels.Money(p.Price)}")</MudSelectItem>
                             }

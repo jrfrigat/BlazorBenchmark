@@ -1,6 +1,6 @@
 <MudDialog>
     <DialogContent>
-        <MudStack RowSpacing="2">
+        <MudStack Spacing="2">
             <MudTextField Label="Название" @bind-Value="_text" Variant="Variant.Outlined" Margin="Margin.Dense" />
             <MudNumericField T="decimal" Label="Количество" @bind-Value="_number" Min="0" Variant="Variant.Outlined" Margin="Margin.Dense" />
             <MudSelect T="string" Label="Категория" @bind-Value="_category" Variant="Variant.Outlined" Margin="Margin.Dense">

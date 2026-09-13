@@ -5,7 +5,7 @@
 
 <PageTitle>Заказы — MudBlazor</PageTitle>
 
-<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Style="flex-wrap:wrap">
     <MudText Typo="Typo.h5">Заказы</MudText>
     <MudSelect T="OrderStatus?" Value="@_statusFilter" ValueChanged="OnStatusChanged" Label="Статус"
                Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width:180px" Clearable="true">
@@ -19,7 +19,7 @@
 </MudStack>
 
 <MudDataGrid T="Order" Items="@_filtered" Hover="true" Elevation="1" RowsPerPage="12" SortMode="SortMode.Multiple"
-             Filterable="false" HidePagination="@(_filtered is null || _filtered.Count() <= 12)">
+             Filterable="false">
     <Columns>
         <PropertyColumn Property="o => o.Id" Title="№" />
         <PropertyColumn Property="o => o.CustomerName" Title="Клиент" />
@@ -55,7 +55,10 @@
             </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="Order" RowsPerPageString="Строк на странице:" />
+        @if (!(_filtered is null || _filtered.Count() <= 12))
+        {
+            <MudDataGridPager T="Order" RowsPerPageString="Строк на странице:" />
+        }
     </PagerContent>
 </MudDataGrid>
 

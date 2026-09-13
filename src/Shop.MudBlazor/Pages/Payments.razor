@@ -5,14 +5,13 @@
 
 <PageTitle>Оплаты — MudBlazor</PageTitle>
 
-<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Style="flex-wrap:wrap">
     <MudText Typo="Typo.h5">Оплаты</MudText>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Payments"
                Disabled="@(_unpaidOrders.Count == 0)" OnClick="OpenCreate">Принять оплату</MudButton>
 </MudStack>
 
-<MudDataGrid T="Payment" Items="@_payments" Hover="true" Elevation="1" RowsPerPage="12" Filterable="false"
-             HidePagination="@(_payments is null || _payments.Count <= 12)">
+<MudDataGrid T="Payment" Items="@_payments" Hover="true" Elevation="1" RowsPerPage="12" Filterable="false">
     <Columns>
         <PropertyColumn Property="p => p.PaidAt" Title="Дата" Format="dd.MM.yyyy HH:mm" />
         <PropertyColumn Property="p => p.OrderId" Title="Заказ" />
@@ -41,7 +40,10 @@
             </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="Payment" RowsPerPageString="Строк на странице:" />
+        @if (!(_payments is null || _payments.Count <= 12))
+        {
+            <MudDataGridPager T="Payment" RowsPerPageString="Строк на странице:" />
+        }
     </PagerContent>
 </MudDataGrid>
 
@@ -70,7 +72,7 @@
     private async Task RefundAsync(Payment payment)
     {
         var confirm = await Dialog.ShowAsync<ConfirmDialog>("Возврат платежа", new DialogParameters { ["Message"] = $"Вернуть {ShopLabels.Money(payment.Amount)} по заказу №{payment.OrderId}?", ["YesText"] = "Вернуть" }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
-        if ((await confirm.Result).Canceled) return;
+        if (await confirm.Result is not { Canceled: false }) return;
         try
         {
             await Api.RefundPaymentAsync(payment.Id);

@@ -5,15 +5,14 @@
 
 <PageTitle>Клиенты — MudBlazor</PageTitle>
 
-<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Style="flex-wrap:wrap">
     <MudText Typo="Typo.h5">Клиенты</MudText>
     <MudTextField @bind-Value="_search" Immediate="true" Placeholder="Поиск…" Variant="Variant.Outlined" Margin="Margin.Dense"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Style="max-width:320px" />
     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenCreate">Добавить клиента</MudButton>
 </MudStack>
 
-<MudDataGrid T="Customer" Items="@_customers" QuickFilter="@_quickFilter" Hover="true" Elevation="1" RowsPerPage="15" Filterable="false"
-             HidePagination="@(_customers is null || _customers.Count <= 15)">
+<MudDataGrid T="Customer" Items="@_customers" QuickFilter="@_quickFilter" Hover="true" Elevation="1" RowsPerPage="15" Filterable="false">
     <Columns>
         <PropertyColumn Property="c => c.Name" Title="Имя" />
         <PropertyColumn Property="c => c.Phone" Title="Телефон" />
@@ -32,7 +31,10 @@
             </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="Customer" RowsPerPageString="Строк на странице:" />
+        @if (!(_customers is null || _customers.Count <= 15))
+        {
+            <MudDataGridPager T="Customer" RowsPerPageString="Строк на странице:" />
+        }
     </PagerContent>
 </MudDataGrid>
 
@@ -72,7 +74,7 @@
     private async Task DeleteAsync(Customer customer)
     {
         var confirm = await Dialog.ShowAsync<ConfirmDialog>("Удаление клиента", new DialogParameters { ["Message"] = $"Удалить «{customer.Name}»?", ["YesText"] = "Удалить" }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
-        if ((await confirm.Result).Canceled) return;
+        if (await confirm.Result is not { Canceled: false }) return;
         try
         {
             await Api.DeleteCustomerAsync(customer.Id);

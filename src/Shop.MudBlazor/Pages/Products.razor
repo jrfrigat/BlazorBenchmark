@@ -5,7 +5,7 @@
 
 <PageTitle>Товары — MudBlazor</PageTitle>
 
-<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" RowSpacing="2" Class="mb-4" Style="flex-wrap:wrap">
+<MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4" Style="flex-wrap:wrap">
     <MudText Typo="Typo.h5">Товары</MudText>
     <MudTextField @bind-Value="_search" Immediate="true" Placeholder="Поиск: название, артикул, категория…" Variant="Variant.Outlined" Margin="Margin.Dense"
                   Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Style="max-width:320px" />
@@ -13,7 +13,7 @@
 </MudStack>
 
 <MudDataGrid T="Product" Items="@_products" QuickFilter="@_quickFilter" Hover="true" Elevation="1"
-             RowsPerPage="15" SortMode="SortMode.Multiple" Filterable="false" HidePagination="@(_products is null || _products.Count <= 15)">
+             RowsPerPage="15" SortMode="SortMode.Multiple" Filterable="false">
     <Columns>
         <PropertyColumn Property="p => p.Sku" Title="Артикул" />
         <PropertyColumn Property="p => p.Name" Title="Название" />
@@ -40,7 +40,10 @@
             </TemplateColumn>
     </Columns>
     <PagerContent>
-        <MudDataGridPager T="Product" RowsPerPageString="Строк на странице:" />
+        @if (!(_products is null || _products.Count <= 15))
+        {
+            <MudDataGridPager T="Product" RowsPerPageString="Строк на странице:" />
+        }
     </PagerContent>
 </MudDataGrid>
 
@@ -80,7 +83,7 @@
     private async Task DeleteAsync(Product product)
     {
         var confirm = await Dialog.ShowAsync<ConfirmDialog>("Удаление товара", new DialogParameters { ["Message"] = $"Удалить «{product.Name}»?", ["YesText"] = "Удалить" }, new DialogOptions { MaxWidth = MaxWidth.ExtraSmall });
-        if ((await confirm.Result).Canceled) return;
+        if (await confirm.Result is not { Canceled: false }) return;
         try
         {
             await Api.DeleteProductAsync(product.Id);

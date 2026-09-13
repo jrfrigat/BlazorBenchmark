@@ -2,21 +2,21 @@
     <DialogContent>
         @if (_order is not null)
         {
-            <MudStack RowSpacing="3">
+            <MudStack Spacing="3">
                 <MudStack Row Spacing="4">
-                    <MudStack RowSpacing="0">
+                    <MudStack Spacing="0">
                         <MudText Typo="Typo.caption">Клиент</MudText>
                         <MudText Typo="Typo.body1">@_order.CustomerName</MudText>
                     </MudStack>
-                    <MudStack RowSpacing="0">
+                    <MudStack Spacing="0">
                         <MudText Typo="Typo.caption">Создан</MudText>
                         <MudText Typo="Typo.body1">@ShopLabels.DateTimeShort(_order.CreatedAt)</MudText>
                     </MudStack>
-                    <MudStack RowSpacing="0">
+                    <MudStack Spacing="0">
                         <MudText Typo="Typo.caption">Статус</MudText>
                         <MudChip T="string" Size="Size.Small" Color="@Tone(ShopLabels.OrderStatusTone(_order.Status))">@ShopLabels.OrderStatusText(_order.Status)</MudChip>
                     </MudStack>
-                    <MudStack RowSpacing="0">
+                    <MudStack Spacing="0">
                         <MudText Typo="Typo.caption">Оплачено</MudText>
                         <MudText Typo="Typo.body1">@($"{ShopLabels.Money(_order.Paid)} из {ShopLabels.Money(_order.Total)}")</MudText>
                     </MudStack>

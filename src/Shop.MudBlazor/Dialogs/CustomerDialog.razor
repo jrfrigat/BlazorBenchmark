@@ -2,7 +2,7 @@
     <DialogContent>
         <EditForm EditContext="_context">
             <DataAnnotationsValidator />
-            <MudStack RowSpacing="2">
+            <MudStack Spacing="2">
                 <MudTextField Label="Имя" For="() => _model.Name" @bind-Value="_model.Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <MudTextField Label="Телефон" For="() => _model.Phone" @bind-Value="_model.Phone" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <MudTextField Label="E-mail" For="() => _model.Email" @bind-Value="_model.Email" Variant="Variant.Outlined" Margin="Margin.Dense" />

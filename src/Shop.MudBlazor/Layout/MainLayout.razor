@@ -6,7 +6,7 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout Elevation="0">
+<MudLayout>
     <MudAppBar Elevation="1" Color="Color.Primary">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
                        OnClick="@(() => _drawerOpen = !_drawerOpen)" />
@@ -30,8 +30,11 @@
         </MudNavMenu>
     </MudDrawer>
 
+    @* Верхний отступ - на обёртке: свой padding-top у MudMainContent занят высотой панели приложения. *@
     <MudMainContent Class="px-6 pb-6">
-        @Body
+        <div class="pt-6">
+            @Body
+        </div>
     </MudMainContent>
 </MudLayout>
 

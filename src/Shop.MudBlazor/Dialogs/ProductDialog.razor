@@ -2,7 +2,7 @@
     <DialogContent>
         <EditForm EditContext="_context">
             <DataAnnotationsValidator />
-            <MudStack RowSpacing="2">
+            <MudStack Spacing="2">
                 <MudTextField Label="Название" For="() => _model.Name" @bind-Value="_model.Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
                 <MudTextField Label="Артикул" For="() => _model.Sku" @bind-Value="_model.Sku" Variant="Variant.Outlined" Margin="Margin.Dense"
                               HelperText="3–12 символов: латиница, цифры, дефис" />
