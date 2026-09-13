@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <!-- Неизвестный тег компонента Razor считает простым HTML и выдаёт лишь предупреждение: при
+         обновлении Flare переименованный компонент (FlareProgress -> FlareProgressLinear в 0.34)
+         молча превращался в пустой тег. Пусть такое ломает сборку. -->
+    <WarningsAsErrors>$(WarningsAsErrors);RZ10012</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,9 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Flare.Blazor" Version="0.33.0" />
-    <PackageReference Include="Flare.Theme.MaterialDesign2" Version="0.33.0" />
-    <PackageReference Include="Flare.Icons.MaterialDesign2.Svg" Version="0.33.0" />
+    <PackageReference Include="Flare.Blazor" Version="0.37.0" />
+    <PackageReference Include="Flare.Theme.MaterialDesign2" Version="0.37.0" />
+    <PackageReference Include="Flare.Icons.MaterialDesign2.Svg" Version="0.37.0" />
   </ItemGroup>
 
   <ItemGroup>

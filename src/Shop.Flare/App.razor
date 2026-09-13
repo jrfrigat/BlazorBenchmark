@@ -1,4 +1,6 @@
-<FlareThemeProvider>
+@* Manual: CSS темы уже прописан в index.html и грузится вместе со страницей; провайдер своих
+   ссылок не пишет, только дожидается стилей и добавляет недостающее при смене темы/палитры. *@
+<FlareThemeProvider Stylesheets="ThemeStylesheets.Manual">
     <Router AppAssembly="@typeof(App).Assembly" NotFoundPage="typeof(Pages.NotFound)">
         <Found Context="routeData">
             <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />

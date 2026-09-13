@@ -27,13 +27,18 @@
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
     <meta name="theme-color" content="#3F51B5" />
 
-    <!-- Шрифт Material Design 2 (одинаковый во всех трёх приложениях бенчмарка) -->
+    <!-- Шрифт Material Design 2 (одинаковый во всех трёх приложениях бенчмарка). Адрес совпадает
+         с StyleAssets темы Flare Material Design 2 байт в байт: провайдер Flare узнаёт ссылку
+         по адресу, и любое расхождение стоило бы ему второго, позднего запроса шрифта. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
 
-    <!-- Flare: стили компонентов + анти-FOUC бутстрап темы -->
+    <!-- Flare: стили компонентов, CSS темы и анти-FOUC бутстрап темы.
+         CSS темы подключаем здесь сами (FlareThemeProvider Stylesheets=Manual в App.razor): так он
+         загружается вместе со страницей, а не второй волной после старта рантайма .NET. -->
     <link rel="stylesheet" href="_content/Flare.Components/css/flare-components.css" />
+    <link rel="stylesheet" href="_content/Flare.Theme.MaterialDesign2/css/components.css" />
     <script src="_content/Flare.Components/js/flare-bootstrap#[.{fingerprint}].js"
             data-default-theme="md2" data-default-palette="md2-indigo" data-default-mode="light"></script>
 

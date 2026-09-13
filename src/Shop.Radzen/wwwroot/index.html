@@ -27,10 +27,12 @@
     <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
     <meta name="theme-color" content="#3F51B5" />
 
-    <!-- Шрифт Material Design 2 (одинаковый во всех трёх приложениях бенчмарка) -->
+    <!-- Шрифт Material Design 2 (одинаковый во всех трёх приложениях бенчмарка). Адрес совпадает
+         с StyleAssets темы Flare Material Design 2 байт в байт: провайдер Flare узнаёт ссылку
+         по адресу, и любое расхождение стоило бы ему второго, позднего запроса шрифта. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
 
     <!-- Radzen: Material-тема (base + swatch) -->
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
