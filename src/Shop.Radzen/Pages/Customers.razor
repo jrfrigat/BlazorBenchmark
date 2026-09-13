@@ -6,7 +6,7 @@
 <PageTitle>Клиенты — Radzen</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
-    <RadzenHeading Size="H5" Style="margin:0" Text="Клиенты" />
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1" Style="margin:0" Text="Клиенты" />
     <RadzenTextBox T="string" @bind-Value="_search" Immediate="true" Placeholder="Поиск: имя, телефон, e-mail…" Style="min-width:260px" />
     <RadzenButton Text="Добавить клиента" Icon="person_add" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenEdit(null))" />
 </RadzenStack>
@@ -51,7 +51,7 @@
     private async Task OpenEdit(Customer? customer)
     {
         var result = await Dialog.OpenAsync<CustomerDialog>(customer is null ? "Новый клиент" : "Изменение клиента",
-            new Dictionary<string, object> { { "CustomerId", (int?)customer?.Id } },
+            new Dictionary<string, object?> { { "CustomerId", (int?)customer?.Id } },
             new DialogOptions { Width = "460px" });
         if (result is true)
         {

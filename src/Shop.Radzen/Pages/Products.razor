@@ -6,7 +6,7 @@
 <PageTitle>Товары — Radzen</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
-    <RadzenHeading Size="H5" Style="margin:0" Text="Товары" />
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1" Style="margin:0" Text="Товары" />
     <RadzenTextBox T="string" @bind-Value="_search" Immediate="true" Placeholder="Поиск: название, артикул, категория…" Style="min-width:260px" />
     <RadzenButton Text="Добавить товар" Icon="add" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenEdit(null))" />
 </RadzenStack>
@@ -60,7 +60,7 @@
     private async Task OpenEdit(Product? product)
     {
         var result = await Dialog.OpenAsync<ProductDialog>(product is null ? "Новый товар" : "Изменение товара",
-            new Dictionary<string, object> { { "ProductId", (int?)product?.Id } },
+            new Dictionary<string, object?> { { "ProductId", (int?)product?.Id } },
             new DialogOptions { Width = "460px" });
         if (result is true)
         {

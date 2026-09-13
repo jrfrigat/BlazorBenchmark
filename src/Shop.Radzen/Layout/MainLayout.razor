@@ -1,8 +1,18 @@
 @inherits LayoutComponentBase
 @inject DiagnosticsService Diag
 
+@* Каркас Radzen: RadzenHeader, RadzenSidebar и RadzenBody - прямые дети RadzenLayout.
+   Компонента RadzenMain в Radzen нет: такой тег рисовался пустым HTML-элементом. *@
 <RadzenLayout>
-    @* Состояние панели держим в поле — иначе кнопка-гамбургер в шапке не управляет ею. *@
+    <RadzenHeader>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="8px" Style="padding:0 16px 0 0;min-height:48px">
+            <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.Span" Style="margin:0;color:inherit" Text="Мини-Магазин" />
+            <span style="flex:1"></span>
+            <RadzenBadge BadgeStyle="BadgeStyle.Secondary" IsPill="true" Text="Radzen · Material" />
+        </RadzenStack>
+    </RadzenHeader>
+
     <RadzenSidebar @bind-Expanded="_sidebarExpanded">
         @* Ссылки БЕЗ ведущего слеша: с ним браузер считает их от корня сайта, и на GitHub Pages
            переход уводит на /diagnostics вместо /BlazorBenchmark/radzen/diagnostics. Относительные
@@ -18,21 +28,14 @@
         </RadzenPanelMenu>
     </RadzenSidebar>
 
-    <RadzenMain>
-        <RadzenHeader Style="display:flex;align-items:center;gap:8px;padding:8px 16px;min-height:48px">
-            <RadzenSidebarToggle Style="float:left" />
-            <RadzenLabel Text="Мини-Магазин" Style="font-size:1.25rem;font-weight:500;margin:0" />
-            <span style="flex:1"></span>
-            <RadzenBadge BadgeStyle="BadgeStyle.Secondary" IsPill="true" Text="Radzen · Material" />
-        </RadzenHeader>
-        <RadzenBody Style="padding:24px">
-            @Body
-        </RadzenBody>
-    </RadzenMain>
+    <RadzenBody Style="padding:24px">
+        @Body
+    </RadzenBody>
 </RadzenLayout>
 
 <RadzenDialog />
 <RadzenNotification />
+<RadzenTooltip />
 
 @code {
     private bool _sidebarExpanded = true;

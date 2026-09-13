@@ -5,11 +5,11 @@
 <PageTitle>Диагностика — Radzen</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
-    <RadzenHeading Size="H5" Style="margin:0" Text="Диагностика" />
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1" Style="margin:0" Text="Диагностика" />
     <RadzenStack Orientation="Orientation.Horizontal" Gap="8px">
-        <RadzenButton Text="Скопировать отчёт" Icon="content_copy" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light"
+        <RadzenButton Text="Скопировать отчёт" Icon="content_copy" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
                       Disabled="@(_report is null)" Click="@(CopyAsync)" />
-        <RadzenButton Text="Собрать метрики" Icon="refresh" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Light"
+        <RadzenButton Text="Собрать метрики" Icon="refresh" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base"
                       Click="@(CollectAsync)" />
     </RadzenStack>
 </RadzenStack>

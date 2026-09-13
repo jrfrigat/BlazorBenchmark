@@ -7,6 +7,9 @@
     <RootNamespace>ShopRadzen</RootNamespace>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <!-- Неизвестный тег компонента Razor рисует пустым HTML и выдаёт лишь предупреждение - так
+         незаметно сломались MudProgressIndeterminate и RadzenMain. Пусть такое ломает сборку. -->
+    <WarningsAsErrors>$(WarningsAsErrors);RZ10012</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

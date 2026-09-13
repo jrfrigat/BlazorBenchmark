@@ -6,7 +6,7 @@
 <PageTitle>Оплаты — Radzen</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
-    <RadzenHeading Size="H5" Style="margin:0" Text="Оплаты" />
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1" Style="margin:0" Text="Оплаты" />
     <RadzenButton Text="Принять оплату" Icon="payments" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary"
                   Disabled="@(_unpaidOrders.Count == 0)" Click="@(async () => await OpenCreate())" />
 </RadzenStack>

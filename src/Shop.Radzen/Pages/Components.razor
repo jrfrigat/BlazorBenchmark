@@ -1,12 +1,13 @@
 @page "/components"
 @inject DialogService Dialog
 @inject NotificationService Notify
+@inject TooltipService Tooltip
 
 <PageTitle>Компоненты — Radzen</PageTitle>
 
 <RadzenStack Gap="1rem">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
-        <RadzenHeading Size="H5" Style="margin:0" Text="Компоненты" />
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1" Style="margin:0" Text="Компоненты" />
         <RadzenBadge BadgeStyle="BadgeStyle.Secondary" IsPill="true" Text="Radzen · Material" />
     </RadzenStack>
 
@@ -44,10 +45,14 @@
                         <RadzenSwitch T="bool" @bind-Value="_switch" />
                         <RadzenLabel Text="Уведомления о заказах" Style="font-size:.875rem" />
                     </RadzenStack>
-                    <RadzenCheckBox T="bool" @bind-Value="_check" Name="check-subscribe" />
-                    <RadzenLabel Text="Подписка на рассылку" Style="font-size:.875rem" />
-                    <RadzenCheckBox T="bool" Value="false" Disabled="true" Name="check-disabled" />
-                    <RadzenLabel Text="Недоступный пункт" Style="font-size:.875rem;color:var(--rz-text-secondary-color)" />
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="8px" AlignItems="AlignItems.Center">
+                        <RadzenCheckBox T="bool" @bind-Value="_check" Name="check-subscribe" />
+                        <RadzenLabel Text="Подписка на рассылку" Component="check-subscribe" Style="font-size:.875rem" />
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="8px" AlignItems="AlignItems.Center">
+                        <RadzenCheckBox T="bool" Value="false" Disabled="true" Name="check-disabled" />
+                        <RadzenLabel Text="Недоступный пункт" Component="check-disabled" Style="font-size:.875rem;color:var(--rz-text-secondary-color)" />
+                    </RadzenStack>
                     <RadzenSlider T="double" @bind-Value="_slider" Min="0" Max="100" Step="1" Style="width:90%" />
                     <RadzenLabel Text="@($"Скидка: {_slider}%")" Style="font-size:.8rem" />
                 </RadzenStack>
@@ -55,10 +60,12 @@
             <RadzenColumn SizeMD="6" SizeXS="12">
                 <RadzenLabel Text="Город доставки" Style="font-size:.875rem" />
                 <RadzenRadioButtonList T="string" @bind-Value="_city" Name="city-group" Style="margin-top:8px">
-                    @foreach (var city in ShowcaseData.Cities.Take(3))
-                    {
-                        <RadzenRadioButtonListItem T="string" Value="@city" Label="@city" />
-                    }
+                    <Items>
+                        @foreach (var city in ShowcaseData.Cities.Take(3))
+                        {
+                            <RadzenRadioButtonListItem T="string" Value="@city" Text="@city" />
+                        }
+                    </Items>
                 </RadzenRadioButtonList>
             </RadzenColumn>
         </RadzenRow>
@@ -183,16 +190,18 @@
             <RadzenColumn SizeMD="4" SizeXS="12">
                 <RadzenLabel Text="Выручка, тыс. ₽" Style="font-size:.8rem" />
                 <RadzenChart Style="height:200px">
-                    <RadzenLineSeries Data="@ShowcaseData.Monthly" CategoryProperty="Month" ValueProperty="Revenue" Smooth="true" />
-                    <RadzenCategoryAxis />
+                    <RadzenLineSeries Data="@ShowcaseData.Monthly" CategoryProperty="Month" ValueProperty="Revenue" Smooth="true" Title="Выручка" />
+                    <RadzenLegend Visible="false" />
+                    <RadzenCategoryAxis LabelAutoRotation="-45" />
                     <RadzenValueAxis />
                 </RadzenChart>
             </RadzenColumn>
             <RadzenColumn SizeMD="4" SizeXS="12">
                 <RadzenLabel Text="Заказы, шт." Style="font-size:.8rem" />
                 <RadzenChart Style="height:200px">
-                    <RadzenColumnSeries Data="@ShowcaseData.Monthly" CategoryProperty="Month" ValueProperty="Orders" />
-                    <RadzenCategoryAxis />
+                    <RadzenColumnSeries Data="@ShowcaseData.Monthly" CategoryProperty="Month" ValueProperty="Orders" Title="Заказы" />
+                    <RadzenLegend Visible="false" />
+                    <RadzenCategoryAxis LabelAutoRotation="-45" />
                     <RadzenValueAxis />
                 </RadzenChart>
             </RadzenColumn>
@@ -215,9 +224,8 @@
             <RadzenButton Text="Подтверждение…" Icon="help" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await ConfirmAsync())" />
             <RadzenButton Text="Уведомление" Icon="notifications" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Info"
                           Click="@(() => Notify.Notify(NotificationSeverity.Success, "Уведомление", "Заказ №1001 оплачен"))" />
-            <RadzenHtml ToolTip="Это подсказка — tooltip">
-                <RadzenButton Text="Наведи на меня" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" />
-            </RadzenHtml>
+            <RadzenButton Text="Наведи на меня" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
+                          MouseEnter="@(args => Tooltip.Open(args, "Это подсказка — tooltip"))" MouseLeave="@(_ => Tooltip.Close())" />
         </RadzenStack>
     </RadzenCard>
 </RadzenStack>
@@ -263,7 +271,7 @@
     private async Task OpenDialog()
     {
         var result = await Dialog.OpenAsync<ShowcaseDialog>("Демонстрационный диалог",
-            new Dictionary<string, object>
+            new Dictionary<string, object?>
             {
                 ["InitialText"] = _text,
                 ["InitialNumber"] = _numberInt,

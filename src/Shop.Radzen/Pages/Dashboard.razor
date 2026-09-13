@@ -4,8 +4,8 @@
 <PageTitle>Обзор — Radzen</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
-    <RadzenHeading Size="H5" Style="margin:0" Text="Обзор" />
-    <RadzenButton Text="Обновить" Icon="refresh" Variant="Variant.Outlined" Click="@(LoadAsync)" ButtonStyle="ButtonStyle.Light" />
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1" Style="margin:0" Text="Обзор" />
+    <RadzenButton Text="Обновить" Icon="refresh" Variant="Variant.Outlined" Click="@(LoadAsync)" ButtonStyle="ButtonStyle.Base" />
 </RadzenStack>
 
 @if (_data is null)
@@ -18,19 +18,19 @@ else
         <RadzenColumn SizeMD="3" SizeXS="12">
             <RadzenCard Style="margin-bottom:12px">
                 <RadzenLabel Text="Выручка сегодня" Style="color:var(--rz-text-secondary-color);font-size:.875rem" />
-                <RadzenHeading Size="H4" Style="margin:4px 0;color:var(--rz-primary)" Text="@ShopLabels.Money(_data.RevenueToday)" />
+                <RadzenText TextStyle="TextStyle.H4" TagName="TagName.Div" Style="margin:4px 0;color:var(--rz-primary)" Text="@ShopLabels.Money(_data.RevenueToday)" />
             </RadzenCard>
         </RadzenColumn>
         <RadzenColumn SizeMD="3" SizeXS="12">
             <RadzenCard Style="margin-bottom:12px">
                 <RadzenLabel Text="Заказов сегодня" Style="color:var(--rz-text-secondary-color);font-size:.875rem" />
-                <RadzenHeading Size="H4" Style="margin:4px 0" Text="@_data.OrdersToday.ToString()" />
+                <RadzenText TextStyle="TextStyle.H4" TagName="TagName.Div" Style="margin:4px 0" Text="@_data.OrdersToday.ToString()" />
             </RadzenCard>
         </RadzenColumn>
         <RadzenColumn SizeMD="3" SizeXS="12">
             <RadzenCard Style="margin-bottom:12px">
                 <RadzenLabel Text="Товаров на складе" Style="color:var(--rz-text-secondary-color);font-size:.875rem" />
-                <RadzenHeading Size="H4" Style="margin:4px 0" Text="@_data.ProductsTotal.ToString()" />
+                <RadzenText TextStyle="TextStyle.H4" TagName="TagName.Div" Style="margin:4px 0" Text="@_data.ProductsTotal.ToString()" />
                 @if (_data.LowStockCount > 0)
                 {
                     <RadzenBadge BadgeStyle="BadgeStyle.Danger" IsPill="true" Text="@($"Мало: {_data.LowStockCount}")" />
@@ -40,7 +40,7 @@ else
         <RadzenColumn SizeMD="3" SizeXS="12">
             <RadzenCard Style="margin-bottom:12px">
                 <RadzenLabel Text="Долг по заказам" Style="color:var(--rz-text-secondary-color);font-size:.875rem" />
-                <RadzenHeading Size="H4" Style="margin:4px 0" Text="@ShopLabels.Money(_data.UnpaidAmount)" />
+                <RadzenText TextStyle="TextStyle.H4" TagName="TagName.Div" Style="margin:4px 0" Text="@ShopLabels.Money(_data.UnpaidAmount)" />
             </RadzenCard>
         </RadzenColumn>
     </RadzenRow>
@@ -51,8 +51,10 @@ else
                 <RadzenLabel Text="Выручка за 14 дней" Style="font-weight:500" />
                 <RadzenChart Style="height:260px">
                     <RadzenColumnSeries Data="@_revenue" CategoryProperty="Date" ValueProperty="Revenue" Title="Выручка, ₽" />
-                    <RadzenCategoryAxis />
-                    <RadzenValueAxis />
+                    @* Одна серия: её название уже в заголовке карточки, а легенда отнимала ширину, и 14 дат слипались. *@
+                    <RadzenLegend Visible="false" />
+                    <RadzenCategoryAxis LabelAutoRotation="-45" />
+                    <RadzenValueAxis FormatString="{0:#,0,к}" />
                 </RadzenChart>
             </RadzenCard>
         </RadzenColumn>
@@ -61,7 +63,7 @@ else
                 <RadzenLabel Text="Продажи по категориям" Style="font-weight:500" />
                 <RadzenChart Style="height:260px">
                     <RadzenDonutSeries Data="@_categories" CategoryProperty="Category" ValueProperty="Revenue" Title="Доля" Fills="@_fills" />
-                    <RadzenLegend Position="LegendPosition.Bottom" />
+                    <RadzenLegend Position="LegendPosition.Right" />
                 </RadzenChart>
             </RadzenCard>
         </RadzenColumn>

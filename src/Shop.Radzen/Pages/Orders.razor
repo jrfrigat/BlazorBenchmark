@@ -6,7 +6,7 @@
 <PageTitle>Заказы — Radzen</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Style="margin-bottom:16px">
-    <RadzenHeading Size="H5" Style="margin:0" Text="Заказы" />
+    <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H1" Style="margin:0" Text="Заказы" />
     <RadzenDropDown TValue="OrderStatus?" Data="@_statusOptions" TextProperty="Text" ValueProperty="Value"
                     @bind-Value="_statusFilter" Placeholder="Все статусы" AllowClear="true" Style="min-width:200px" />
     <RadzenButton Text="Новый заказ" Icon="add" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Click="@(async () => await OpenCreate())" />
@@ -46,7 +46,7 @@
                             <RadzenButton Text="@NextStatusText(next)" Size="ButtonSize.ExtraSmall" Variant="Variant.Outlined"
                                           ButtonStyle="ButtonStyle.Primary" Click="@(async () => await AdvanceAsync(o, next))" />
                         }
-                        <RadzenButton Icon="search" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light"
+                        <RadzenButton Icon="search" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base"
                                       Click="@(async () => await ShowDetails(o))" title="Детали" />
                     </RadzenStack>
                 </Template>
@@ -103,7 +103,7 @@
     private async Task ShowDetails(Order order)
     {
         await Dialog.OpenAsync<OrderDetailDialog>($"Заказ №{order.Id}",
-            new Dictionary<string, object> { { "OrderId", order.Id } },
+            new Dictionary<string, object?> { { "OrderId", order.Id } },
             new DialogOptions { Width = "640px" });
         await ReloadAsync();
     }

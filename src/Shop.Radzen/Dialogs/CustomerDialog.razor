@@ -30,7 +30,7 @@
 </RadzenStack>
 
 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="8px" Style="margin-top:8px">
-    <RadzenButton Text="Отмена" Variant="Variant.Text" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialog.Close())" />
+    <RadzenButton Text="Отмена" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialog.Close())" />
     <RadzenButton Text="Сохранить" Icon="save" Variant="Variant.Filled" ButtonStyle="ButtonStyle.Primary" Disabled="_saving" Click="@SaveAsync" />
 </RadzenStack>
 
