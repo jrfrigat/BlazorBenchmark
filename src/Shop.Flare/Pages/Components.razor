@@ -109,8 +109,8 @@
                 <FlareCol Xs="12" Md="6">
                     <FlareStack Gap="FlareSpacing.Medium">
                         <FlareProgressLinear Value="@_slider" />
-                        <FlareProgressCircular Value="null" />
-                        <FlareProgressLinear Value="65" Color="FlareColor.Success" />
+                        <FlareProgressLinear Value="null" />
+                        <FlareProgressCircular Value="65" Color="FlareColor.Success" />
                     </FlareStack>
                 </FlareCol>
                 <FlareCol Xs="12" Md="6">
@@ -229,9 +229,9 @@
         _bar = new ChartData(
             [new ChartSeries("Заказы", [.. ShowcaseData.Monthly.Select(m => m.Orders)])],
             [.. ShowcaseData.Monthly.Select(m => m.Month)]);
+        // У круговой диаграммы Flare сегмент - это серия с одним значением, а не точка серии.
         _pie = new ChartData(
-            [new ChartSeries("Доля, %", [.. ShowcaseData.CategoryShare.Select(v => (double)v)])],
-            [.. ShowcaseData.Categories]);
+            [.. ShowcaseData.Categories.Select((name, i) => new ChartSeries(name, [(double)ShowcaseData.CategoryShare[i]]))]);
     }
 
     private void OnToggleFavorite(bool value)

@@ -67,20 +67,13 @@
         </FlareGrid>
 
         <FlareGrid Gap="FlareSpacing.Medium">
+            @* FlareChart сам рисует поверхность с рамкой и отступами - карточка вокруг дала бы двойную рамку. *@
             <FlareCol Xs="12" Lg="7">
-                <FlareCard Variant="CardVariant.Outlined">
-                    <FlareCardContent>
-                        <FlareChart Type="ChartType.Bar" Height="260" Title="Выручка за 14 дней" Data="@_revenue"
-                                    YAxisFormat="N0" ShowValues="false" />
-                    </FlareCardContent>
-                </FlareCard>
+                <FlareChart Type="ChartType.Bar" Height="260" Title="Выручка за 14 дней" Data="@_revenue"
+                            YAxisFormat="#,0,к" ShowValues="false" />
             </FlareCol>
             <FlareCol Xs="12" Lg="5">
-                <FlareCard Variant="CardVariant.Outlined">
-                    <FlareCardContent>
-                        <FlareChart Type="ChartType.Donut" Height="260" Title="Продажи по категориям" Data="@_categories" />
-                    </FlareCardContent>
-                </FlareCard>
+                <FlareChart Type="ChartType.Donut" Height="260" Title="Продажи по категориям" Data="@_categories" />
             </FlareCol>
         </FlareGrid>
 
@@ -94,10 +87,11 @@
                             {
                                 <FlareStack Row Align="FlareAlignItems.Center" Gap="FlareSpacing.Small">
                                     <FlareBadge Standalone="true" Text="@((index + 1).ToString())" Color="FlareColor.Primary" />
-                                    <FlareStack StretchFirst="true">
+                                    <FlareStack Gap="FlareSpacing.None">
                                         <FlareText Typo="TypographyScale.BodyMedium">@item.Name</FlareText>
                                         <FlareText Typo="TypographyScale.BodySmall" Color="FlareColor.OnSurfaceVariant">@item.Quantity шт.</FlareText>
                                     </FlareStack>
+                                    <FlareSpacer />
                                     <FlareText Typo="TypographyScale.BodyMedium" Weight="FontWeight.Medium">@ShopLabels.Money(item.Revenue)</FlareText>
                                 </FlareStack>
                             }
@@ -143,9 +137,9 @@
             _revenue = new ChartData(
                 [new ChartSeries("Выручка, ₽", [.. _data.RevenueByDay.Select(d => (double)Math.Round(d.Revenue))])],
                 [.. _data.RevenueByDay.Select(d => d.Date)]);
+            // У круговой диаграммы Flare сегмент - это серия с одним значением, а не точка серии.
             _categories = new ChartData(
-                [new ChartSeries("Доля, %", [.. _data.SalesByCategory.Select(c => (double)Math.Round(c.Revenue))])],
-                [.. _data.SalesByCategory.Select(c => c.Category)]);
+                [.. _data.SalesByCategory.Select(c => new ChartSeries(c.Category, [(double)Math.Round(c.Revenue)]))]);
         }
     }
 
