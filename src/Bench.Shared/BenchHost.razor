@@ -1,0 +1,51 @@
+@namespace Bench.Shared
+@inject IJSRuntime JS
+
+@* Одинаковый каркас замера для всех пяти библиотек: кнопка монтирования, N полей даты и N полей
+   времени из шаблонов приложения, и строка со значением первого поля для сценария ввода. Отличается
+   только то, какой компонент библиотека кладет в шаблон. *@
+<main class="bench">
+    <h1>@Title</h1>
+    <button id="bench-mount" type="button" @onclick="Mount">Mount @Count</button>
+    <span id="bench-value">@Value0</span>
+    @if (_mounted)
+    {
+        <section class="bench-dates">
+            @for (var i = 0; i < Count; i++)
+            {
+                var index = i;
+                <div class="bench-date" @key="index">@Date(index)</div>
+            }
+        </section>
+        <section class="bench-times">
+            @for (var i = 0; i < Count; i++)
+            {
+                var index = i;
+                <div class="bench-time" @key="index">@Time(index)</div>
+            }
+        </section>
+        <span id="bench-mounted"></span>
+    }
+</main>
+
+@code {
+    /// <summary>Библиотека и тема, что замеряются.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    /// <summary>Поле даты номер i.</summary>
+    [Parameter, EditorRequired] public RenderFragment<int> Date { get; set; } = default!;
+    /// <summary>Поле времени номер i.</summary>
+    [Parameter, EditorRequired] public RenderFragment<int> Time { get; set; } = default!;
+    /// <summary>Значение первого поля даты в виде yyyy-MM-dd - по нему сценарий ввода видит, что дата принята.</summary>
+    [Parameter] public string? Value0 { get; set; }
+    /// <summary>Сколько полей каждого вида монтируется.</summary>
+    [Parameter] public int Count { get; set; } = 50;
+
+    private bool _mounted;
+
+    private void Mount() => _mounted = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await JS.InvokeVoidAsync("shopDiagnostics.markAppReady");
+    }
+}

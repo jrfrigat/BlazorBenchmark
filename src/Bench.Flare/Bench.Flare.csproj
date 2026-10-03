@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <WarningsAsErrors>$(WarningsAsErrors);RZ10012</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.11" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Flare\src\Flare\Flare.csproj" />
+    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.MaterialDesign2\Flare.Theme.MaterialDesign2.csproj" />
+    <ProjectReference Include="..\..\..\Flare\src\Flare.Icons.MaterialDesign2.Svg\Flare.Icons.MaterialDesign2.Svg.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bench.Shared\Bench.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

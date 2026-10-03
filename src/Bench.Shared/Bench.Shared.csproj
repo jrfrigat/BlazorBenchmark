@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SupportedPlatforms>browser</SupportedPlatforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- diagnostics.js and the loader styles are the shop's; the bench reuses them rather than copying. -->
+    <ProjectReference Include="..\Shop.Shared\Shop.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

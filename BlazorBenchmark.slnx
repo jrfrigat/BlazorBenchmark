@@ -5,4 +5,12 @@
     <Project Path="src/Shop.Radzen/Shop.Radzen.csproj" />
     <Project Path="src/Shop.Shared/Shop.Shared.csproj" />
   </Folder>
+  <Folder Name="/bench/">
+    <Project Path="src/Bench.Shared/Bench.Shared.csproj" />
+    <Project Path="src/Bench.Flare/Bench.Flare.csproj" />
+    <Project Path="src/Bench.MudBlazor/Bench.MudBlazor.csproj" />
+    <Project Path="src/Bench.Radzen/Bench.Radzen.csproj" />
+    <Project Path="src/Bench.Blazorise/Bench.Blazorise.csproj" />
+    <Project Path="src/Bench.FluentUI/Bench.FluentUI.csproj" />
+  </Folder>
 </Solution>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bench - Flare (this branch) / Material Design 2</title>
+    <base href="/" />
+    <link rel="preload" id="webassembly" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
+    <link rel="stylesheet" href="_content/Flare.Components/css/flare-components.css" />
+    <link rel="stylesheet" href="_content/Flare.Theme.MaterialDesign2/css/components.css" />
+    <script src="_content/Flare.Components/js/flare-bootstrap#[.{fingerprint}].js"
+            data-default-theme="md2" data-default-palette="md2-indigo" data-default-mode="light"></script>
+    <link rel="stylesheet" href="_content/Shop.Shared/css/app.css" />
+    <script src="_content/Shop.Shared/diagnostics.js"></script>
+    <script src="_content/Bench.Shared/bench.js"></script>
+    <script src="_content/Bench.Shared/bench-configs.js"></script>
+    <script>window.benchConfig = window.benchConfigs.Flare;</script>
+    <script type="importmap"></script>
+</head>
+
+<body>
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
+
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+@namespace Bench.Blazorise
+
+
+<BenchHost Title="Blazorise 2.3.3 / Bootstrap 5" Value0="@Value0">
+    <Date Context="i"><DatePicker TValue="DateTime?" InputFormat="MM/dd/yyyy" DisplayFormat="MM/dd/yyyy" Value="_dates[i]" ValueChanged="@((DateTime? v) => SetDate(i, v))" /></Date>
+    <Time Context="i"><TimePicker TValue="TimeSpan?" Value="_times[i]" ValueChanged="@((TimeSpan? v) => _times[i] = v)" /></Time>
+</BenchHost>
+
+
+@code {
+    private readonly DateTime?[] _dates = new DateTime?[50];
+    private readonly TimeSpan?[] _times = new TimeSpan?[50];
+
+    private string? Value0 => _dates[0] is var v ? v?.ToString("yyyy-MM-dd") : null;
+
+    private void SetDate(int i, DateTime? value) => _dates[i] = value;
+}
