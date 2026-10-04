@@ -2,8 +2,8 @@
 
 
 <BenchHost Title="Blazorise 2.3.3 / Bootstrap 5" Value0="@Value0">
-    <Date Context="i"><DatePicker TValue="DateTime?" InputFormat="MM/dd/yyyy" DisplayFormat="MM/dd/yyyy" Value="_dates[i]" ValueChanged="@((DateTime? v) => SetDate(i, v))" /></Date>
-    <Time Context="i"><TimePicker TValue="TimeSpan?" Value="_times[i]" ValueChanged="@((TimeSpan? v) => _times[i] = v)" /></Time>
+    <Date Context="i"><Field><FieldLabel>Date</FieldLabel><DatePicker TValue="DateTime?" InputFormat="MM/dd/yyyy" DisplayFormat="MM/dd/yyyy" Value="_dates[i]" ValueChanged="@((DateTime? v) => SetDate(i, v))" /></Field></Date>
+    <Time Context="i"><Field><FieldLabel>Time</FieldLabel><TimePicker TValue="TimeSpan?" Value="_times[i]" ValueChanged="@((TimeSpan? v) => _times[i] = v)" /></Field></Time>
 </BenchHost>
 
 

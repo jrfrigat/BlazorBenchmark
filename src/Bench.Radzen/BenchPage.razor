@@ -2,8 +2,8 @@
 
 
 <BenchHost Title="Radzen.Blazor 12.0.5 / Material" Value0="@Value0">
-    <Date Context="i"><RadzenDatePicker TValue="DateTime?" Placeholder="Date" DateFormat="MM/dd/yyyy" Value="_dates[i]" ValueChanged="@(v => SetDate(i, v))" /></Date>
-    <Time Context="i"><RadzenDatePicker TValue="DateTime?" Placeholder="Time" TimeOnly="true" ShowTime="true" DateFormat="HH:mm" Value="_times[i]" ValueChanged="@(v => _times[i] = v)" /></Time>
+    <Date Context="i"><RadzenFormField Text="Date"><RadzenDatePicker TValue="DateTime?" DateFormat="MM/dd/yyyy" Value="_dates[i]" ValueChanged="@(v => SetDate(i, v))" /></RadzenFormField></Date>
+    <Time Context="i"><RadzenFormField Text="Time"><RadzenDatePicker TValue="DateTime?" TimeOnly="true" ShowTime="true" DateFormat="HH:mm" Value="_times[i]" ValueChanged="@(v => _times[i] = v)" /></RadzenFormField></Time>
 </BenchHost>
 
 
