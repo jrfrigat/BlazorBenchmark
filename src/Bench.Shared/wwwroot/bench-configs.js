@@ -46,14 +46,15 @@
             library: 'Flare',
             mounted: function () { return all('.bench-time .flare-input__toggle').length >= 50; },
             openDate: function (f) { press(f.querySelector('.flare-input__toggle')); },
-            calendarReady: function () { return !!q('.flare-datepicker__panel[role=dialog] button[role=gridcell]'); },
+            // Shown, not only rendered: the panel counts once it is placed in the top layer.
+            calendarReady: function () { return !!q('.flare-datepicker__panel[role=dialog]:popover-open button[role=gridcell]'); },
             next: function () { return last('.flare-datepicker__panel[role=dialog] .flare-datepicker__header button[aria-label]'); },
             title: function () { return text(document, '.flare-datepicker__panel[role=dialog] .flare-datepicker__month-label'); },
             closeDate: function () { press(q('.flare-picker__scrim')); },
             dateInput: function (f) { return f.querySelector('input'); },
             typed: '10/15/2026',
             openTime: function (f) { press(f.querySelector('.flare-input__toggle')); },
-            timeReady: function () { return !!q('.flare-timepicker [role=dialog]'); },
+            timeReady: function () { return !!q('.flare-timepicker [role=dialog]:popover-open'); },
             closeTime: function () { q('.flare-timepicker [role=dialog]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); }
         },
         MudBlazor: {
