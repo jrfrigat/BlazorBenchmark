@@ -1,0 +1,5 @@
+/* The controlled bench uses the same installed font and no remote font service. */
+body, .bench, .bench input, .bench button { font-family: Arial, sans-serif !important; }
+.bench { margin: 24px; }
+.bench-dates, .bench-times { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 8px; }
+#bench-report { max-height: 320px; overflow: auto; white-space: pre-wrap; }

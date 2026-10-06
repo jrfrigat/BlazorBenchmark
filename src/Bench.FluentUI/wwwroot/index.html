@@ -9,10 +9,7 @@
     <link rel="preload" id="webassembly" />
 
     <link rel="stylesheet" href="_content/Shop.Shared/css/app.css" />
-    <script src="_content/Shop.Shared/diagnostics.js"></script>
-    <script src="_content/Bench.Shared/bench.js"></script>
-    <script src="_content/Bench.Shared/bench-configs.js"></script>
-    <script>window.benchConfig = window.benchConfigs.FluentUI;</script>
+    <link rel="stylesheet" href="_content/Bench.Shared/analytics.css" />
     <script type="importmap"></script>
 </head>
 
@@ -25,6 +22,11 @@
         <div class="loading-progress-text"></div>
     </div>
 
+    <script src="_content/Shop.Shared/diagnostics.js"></script>
+    <script src="_content/Bench.Shared/bench.js"></script>
+    <script src="_content/Bench.Shared/bench-configs.js"></script>
+    <script>window.benchConfig = window.benchConfigs.FluentUI;</script>
+    <script src="_content/Bench.Shared/analytics.js"></script>
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
 

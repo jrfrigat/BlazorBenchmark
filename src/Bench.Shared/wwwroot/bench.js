@@ -63,6 +63,11 @@
         if (!c) throw new Error('window.benchConfig is not defined');
         var r = { library: c.library, scenarios: {} };
 
+        if (document.getElementById('bench-mounted')) {
+            document.getElementById('bench-unmount').click();
+            await until(function () { return !document.getElementById('bench-mounted'); }, 'unmount before interactions');
+            await frame();
+        }
         var nodesBefore = document.getElementsByTagName('*').length;
         r.scenarios.mount = round(await timed(
             function () { document.getElementById('bench-mount').click(); },
@@ -107,6 +112,9 @@
 
         r.startup = window.shopDiagnostics ? window.shopDiagnostics.collect() : null;
         window.benchResult = r;
+        r.success = true;
+        var output = document.getElementById('bench-report');
+        if (output) output.textContent = JSON.stringify(r, null, 2);
         return r;
     }
 

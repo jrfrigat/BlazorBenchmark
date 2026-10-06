@@ -1,13 +1,32 @@
 @namespace Bench.Flare
+@inject global::Flare.Abstractions.IThemeService Themes
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 <FlareThemeProvider Stylesheets="ThemeStylesheets.Manual">
-<BenchHost Title="Flare (this branch) / Material Design 2" Value0="@Value0">
+@if (Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("switch=1", StringComparison.Ordinal))
+{
+<div id="bench-themes" data-bench-active-theme="@_completedTheme">
+@foreach (var theme in Themes.Themes)
+{
+    <button type="button" data-bench-theme="@theme.Id" @onclick="() => SwitchTheme(theme.Id)">@theme.DisplayName</button>
+}
+</div>
+}
+<BenchHost Title="@ThemeSetup.Title" Value0="@Value0">
     <Date Context="i"><FlareDatePicker Label="Date" Value="_dates[i]" ValueChanged="@(v => SetDate(i, v))" /></Date>
     <Time Context="i"><FlareTimePicker Label="Time" Value="_times[i]" ValueChanged="@(v => _times[i] = v)" /></Time>
 </BenchHost>
 </FlareThemeProvider>
 
 @code {
+    private string _completedTheme = "";
+    private async Task SwitchTheme(string id)
+    {
+        await Themes.SetThemeAsync(id);
+        await Themes.SetPaletteAsync(Themes.CurrentTheme.DefaultPaletteId);
+        _completedTheme = id;
+    }
+
     private readonly DateOnly?[] _dates = new DateOnly?[50];
     private readonly TimeOnly?[] _times = new TimeOnly?[50];
 

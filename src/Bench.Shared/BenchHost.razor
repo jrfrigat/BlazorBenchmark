@@ -7,6 +7,10 @@
 <main class="bench">
     <h1>@Title</h1>
     <button id="bench-mount" type="button" @onclick="Mount">Mount @Count</button>
+    <button id="bench-unmount" type="button" @onclick="Unmount">Unmount</button>
+    <button id="bench-analytics" type="button" @onclick="RunAnalytics">Measure startup on reload</button>
+    <button id="bench-interactions" type="button" @onclick="RunInteractions">Measure picker interactions</button>
+    <button type="button" @onclick="Download">Download JSON</button>
     <span id="bench-value">@Value0</span>
     @if (_mounted)
     {
@@ -26,6 +30,7 @@
         </section>
         <span id="bench-mounted"></span>
     }
+    <pre id="bench-report"></pre>
 </main>
 
 @code {
@@ -43,6 +48,10 @@
     private bool _mounted;
 
     private void Mount() => _mounted = true;
+    private void Unmount() => _mounted = false;
+    private Task RunAnalytics() => JS.InvokeVoidAsync("benchAnalytics.restart").AsTask();
+    private Task RunInteractions() => JS.InvokeVoidAsync("bench.run").AsTask();
+    private Task Download() => JS.InvokeVoidAsync("benchAnalytics.download").AsTask();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

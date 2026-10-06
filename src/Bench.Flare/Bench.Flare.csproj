@@ -2,9 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <PublishTrimmed>true</PublishTrimmed>
+    <RunAOTCompilation>false</RunAOTCompilation>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <ThemeSet Condition="'$(ThemeSet)' == ''">Md2</ThemeSet>
+    <DefineConstants Condition="'$(ThemeSet)' == 'Fluent2'">$(DefineConstants);FLUENT_THEME</DefineConstants>
+    <DefineConstants Condition="'$(ThemeSet)' == 'All'">$(DefineConstants);ALL_THEMES</DefineConstants>
     <WarningsAsErrors>$(WarningsAsErrors);RZ10012</WarningsAsErrors>
   </PropertyGroup>
 
@@ -15,7 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Flare\src\Flare\Flare.csproj" />
-    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.MaterialDesign2\Flare.Theme.MaterialDesign2.csproj" />
+    <ProjectReference Condition="'$(ThemeSet)' != 'Fluent2'" Include="..\..\..\Flare\src\Flare.Theme.MaterialDesign2\Flare.Theme.MaterialDesign2.csproj" />
     <ProjectReference Include="..\..\..\Flare\src\Flare.Icons.MaterialDesign2.Svg\Flare.Icons.MaterialDesign2.Svg.csproj" />
   </ItemGroup>
 
@@ -23,4 +28,14 @@
     <ProjectReference Include="..\Bench.Shared\Bench.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(ThemeSet)' == 'Fluent2' Or '$(ThemeSet)' == 'All'">
+    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.FluentUI2\Flare.Theme.FluentUI2.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(ThemeSet)' == 'All'">
+    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.MaterialDesign3\Flare.Theme.MaterialDesign3.csproj" />
+    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.MaterialDesign3Expressive\Flare.Theme.MaterialDesign3Expressive.csproj" />
+    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.Aero\Flare.Theme.Aero.csproj" />
+    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.LiquidGlass\Flare.Theme.LiquidGlass.csproj" />
+    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.VisualStudio\Flare.Theme.VisualStudio.csproj" />
+  </ItemGroup>
 </Project>
