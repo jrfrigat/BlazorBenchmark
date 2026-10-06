@@ -7,7 +7,7 @@ const context={window:{}};
 vm.runInNewContext(await readFile(new URL('../src/Bench.Shared/wwwroot/bench.js',import.meta.url),'utf8'),context);
 export const stats = values => JSON.parse(JSON.stringify(context.window.bench.stats(values)));
 const base={firstMount:1,remount:8,parentRerender:8};
-const date={firstOpenDate:1,openDate:8,nextMonth:8,typeDateCommit:8,selectDay:8};
+const date={firstOpenDate:1,openDate:8,nextMonth:8,typeDateCommit:8,selectDay:8,selectDayClose:8};
 const time={firstOpenTime:1,openTime:8};
 export const contract={date:{dates:1,times:0,metrics:{...base,...date}},
     time:{dates:0,times:1,metrics:{...base,...time}},mixed:{dates:50,times:50,metrics:{...base,...date,...time}}};

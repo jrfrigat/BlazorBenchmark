@@ -132,8 +132,14 @@
                         setInput(c.dateInput(firstDate()),'10/14/2026');
                         await until(()=>value()==='2026-10-14','selection reset');await closeDate(c);
                         await c.openDate(firstDate());await until(c.calendarReady,'date for selection');await frame();
+                        const selectStart=performance.now();
                         add(g,'selectDay',await timed(()=>c.pickDay(15),()=>value()==='2026-10-15','select day'));
-                        await closeDate(c);
+                        // Await the library's own close, including an intentional delay; forcing close would
+                        // leave an old delayed callback free to close the NEXT popup (Mud ClosingDelay).
+                        await until(()=>!c.calendarReady(),'close after day selection');
+                        const domMs=performance.now()-selectStart;
+                        await frame();visible();
+                        add(g,'selectDayClose',{domMs,frameMs:performance.now()-selectStart});
                     }
                 }
                 if(times){
