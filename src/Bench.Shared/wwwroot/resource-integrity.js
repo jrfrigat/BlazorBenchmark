@@ -24,7 +24,7 @@
             } catch(error) { errors.push(url.pathname + ': ' + error); }
         }
         if (!checked.length) errors.push('no loaded JS/CSS checked');
-        return {publicationId:manifest.publicationId, checked, errors, success:errors.length === 0};
+        return {publicationId:manifest.publicationId, loadedPaths:[...paths], checked, errors, success:errors.length === 0};
     }
     async function audit() {
         // Capture inventory before control requests. Never import or fetch unused modules.

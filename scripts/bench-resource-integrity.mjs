@@ -3,7 +3,7 @@ import {open,mkdir,readFile} from 'node:fs/promises';
 export const publicationId = manifest => createHash('sha256').update(JSON.stringify(manifest)).digest('hex');
 export function integrityError(record, manifest) {
     const audit=record.resourceIntegrity;
-    if (!audit?.success || audit.errors?.length || audit.publicationId !== publicationId(manifest) || !audit.checked?.length)
+    if (audit?.success !== true || !Array.isArray(audit.errors) || audit.errors.length || audit.publicationId !== publicationId(manifest) || !Array.isArray(audit.checked) || !audit.checked.length || !Array.isArray(audit.loadedPaths))
         return 'unverified publication resources';
     const variant=manifest.Variants.find(v=>v.Name===record.variant);
     const assets=new Map((variant?.Assets || []).map(a=>['/'+a.Path,a.Sha256.toLowerCase()]));
@@ -15,6 +15,8 @@ export function integrityError(record, manifest) {
     }
     for(const path of ['/_content/Bench.Shared/bench.js','/_content/Bench.Shared/analytics.js','/_content/Bench.Shared/bench-configs.js'])
         if(!seen.has(path)) return 'missing driver resource check';
+    if(new Set(audit.loadedPaths).size !== audit.loadedPaths.length || audit.loadedPaths.length !== seen.size || audit.loadedPaths.some(path=>!seen.has(path)))
+        return 'incomplete loaded resource checks';
     return null;
 }
 export function protectHtml(html, assets) {

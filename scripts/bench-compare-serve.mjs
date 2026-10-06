@@ -64,10 +64,11 @@ for(let round=0;round<rounds;round++){
                     const record=JSON.parse(body);
                     if(record.variant!==variant.Name||record.round!==round||!['cold','warm'].includes(record.cache))
                         {res.writeHead(400).end();return;}
+                    // Retain failed resource audits too; summary must explain their failure.
+                    await writeFile(join(results,'round-'+round+'-'+variant.Name+'-'+record.cache+'.json'),body);
                     if(mode==='interactions' && (record.kind!=='picker-interactions-v3' || integrityError(record,manifest))){
                         res.writeHead(409,{'Content-Type':'application/json'}).end(JSON.stringify({error:'unverified publication resources'}));return;
                     }
-                    await writeFile(join(results,'round-'+round+'-'+variant.Name+'-'+record.cache+'.json'),body);
                     console.log('saved',round,variant.Name,record.cache,record.success,record.startup?.appReadyMs);
                     const index=schedule.findIndex(item=>item.port===port);
                     const next=record.cache==='cold'?schedule[index].url.replace('cache=cold','cache=warm'):schedule[index+1]?.url;
