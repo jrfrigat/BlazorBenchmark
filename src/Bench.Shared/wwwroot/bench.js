@@ -50,13 +50,15 @@
         for (const [name, values] of Object.entries(group.samples)) group.summary[name] = {
             dom:stats(values.map(v=>v.domMs)), frame:stats(values.map(v=>v.frameMs))};
     }
+    async function prepareInput(input) {
+        // Focus-driven mask setup is preparation, outside text-to-value latency.
+        input.focus(); await frame(); await frame();
+    }
     function setInput(input, text) {
-        input.focus();
         Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,text);
         input.dispatchEvent(new Event('input',{bubbles:true,composed:true}));
         input.dispatchEvent(new Event('change',{bubbles:true,composed:true}));
         input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,composed:true}));
-        input.blur();
     }
     const firstDate = () => document.querySelector('.bench-date');
     const firstTime = () => document.querySelector('.bench-time');
@@ -121,16 +123,18 @@
                     }
                     for(let i=0;i<REPEATS;i++){
                         const number=i%2 ? 15 : 14;
-                        add(g,'typeDateCommit',await timed(()=>setInput(c.dateInput(firstDate()),'10/'+number+'/2026'),
+                        const input=c.dateInput(firstDate()); await prepareInput(input);
+                        add(g,'typeDateCommit',await timed(()=>setInput(input,'10/'+number+'/2026'),
                             ()=>value()==='2026-10-'+number,'typed date commit'));
-                        await closeDate(c);
+                        input.blur(); await frame(); await closeDate(c);
 
                     }
                 }
                 if(dates){
                     for(let i=0;i<REPEATS;i++){
-                        setInput(c.dateInput(firstDate()),'10/14/2026');
-                        await until(()=>value()==='2026-10-14','selection reset');await closeDate(c);
+                        const input=c.dateInput(firstDate()); await prepareInput(input);
+                        setInput(input,'10/14/2026');
+                        await until(()=>value()==='2026-10-14','selection reset');input.blur();await frame();await closeDate(c);
                         await c.openDate(firstDate());await until(c.calendarReady,'date for selection');await frame();
                         const selectStart=performance.now();
                         add(g,'selectDay',await timed(()=>c.pickDay(15),()=>value()==='2026-10-15','select day'));
