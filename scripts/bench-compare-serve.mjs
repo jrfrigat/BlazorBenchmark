@@ -4,7 +4,8 @@ import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir, stat, readdir } from 'node:fs/promises';
 import { resolve, join, extname, relative, isAbsolute } from 'node:path';
 
-const [pubArg, resultArg, baseArg='6200', roundsArg='10', delayArg='40'] = process.argv.slice(2);
+const [pubArg, resultArg, baseArg='6200', roundsArg='10', delayArg='40', mode='startup'] = process.argv.slice(2);
+if (!['startup','interactions'].includes(mode)) throw new Error('invalid mode');
 if (!pubArg || !resultArg) throw new Error('publication and results directories required');
 const publication=resolve(pubArg), results=resolve(resultArg);
 const base=Number(baseArg), rounds=Number(roundsArg), delay=Number(delayArg);
@@ -31,7 +32,7 @@ for(let round=0;round<rounds;round++){
         if (nextPort > 65535) throw new Error('port range exceeds 65535');
         const port=nextPort++, root=join(publication,variant.Name,'publish/wwwroot');
         schedule.push({round,variant:variant.Name,port,url:'http://localhost:'+port+
-            '/?run=1&save=1&variant='+variant.Name+'&round='+round+'&cache=cold'});
+            '/?run=1&save=1&variant='+variant.Name+'&round='+round+'&cache=cold&mode='+mode});
         createServer(async(req,res)=>{
             try {
                 const url=new URL(req.url,'http://localhost:'+port);

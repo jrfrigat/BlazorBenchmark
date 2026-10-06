@@ -7,6 +7,11 @@
 <main class="bench">
     <h1>@Title</h1>
     <button id="bench-mount" type="button" @onclick="Mount">Mount @Count</button>
+    <button id="bench-single-date" type="button" @onclick='() => Shape("date")'>One date</button>
+    <button id="bench-single-time" type="button" @onclick='() => Shape("time")'>One time</button>
+    <button id="bench-many" type="button" @onclick='() => Shape("mixed")'>50 date + 50 time</button>
+    <button id="bench-rerender" type="button" @onclick="() => _renderVersion++">Rerender container</button>
+    <span id="bench-shape">@_shape</span><span id="bench-render-version">@_renderVersion</span>
     <button id="bench-unmount" type="button" @onclick="Unmount">Unmount</button>
     <button id="bench-analytics" type="button" @onclick="RunAnalytics">Measure startup on reload</button>
     <button id="bench-interactions" type="button" @onclick="RunInteractions">Measure picker interactions</button>
@@ -15,20 +20,20 @@
     @if (_mounted)
     {
         <section class="bench-dates">
-            @for (var i = 0; i < Count; i++)
+            @for (var i = 0; i < DateCount; i++)
             {
                 var index = i;
                 <div class="bench-date" @key="index">@Date(index)</div>
             }
         </section>
         <section class="bench-times">
-            @for (var i = 0; i < Count; i++)
+            @for (var i = 0; i < TimeCount; i++)
             {
                 var index = i;
                 <div class="bench-time" @key="index">@Time(index)</div>
             }
         </section>
-        <span id="bench-mounted"></span>
+        <span id="bench-mounted" data-dates="@DateCount" data-times="@TimeCount"></span>
     }
     <pre id="bench-report"></pre>
 </main>
@@ -46,6 +51,11 @@
     [Parameter] public int Count { get; set; } = 50;
 
     private bool _mounted;
+    private string _shape = "mixed";
+    private int _renderVersion;
+    private int DateCount => _shape == "time" ? 0 : _shape == "date" ? 1 : Count;
+    private int TimeCount => _shape == "date" ? 0 : _shape == "time" ? 1 : Count;
+    private void Shape(string shape) { _mounted = false; _shape = shape; }
 
     private void Mount() => _mounted = true;
     private void Unmount() => _mounted = false;

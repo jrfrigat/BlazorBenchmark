@@ -1,122 +1,157 @@
-// Драйвер замера date/time-пикеров, общий для пяти приложений Bench.*. Приложение описывает только
-// свою разметку в window.benchConfig (как открыть календарь, где следующий месяц, как закрыть);
-// сценарии, тайминг и отчет одинаковы, поэтому разница в цифрах - это разница библиотек.
-//
-// Время шага - от действия до первого кадра, в котором DOM уже показывает результат:
-// ждем условие (MutationObserver + проверка в каждом кадре), затем еще один requestAnimationFrame.
+// Shared, repeatable date/time interactions. Startup and transfer sizes are excluded.
+// DOM completion and first-frame latency are separate: a 60 Hz frame must not hide CPU differences.
 (function () {
     'use strict';
-
-    var TIMEOUT_MS = 10000;
-
-    function frame() { return new Promise(function (r) { requestAnimationFrame(function () { r(); }); }); }
-
+    const REPEATS = 8, TIMEOUT_MS = 10000;
+    let busy = false;
+    function frame() { return new Promise(resolve => requestAnimationFrame(resolve)); }
+    function visible() {
+        if (document.visibilityState !== 'visible') throw new Error('interaction measurement requires a visible document');
+    }
     function until(check, what) {
-        return new Promise(function (resolve, reject) {
-            if (check()) { resolve(); return; }
-            var done = false;
-            var observer = new MutationObserver(function () { if (!done && check()) finish(); });
-            function finish() { done = true; observer.disconnect(); resolve(); }
-            observer.observe(document.body, { childList: true, subtree: true, attributes: true, characterData: true });
-            var started = performance.now();
-            (function poll() {
+        return new Promise((resolve, reject) => {
+            const start = performance.now();
+            let done = false;
+            const observer = new MutationObserver(() => { if (!done) { try { if (check()) finish(); } catch(error) { finish(error); } } });
+            function finish(error) {
+                done = true; observer.disconnect();
+                if (error) reject(error); else resolve();
+            }
+            function poll() {
                 if (done) return;
-                if (check()) { finish(); return; }
-                if (performance.now() - started > TIMEOUT_MS) { done = true; observer.disconnect(); reject(new Error('timeout: ' + what)); return; }
+                try {
+                    if (check()) { finish(); return; }
+                    if (performance.now() - start > TIMEOUT_MS) { finish(new Error('timeout: ' + what)); return; }
+                } catch (error) { finish(error); return; }
                 requestAnimationFrame(poll);
-            })();
+            }
+            observer.observe(document.body, {childList:true, subtree:true, attributes:true, characterData:true});
+            poll();
         });
     }
-
     async function timed(action, check, what) {
-        var t0 = performance.now();
+        visible();
+        const start = performance.now();
         await action();
         await until(check, what);
+        const domMs = performance.now() - start;
         await frame();
-        return performance.now() - t0;
+        visible();
+        return {domMs, frameMs:performance.now() - start};
     }
-
-    function median(values) {
-        var s = values.slice().sort(function (a, b) { return a - b; });
-        var m = Math.floor(s.length / 2);
-        return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+    function stats(values) {
+        if (!values.length || values.some(v => !Number.isFinite(v) || v < 0)) throw new Error('invalid timing samples');
+        const s = [...values].sort((a,b) => a-b), n=s.length;
+        return {n, median:n%2 ? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2,
+            p95:s[Math.ceil(n*.95)-1], min:s[0], max:s[n-1]};
     }
-
-    function round(v) { return Math.round(v * 10) / 10; }
-
-    function firstDate() { return document.querySelector('.bench-date'); }
-    function firstTime() { return document.querySelector('.bench-time'); }
-
+    function add(group, name, sample) { (group.samples[name] ??= []).push(sample); }
+    function summaries(group) {
+        for (const [name, values] of Object.entries(group.samples)) group.summary[name] = {
+            dom:stats(values.map(v=>v.domMs)), frame:stats(values.map(v=>v.frameMs))};
+    }
     function setInput(input, text) {
-        // Native setter, so frameworks that track the value property see the change.
-        var setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
         input.focus();
-        setter.call(input, text);
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        input.dispatchEvent(new Event('change', { bubbles: true }));
-        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,text);
+        input.dispatchEvent(new Event('input',{bubbles:true,composed:true}));
+        input.dispatchEvent(new Event('change',{bubbles:true,composed:true}));
+        input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,composed:true}));
         input.blur();
     }
-
-    async function run() {
-        var c = window.benchConfig;
-        if (!c) throw new Error('window.benchConfig is not defined');
-        var r = { library: c.library, scenarios: {} };
-
-        if (document.getElementById('bench-mounted')) {
-            document.getElementById('bench-unmount').click();
-            await until(function () { return !document.getElementById('bench-mounted'); }, 'unmount before interactions');
-            await frame();
-        }
-        var nodesBefore = document.getElementsByTagName('*').length;
-        r.scenarios.mount = round(await timed(
-            function () { document.getElementById('bench-mount').click(); },
-            function () { return !!document.getElementById('bench-mounted') && c.mounted(); }, 'mount'));
-        r.domNodesPer100Fields = document.getElementsByTagName('*').length - nodesBefore;
-
-        // First open is cold (the popup's code and styles run for the first time); the rest are warm.
-        var opens = [];
-        for (var i = 0; i < 6; i++) {
-            opens.push(await timed(function () { return c.openDate(firstDate()); }, c.calendarReady, 'openDate'));
-            if (i === 0) {
-                var titleBefore = c.title();
-                var steps = [];
-                for (var m = 0; m < 12; m++) {
-                    var before = c.title();
-                    steps.push(await timed(function () { c.next().click(); }, function () { return c.title() !== before; }, 'nextMonth'));
-                }
-                r.scenarios.nextMonthMedian = round(median(steps));
-                r.scenarios.nextMonthMax = round(Math.max.apply(null, steps));
-                r.titleAfter12 = c.title() + ' (from ' + titleBefore + ')';
-            }
-            await c.closeDate();
-            await until(function () { return !c.calendarReady(); }, 'closeDate');
-            await frame();
-        }
-        r.scenarios.openDateCold = round(opens[0]);
-        r.scenarios.openDateWarm = round(median(opens.slice(1)));
-
-        r.scenarios.typeDate = round(await timed(
-            function () { setInput(c.dateInput(firstDate()), c.typed); },
-            function () { return document.getElementById('bench-value').textContent.trim() === '2026-10-15'; }, 'typeDate'));
-
-        var times = [];
-        for (var t = 0; t < 4; t++) {
-            times.push(await timed(function () { return c.openTime(firstTime()); }, c.timeReady, 'openTime'));
-            await c.closeTime();
-            await until(function () { return !c.timeReady(); }, 'closeTime');
-            await frame();
-        }
-        r.scenarios.openTimeCold = round(times[0]);
-        r.scenarios.openTimeWarm = round(median(times.slice(1)));
-
-        r.startup = window.shopDiagnostics ? window.shopDiagnostics.collect() : null;
-        window.benchResult = r;
-        r.success = true;
-        var output = document.getElementById('bench-report');
-        if (output) output.textContent = JSON.stringify(r, null, 2);
-        return r;
+    const firstDate = () => document.querySelector('.bench-date');
+    const firstTime = () => document.querySelector('.bench-time');
+    const value = () => document.getElementById('bench-value').textContent.trim();
+    const click = id => document.getElementById(id).click();
+    async function unmount() {
+        click('bench-unmount');
+        await until(()=>!document.getElementById('bench-mounted'),'unmount');
+        await frame();
     }
+    async function closeDate(c) {
+        if (!c.calendarReady()) return;
+        await c.closeDate();
+        await until(()=>!c.calendarReady(),'close date');
+        await frame();
+    }
+    async function run() {
+        if (busy) throw new Error('interactions already running');
+        busy = true;
+        const c = window.benchConfig;
+        const result = {kind:'picker-interactions-v2', library:c.library, repeats:REPEATS, success:false,
+            protocol:'one date; one time; 50 dates + 50 times, unchanged container rerender, synthetic full input/commit and day selection',
+            environment:{userAgent:navigator.userAgent, viewport:[innerWidth,innerHeight],
+                hardwareConcurrency:navigator.hardwareConcurrency, devicePixelRatio,
+                visibility:document.visibilityState, themeClasses:document.documentElement.className,
+                serviceWorker:!!navigator.serviceWorker?.controller}, groups:{}, errors:[],
+            exclusions:['Startup/transfer size','Trusted keyboard/IME/touch UX','Time value selection: unlike popup models','DateTime/Range performance: no common adapter']};
+        try {
+            visible();
+            const frames=[];
+            await frame();
+            for(let i=0;i<REPEATS;i++){const start=performance.now();await frame();frames.push(performance.now()-start);}
+            result.environment.frameBaseline=stats(frames);
+            for (const [shape,button,dates,times] of [['date','bench-single-date',1,0],['time','bench-single-time',0,1],['mixed','bench-many',50,50]]) {
+                await unmount();click(button);
+                await until(()=>document.getElementById('bench-shape').textContent===shape,'shape');
+                const g=result.groups[shape]={dates,times,samples:{},summary:{}};
+                const ready=()=>{
+                    const marker=document.getElementById('bench-mounted');
+                    return marker && Number(marker.dataset.dates)===dates && Number(marker.dataset.times)===times &&
+                        document.querySelectorAll('.bench-date').length===dates &&
+                        document.querySelectorAll('.bench-time').length===times &&
+                        c.mounted(times) && (!dates || !!c.dateInput(firstDate()));
+                };
+                const before=document.getElementsByTagName('*').length;
+                add(g,'firstMount',await timed(()=>click('bench-mount'),ready,'mount '+shape));
+                g.domNodes=document.getElementsByTagName('*').length-before;
+                for(let i=0;i<REPEATS;i++){
+                    await unmount();add(g,'remount',await timed(()=>click('bench-mount'),ready,'remount'));
+                    const previous=document.getElementById('bench-render-version').textContent;
+                    add(g,'parentRerender',await timed(()=>click('bench-rerender'),
+                        ()=>document.getElementById('bench-render-version').textContent!==previous,'parent rerender'));
+                }
+                if(dates){
+                    for(let i=0;i<=REPEATS;i++){
+                        add(g,i===0?'firstOpenDate':'openDate',await timed(()=>c.openDate(firstDate()),c.calendarReady,'open date'));
+                        if(i>0){
+                            const beforeTitle=c.title();
+                            add(g,'nextMonth',await timed(()=>c.next().click(),()=>c.title()!==beforeTitle,'next month'));
+                        }
+                        await closeDate(c);
+                    }
+                    for(let i=0;i<REPEATS;i++){
+                        const number=i%2 ? 15 : 14;
+                        add(g,'typeDateCommit',await timed(()=>setInput(c.dateInput(firstDate()),'10/'+number+'/2026'),
+                            ()=>value()==='2026-10-'+number,'typed date commit'));
+                        await closeDate(c);
 
-    window.bench = { run: run, until: until, frame: frame };
+                    }
+                }
+                if(dates){
+                    for(let i=0;i<REPEATS;i++){
+                        setInput(c.dateInput(firstDate()),'10/14/2026');
+                        await until(()=>value()==='2026-10-14','selection reset');await closeDate(c);
+                        await c.openDate(firstDate());await until(c.calendarReady,'date for selection');await frame();
+                        add(g,'selectDay',await timed(()=>c.pickDay(15),()=>value()==='2026-10-15','select day'));
+                        await closeDate(c);
+                    }
+                }
+                if(times){
+                    for(let i=0;i<=REPEATS;i++){
+                        add(g,i===0?'firstOpenTime':'openTime',await timed(()=>c.openTime(firstTime()),c.timeReady,'open time'));
+                        await c.closeTime();await until(()=>!c.timeReady(),'close time');await frame();
+                    }
+                }
+                summaries(g);
+            }
+            result.success=true;
+        } catch(error) {result.errors.push(String(error));}
+        finally {
+            busy=false;window.benchResult=result;
+            const output=document.getElementById('bench-report');if(output)output.textContent=JSON.stringify(result,null,2);
+            document.documentElement.dataset.benchComplete=result.success?'pass':'fail';
+        }
+        return result;
+    }
+    window.bench={run,until,frame,stats};
 })();

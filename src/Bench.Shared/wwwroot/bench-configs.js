@@ -41,10 +41,18 @@
         });
     };
 
+    function day(root, selector, number) {
+        const found = Array.from(root.querySelectorAll(selector)).find(e =>
+            e.textContent.trim() === String(number) && !e.disabled && e.getAttribute('aria-disabled') !== 'true');
+        if (!found) throw new Error('enabled current-month day missing: ' + number);
+        press(found);
+    }
+
     window.benchConfigs = {
         Flare: {
             library: 'Flare',
-            mounted: function () { return all('.bench-time .flare-input__toggle').length >= 50; },
+            pickDay: n => day(q('.flare-datepicker__panel[role=dialog]'), '[role=gridcell]', n),
+            mounted: function (count = 50) { return all('.bench-time .flare-input__toggle').length >= count; },
             openDate: function (f) { press(f.querySelector('.flare-input__toggle')); },
             // Shown, not only rendered: the panel counts once it is placed in the top layer.
             calendarReady: function () { return !!q('.flare-datepicker__panel[role=dialog]:popover-open button[role=gridcell]'); },
@@ -59,7 +67,8 @@
         },
         MudBlazor: {
             library: 'MudBlazor',
-            mounted: function () { return all('.bench-time .mud-input-adornment button').length >= 50; },
+            pickDay: n => day(q('.mud-popover-open'), '.mud-day', n),
+            mounted: function (count = 50) { return all('.bench-time .mud-input-adornment button').length >= count; },
             openDate: function (f) { press(f.querySelector('.mud-input-adornment button')); },
             calendarReady: function () { return !!q('.mud-popover-open .mud-day'); },
             next: function () { return last('.mud-popover-open .mud-picker-calendar-header-switch button'); },
@@ -73,7 +82,8 @@
         },
         Radzen: {
             library: 'Radzen',
-            mounted: function () { return all('.bench-time .rz-datepicker-trigger').length >= 50; },
+            pickDay: n => day(radzenPopup(), 'td', n),
+            mounted: function (count = 50) { return all('.bench-time .rz-datepicker-trigger').length >= count; },
             openDate: function (f) { press(f.querySelector('.rz-datepicker-trigger')); },
             calendarReady: function () { var p = radzenPopup(); return !!(p && p.querySelector('td')); },
             next: function () { return radzenPopup().querySelector('button[aria-label="Next month"]'); },
@@ -87,7 +97,8 @@
         },
         Blazorise: {
             library: 'Blazorise',
-            mounted: function () { return all('.bench-time .timepicker input').length >= 50; },
+            pickDay: n => day(blazoriseCalendar(), '.datepicker-day', n),
+            mounted: function (count = 50) { return all('.bench-time .timepicker input').length >= count; },
             openDate: function (f) { var i = f.querySelector('input'); i.focus(); press(i); },
             calendarReady: function () { var c = blazoriseCalendar(); return !!(c && c.querySelector('.datepicker-day')); },
             next: function () { return blazoriseCalendar().querySelector('[aria-label="Next month"]'); },
@@ -104,13 +115,14 @@
         },
         FluentUI: {
             library: 'FluentUI',
-            mounted: function () { return all('.bench-time fluent-dropdown').length >= 50; },
+            pickDay: n => day(fluentPopover(), '.day', n),
+            mounted: function (count = 50) { return all('.bench-time fluent-dropdown').length >= count; },
             openDate: function (f) { press(f.querySelector('svg[role=button]')); },
             calendarReady: function () { var p = fluentPopover(); return !!(p && p.querySelector('.fluent-calendar .day')); },
             next: function () { return fluentPopover().querySelector('.fluent-calendar .next'); },
             title: function () { return text(fluentPopover(), '.fluent-calendar .title .label'); },
             closeDate: function () { fluentPopover().closePopover(); },
-            dateInput: function (f) { return f.querySelector('fluent-text-input').shadowRoot.querySelector('input'); },
+            dateInput: function (f) { return f.querySelector('fluent-text-input')?.shadowRoot?.querySelector('input'); },
             typed: '10/15/2026',
             openTime: function (f) { press(f.querySelector('fluent-dropdown')); },
             timeReady: function () { return !!q('.bench-time fluent-listbox:popover-open'); },
