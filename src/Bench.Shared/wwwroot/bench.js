@@ -55,8 +55,9 @@
         input.focus(); await frame(); await frame();
     }
     function setInput(input, text) {
-        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,text);
-        input.dispatchEvent(new Event('input',{bubbles:true,composed:true}));
+        // Honor the field's value setter: input masks keep an editing buffer there.
+        input.value=text;
+        input.dispatchEvent(new InputEvent('input',{bubbles:true,composed:true,inputType:'insertReplacementText',data:text}));
         input.dispatchEvent(new Event('change',{bubbles:true,composed:true}));
         input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,composed:true}));
     }
