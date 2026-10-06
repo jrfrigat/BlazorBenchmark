@@ -132,6 +132,8 @@
                     }
                 }
                 if(dates){
+                    // Reset browsing state uniformly: some calendars retain the browsed month after typing.
+                    await unmount();click('bench-mount');await until(ready,'selection mount');await frame();
                     for(let i=0;i<REPEATS;i++){
                         const input=c.dateInput(firstDate()); await prepareInput(input);
                         setInput(input,'10/14/2026');
