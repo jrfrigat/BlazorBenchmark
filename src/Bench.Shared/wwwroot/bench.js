@@ -80,7 +80,7 @@
         if (busy) throw new Error('interactions already running');
         busy = true;
         const c = window.benchConfig;
-        const result = {kind:'picker-interactions-v2', library:c.library, repeats:REPEATS, success:false,
+        const result = {kind:'picker-interactions-v3', library:c.library, repeats:REPEATS, success:false,
             protocol:'one date; one time; 50 dates + 50 times, unchanged container rerender, synthetic full input/commit and day selection',
             environment:{userAgent:navigator.userAgent, viewport:[innerWidth,innerHeight],
                 hardwareConcurrency:navigator.hardwareConcurrency, devicePixelRatio,

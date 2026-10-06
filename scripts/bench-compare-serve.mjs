@@ -1,10 +1,12 @@
 // Serve a fresh origin per variant/round; reuse that origin for the warm reload.
-// node scripts/bench-compare-serve.mjs <publication> <results> [basePort=6200] [rounds=10] [delay=40]
+// node scripts/bench-compare-serve.mjs <publication> <results> [basePort=6940] [rounds=10] [delay=40]
 import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir, stat, readdir } from 'node:fs/promises';
-import { resolve, join, extname, relative, isAbsolute } from 'node:path';
+import { resolve, join, extname, relative, isAbsolute, dirname } from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {publicationId,integrityError,protectHtml,reserveOrigins} from './bench-resource-integrity.mjs';
 
-const [pubArg, resultArg, baseArg='6200', roundsArg='10', delayArg='40', mode='startup'] = process.argv.slice(2);
+const [pubArg, resultArg, baseArg='6940', roundsArg='10', delayArg='40', mode='startup'] = process.argv.slice(2);
 if (!['startup','interactions'].includes(mode)) throw new Error('invalid mode');
 if (!pubArg || !resultArg) throw new Error('publication and results directories required');
 const publication=resolve(pubArg), results=resolve(resultArg);
@@ -23,6 +25,15 @@ const types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'
 async function exists(path) {try{return (await stat(path)).isFile();}catch{return false;}}
 // Avoid ports blocked by Chromium (the validated range starts above 1023).
 const blockedPorts = new Set([1719,1720,1723,2049,3659,4045,5060,5061,6000,6566,6665,6666,6667,6668,6669,6697,10080]);
+const id=publicationId(manifest);
+
+const ledger=resolve(dirname(fileURLToPath(import.meta.url)),'../.claude/tests/bench-origin-ledger');
+// Historical comparison and diagnostic origins had no journal; never reuse them.
+if(base <= 6921 && base + rounds * manifest.Variants.length >= 6200) throw new Error('legacy origin range 6200-6921 is reserved');
+const reserved=[];
+let planned=base;
+for(let i=0;i<rounds*manifest.Variants.length;i++){while(blockedPorts.has(planned))planned++;reserved.push(planned++);}
+await reserveOrigins(ledger,reserved,id);
 const schedule=[];
 let nextPort = base;
 for(let round=0;round<rounds;round++){
@@ -31,11 +42,21 @@ for(let round=0;round<rounds;round++){
         while (blockedPorts.has(nextPort)) nextPort++;
         if (nextPort > 65535) throw new Error('port range exceeds 65535');
         const port=nextPort++, root=join(publication,variant.Name,'publish/wwwroot');
+        const guard=await readFile(join(root,'_content/Bench.Shared/resource-integrity.js'));
+        const guardAsset=variant.Assets.find(a=>a.Path==='_content/Bench.Shared/resource-integrity.js');
+        if(!guardAsset) throw new Error('publication has no integrity guard');
+        const guardSri='sha256-'+Buffer.from(guardAsset.Sha256,'hex').toString('base64');
         schedule.push({round,variant:variant.Name,port,url:'http://localhost:'+port+
             '/?run=1&save=1&variant='+variant.Name+'&round='+round+'&cache=cold&mode='+mode});
         createServer(async(req,res)=>{
             try {
                 const url=new URL(req.url,'http://localhost:'+port);
+                if(url.pathname==='/__manifest'){
+                    res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'}).end(JSON.stringify({publicationId:id,assets:variant.Assets}));return;
+                }
+                if(url.pathname==='/__integrity.js'){
+                    res.writeHead(200,{'Content-Type':'text/javascript','Cache-Control':'no-store'}).end(guard);return;
+                }
                 if(url.pathname==='/__results'){
                     if(req.method!=='POST'){res.writeHead(405).end();return;}
                     let body='';
@@ -43,6 +64,9 @@ for(let round=0;round<rounds;round++){
                     const record=JSON.parse(body);
                     if(record.variant!==variant.Name||record.round!==round||!['cold','warm'].includes(record.cache))
                         {res.writeHead(400).end();return;}
+                    if(mode==='interactions' && (record.kind!=='picker-interactions-v3' || integrityError(record,manifest))){
+                        res.writeHead(409,{'Content-Type':'application/json'}).end(JSON.stringify({error:'unverified publication resources'}));return;
+                    }
                     await writeFile(join(results,'round-'+round+'-'+variant.Name+'-'+record.cache+'.json'),body);
                     console.log('saved',round,variant.Name,record.cache,record.success,record.startup?.appReadyMs);
                     const index=schedule.findIndex(item=>item.port===port);
@@ -55,6 +79,10 @@ for(let round=0;round<rounds;round++){
                 if(rel.startsWith('..')||isAbsolute(rel)){res.writeHead(403).end();return;}
                 let found=await exists(path)?path:!extname(url.pathname)?join(root,'index.html'):null;
                 if(!found||!await exists(found)){res.writeHead(404).end();return;}
+                if(extname(found)==='.html'){
+                    const html=protectHtml(await readFile(found,'utf8'),variant.Assets).replace('</head>', '<script src="/__integrity.js?publication='+id+'" integrity="'+guardSri+'"></script></head>');
+                    res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}).end(html);return;
+                }
                 const headers={'Content-Type':types[extname(found)]||'application/octet-stream',
                     'Vary':'Accept-Encoding','Cache-Control':extname(found)==='.html'?'no-cache':'public, max-age=3600'};
                 const br=(req.headers['accept-encoding']||'').includes('br')&&await exists(found+'.br');

@@ -147,6 +147,13 @@
         result.variant = params.get('variant') || benchConfig.library;
         result.round = Number(params.get('round') || 0);
         result.cache = params.get('cache') || 'manual';
+        try {
+            result.resourceIntegrity = await benchIntegrity.audit();
+            if (!result.resourceIntegrity.success) { result.success = false; result.errors.push(...result.resourceIntegrity.errors); }
+        } catch(error) { result.success = false; result.errors.push('resource audit: ' + error); }
+        document.documentElement.dataset.benchComplete = result.success ? 'pass' : 'fail';
+        const output = document.getElementById('bench-report');
+        if (output) output.textContent = JSON.stringify(result, null, 2);
         window.benchAnalyticsResult = result;
         if (params.get('save') === '1') {
             const response = await fetch('/__results', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(result)});

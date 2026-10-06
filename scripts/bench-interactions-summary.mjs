@@ -3,6 +3,7 @@ import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import {integrityError} from './bench-resource-integrity.mjs';
 const context={window:{}};
 vm.runInNewContext(await readFile(new URL('../src/Bench.Shared/wwwroot/bench.js',import.meta.url),'utf8'),context);
 export const stats = values => JSON.parse(JSON.stringify(context.window.bench.stats(values)));
@@ -11,7 +12,7 @@ const date={firstOpenDate:1,openDate:8,nextMonth:8,typeDateCommit:8,selectDay:8,
 const time={firstOpenTime:1,openTime:8};
 export const contract={date:{dates:1,times:0,metrics:{...base,...date}},
     time:{dates:0,times:1,metrics:{...base,...time}},mixed:{dates:50,times:50,metrics:{...base,...date,...time}}};
-export function summarize(records,schedule) {
+export function summarize(records,schedule,manifest) {
     if (!schedule.length || schedule.some(s=>!Number.isInteger(s.round)||s.round<0||typeof s.variant!=='string'||!s.variant)) throw new Error('invalid schedule');
     const expected=new Set(schedule.flatMap(s=>['cold','warm'].map(cache=>s.round+':'+s.variant+':'+cache)));
     if (expected.size!==schedule.length*2) throw new Error('duplicate schedule identity');
@@ -22,7 +23,9 @@ export function summarize(records,schedule) {
         if(!expected.has(key))reason='unexpected identity';
         else if(seen.has(key))reason='duplicate identity';
         seen.add(key);
-        if(r.kind!=='picker-interactions-v2'||!r.success||r.errors?.length)reason??='failed interaction run';
+        if(r.kind!=='picker-interactions-v3'||!r.success||r.errors?.length)reason??='failed interaction run';
+        if(!manifest) reason??='missing publication manifest';
+        else reason??=integrityError(r,manifest);
         if(r.environment?.visibility!=='visible'||r.environment?.serviceWorker)reason??='invalid environment';
         for(const [shape,c] of Object.entries(contract)){
             const g=r.groups?.[shape];
@@ -48,7 +51,7 @@ export function summarize(records,schedule) {
     for(const variant of Object.values(variants)) for(const group of Object.values(variant))
         for(const m of Object.values(group)){m.dom=stats(m.domSamples);m.frame=stats(m.frameSamples);}
     const missing=[...expected].filter(key=>!seen.has(key));
-    return {kind:'picker-interactions-v2',expectedRuns:expected.size,runs:records.length,missing,failures,variants,
+    return {kind:'picker-interactions-v3',expectedRuns:expected.size,runs:records.length,missing,failures,variants,
         complete:missing.length===0&&failures.length===0&&records.length===expected.size};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
@@ -56,7 +59,8 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
     const schedule=JSON.parse(await readFile(join(dir,'schedule.json'),'utf8'));
     const records=[];
     for(const name of await readdir(dir))if(/^round-\d+-.*\.json$/.test(name))records.push(JSON.parse(await readFile(join(dir,name),'utf8')));
-    const result=summarize(records,schedule);
+    const manifest=JSON.parse((await readFile(join(dir,'manifest.json'),'utf8')).replace(/^\uFEFF/, ''));
+    const result=summarize(records,schedule,manifest);
     await writeFile(join(dir,'interactions-summary.json'),JSON.stringify(result,null,2));
     console.log(JSON.stringify({complete:result.complete,runs:result.runs,expected:result.expectedRuns,failures:result.failures,missing:result.missing},null,2));
     if(!result.complete)process.exitCode=1;
