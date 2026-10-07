@@ -5,7 +5,7 @@ import {stats} from './bench-interactions-summary.mjs';
 import {integrityError} from './bench-resource-integrity.mjs';
 export const metrics={firstMount:1,remount:8,parentRerender:8,firstOpen:1,open:8,firstSelect:1,select:8,firstType:1,type:8};
 export function timeError(r,manifest){
-    if(r.kind!=='time-values-v1'||r.success!==true||!Array.isArray(r.errors)||r.errors.length||r.repeats!==8)return 'failed time run';
+    if(r.kind!=='time-values-v2'||r.success!==true||!Array.isArray(r.errors)||r.errors.length||r.repeats!==8)return 'failed time run';
     if(!manifest)return 'missing manifest';
     const integrity=integrityError(r,manifest);if(integrity)return integrity;
     const variant=manifest.Variants.find(v=>v.Name===r.variant),library=variant?.Library;
@@ -54,7 +54,7 @@ export function summarize(records,schedule,manifest){
     }
     for(const v of Object.values(variants))for(const g of Object.values(v))for(const m of Object.values(g)){m.dom=stats(m.domSamples);m.frame=stats(m.frameSamples);}
     const missing=[...expected].filter(k=>!seen.has(k));
-    return {kind:'time-values-v1',expectedRuns:expected.size,runs:records.length,failures,missing,variants,complete:!failures.length&&!missing.length&&records.length===expected.size};
+    return {kind:'time-values-v2',expectedRuns:expected.size,runs:records.length,failures,missing,variants,complete:!failures.length&&!missing.length&&records.length===expected.size};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
     const dir=process.argv[2];if(!dir)throw new Error('results directory required');

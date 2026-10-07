@@ -25,7 +25,7 @@
             policy:'24h; 08:00..18:00; MinuteStep=15; seconds off; Dial permits individual minutes',
             selection:'Dial: synthetic digit keys and OK; Dropdown: two options and OK; List: one option',
             manual:'supported',
-            ready:model => model === 'List' ? listOpen() && !!flareList()?.querySelector('[role=option]') : !!flarePanel(),
+            ready:model => model === 'List' ? listOpen() && !!q('.flare-timepicker [popover]:popover-open [role=listbox] [role=option]') : !!flarePanel(),
             close:model => {
                 if(model === 'List') key(input(),'Escape');
                 else key(flarePanel(),'Escape');

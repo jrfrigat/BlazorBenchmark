@@ -68,7 +68,7 @@ for(let round=0;round<rounds;round++){
                         {res.writeHead(400).end();return;}
                     // Retain failed resource audits too; summary must explain their failure.
                     await writeFile(join(results,'round-'+round+'-'+variant.Name+'-'+record.cache+'.json'),body);
-                    if(mode!=='startup' && (record.kind!==(mode==='time-values'?'time-values-v1':'picker-interactions-v3') || integrityError(record,manifest))){
+                    if(mode!=='startup' && (record.kind!==(mode==='time-values'?'time-values-v2':'picker-interactions-v3') || integrityError(record,manifest))){
                         res.writeHead(409,{'Content-Type':'application/json'}).end(JSON.stringify({error:'unverified publication resources'}));return;
                     }
                     console.log('saved',round,variant.Name,record.cache,record.success,record.startup?.appReadyMs);

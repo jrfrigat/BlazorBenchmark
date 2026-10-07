@@ -16,7 +16,7 @@
     async function run(){
         if(busy)throw new Error('time measurement already running');busy=true;
         const c=benchTimeConfigs[benchConfig.library];
-        const result={kind:'time-values-v1',library:benchConfig.library,repeats:N,success:false,errors:[],groups:{},
+        const result={kind:'time-values-v2',library:benchConfig.library,repeats:N,success:false,errors:[],groups:{},
             protocol:'synthetic public DOM events; first component action is not cold runtime; 1 or 50 time fields',
             policy:c.policy,selection:c.selection,manual:c.manual,
             environment:{userAgent:navigator.userAgent,viewport:[innerWidth,innerHeight],devicePixelRatio,

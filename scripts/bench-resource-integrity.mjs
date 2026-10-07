@@ -13,7 +13,7 @@ export function integrityError(record, manifest) {
             return 'resource hash mismatch';
         seen.add(item.path);
     }
-    const extra=record.kind==='time-values-v1'?['/_content/Bench.Shared/time-configs.js','/_content/Bench.Shared/time-values.js']:[];
+    const extra=record.kind==='time-values-v2'?['/_content/Bench.Shared/time-configs.js','/_content/Bench.Shared/time-values.js']:[];
     for(const path of [...extra,'/_content/Bench.Shared/bench.js','/_content/Bench.Shared/analytics.js','/_content/Bench.Shared/bench-configs.js'])
         if(!seen.has(path)) return 'missing driver resource check';
     if(new Set(audit.loadedPaths).size !== audit.loadedPaths.length || audit.loadedPaths.length !== seen.size || audit.loadedPaths.some(path=>!seen.has(path)))

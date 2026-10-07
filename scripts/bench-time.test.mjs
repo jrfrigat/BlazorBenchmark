@@ -3,7 +3,7 @@ import {publicationId} from './bench-resource-integrity.mjs';
 import {metrics,summarize} from './bench-time-summary.mjs';
 const assets=['bench.js','analytics.js','bench-configs.js','time-configs.js','time-values.js'].map(n=>({Path:'_content/Bench.Shared/'+n,Sha256:'a'.repeat(64)}));
 const manifest={Variants:[{Name:'Flare',Library:'Flare',Assets:assets}]};
-function record(cache){return {kind:'time-values-v1',library:'Flare',variant:'Flare',round:0,cache,repeats:8,success:true,errors:[],modelOrder:['Dial','Dropdown','List'],
+function record(cache){return {kind:'time-values-v2',library:'Flare',variant:'Flare',round:0,cache,repeats:8,success:true,errors:[],modelOrder:['Dial','Dropdown','List'],
     environment:{visibility:'visible',serviceWorker:false,viewport:[926,1244]},
     resourceIntegrity:{success:true,errors:[],publicationId:publicationId(manifest),loadedPaths:assets.map(a=>'/'+a.Path),checked:assets.map(a=>({path:'/'+a.Path,expected:a.Sha256,actual:a.Sha256}))},
     groups:Object.fromEntries(['Dial','Dropdown','List'].flatMap(model=>[1,50].map(count=>[model+'/'+count,{model,count,samples:Object.fromEntries(Object.entries(metrics).map(([metric,n])=>[metric,Array.from({length:n},(_,i)=>{
@@ -37,3 +37,19 @@ const warm=structuredClone(single);warm.cache='warm';
 const plan=[{variant:'Flare-List',round:0}];assert.equal(summarize([single,warm],plan,planned).complete,true);
 const mixed=structuredClone(warm);mixed.modelOrder.push('Dial');assert.equal(summarize([single,mixed],plan,planned).complete,false);
 console.log('Independent popup model document checks passed');
+
+// Opening must wait for placement, as the Fluent adapter waits for its open popover.
+const {runInNewContext}=await import('node:vm');
+const {readFile}=await import('node:fs/promises');
+let placed=false;
+const rendered={querySelector:()=>({})},window={},document={querySelector:selector=>{
+    if(selector==='.flare-timepicker input[aria-expanded=true]')return {};
+    if(selector==='.flare-timepicker [role=listbox]')return rendered;
+    if(selector==='.flare-timepicker [popover]:popover-open [role=listbox] [role=option]')return placed?{}:null;
+    return null;
+}};
+runInNewContext(await readFile(new URL('../src/Bench.Shared/wwwroot/time-configs.js',import.meta.url),'utf8'),{window,document});
+assert.equal(window.benchTimeConfigs.Flare.ready('List'),false);
+placed=true;assert.equal(window.benchTimeConfigs.Flare.ready('List'),true);
+const legacy=structuredClone(b);legacy.kind='time-values-v1';assert.equal(summarize([a,legacy],schedule,manifest).complete,false);
+console.log('List waits for top-layer placement; legacy readiness protocol rejected');
