@@ -25,3 +25,15 @@ for(const mutate of [r=>r.success=false,r=>r.repeats=4,r=>r.modelOrder.pop(),r=>
 assert.equal(summarize([a],schedule,manifest).complete,false);assert.equal(summarize([a,a],schedule,manifest).complete,false);
 assert.throws(()=>summarize([],[],manifest));assert.throws(()=>summarize([],[...schedule,...schedule],manifest));
 console.log('Time value summary regression checks passed');
+
+const {timeManifest}=await import('./bench-time-plan.mjs');
+const planned=timeManifest({Variants:[...manifest.Variants,{Name:'MudBlazor',Library:'MudBlazor',Assets:assets}]});
+assert.deepEqual(planned.Variants.map(v=>v.Name),['Flare-Dial','Flare-Dropdown','Flare-List','MudBlazor']);
+assert.equal(planned.Variants[2].SourceVariant,'Flare');assert.equal(planned.Variants[2].TimeModel,'List');
+assert.equal(manifest.Variants.length,1);assert.throws(()=>timeManifest({Variants:[...manifest.Variants,...manifest.Variants]}));
+const single=record('cold');single.variant='Flare-List';single.modelOrder=['List'];single.groups=Object.fromEntries(Object.entries(single.groups).filter(([k])=>k.startsWith('List/')));
+single.resourceIntegrity.publicationId=publicationId(planned);
+const warm=structuredClone(single);warm.cache='warm';
+const plan=[{variant:'Flare-List',round:0}];assert.equal(summarize([single,warm],plan,planned).complete,true);
+const mixed=structuredClone(warm);mixed.modelOrder.push('Dial');assert.equal(summarize([single,mixed],plan,planned).complete,false);
+console.log('Independent popup model document checks passed');

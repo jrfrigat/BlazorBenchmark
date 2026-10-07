@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir, stat, readdir } from 'node:fs/promises';
 import { resolve, join, extname, relative, isAbsolute, dirname } from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {timeManifest} from './bench-time-plan.mjs';
 import {publicationId,integrityError,protectHtml,reserveOrigins} from './bench-resource-integrity.mjs';
 
 const [pubArg, resultArg, baseArg='6940', roundsArg='10', delayArg='40', mode='startup'] = process.argv.slice(2);
@@ -14,6 +15,7 @@ const base=Number(baseArg), rounds=Number(roundsArg), delay=Number(delayArg);
 if (![base, rounds, delay].every(Number.isInteger) || base<1024 || rounds<1 || rounds>50 || delay<0)
     throw new Error('invalid port, round count or delay');
 const manifest=JSON.parse((await readFile(join(publication,'manifest.json'),'utf8')).replace(/^\uFEFF/, ''));
+if(mode==='time-values') Object.assign(manifest,timeManifest(manifest));
 if (base + rounds * manifest.Variants.length - 1 > 65535) throw new Error('port range exceeds 65535');
 try { if ((await readdir(results)).length) throw new Error('Use a fresh results directory'); }
 catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -41,13 +43,13 @@ for(let round=0;round<rounds;round++){
     for(const variant of order){
         while (blockedPorts.has(nextPort)) nextPort++;
         if (nextPort > 65535) throw new Error('port range exceeds 65535');
-        const port=nextPort++, root=join(publication,variant.Name,'publish/wwwroot');
+        const port=nextPort++, root=join(publication,variant.SourceVariant||variant.Name,'publish/wwwroot');
         const guard=await readFile(join(root,'_content/Bench.Shared/resource-integrity.js'));
         const guardAsset=variant.Assets.find(a=>a.Path==='_content/Bench.Shared/resource-integrity.js');
         if(!guardAsset) throw new Error('publication has no integrity guard');
         const guardSri='sha256-'+Buffer.from(guardAsset.Sha256,'hex').toString('base64');
         schedule.push({round,variant:variant.Name,port,url:'http://localhost:'+port+
-            '/?run=1&save=1&variant='+variant.Name+'&round='+round+'&cache=cold&mode='+mode});
+            '/?run=1&save=1&variant='+variant.Name+'&round='+round+'&cache=cold&mode='+mode+(variant.TimeModel?'&model='+variant.TimeModel:'')});
         createServer(async(req,res)=>{
             try {
                 const url=new URL(req.url,'http://localhost:'+port);
@@ -97,4 +99,4 @@ await writeFile(join(results,'schedule.json'),JSON.stringify(schedule,null,2));
 console.log('Ready:',schedule.length,'origins,',rounds,'rounds, delay',delay);
 
 console.log('Open:',schedule[0].url+'&sequence=1');
-console.log('Summary: node scripts/bench-summary.mjs',results);
+console.log('Summary: node scripts/'+(mode==='time-values'?'bench-time-summary.mjs':mode==='interactions'?'bench-interactions-summary.mjs':'bench-summary.mjs'),results);

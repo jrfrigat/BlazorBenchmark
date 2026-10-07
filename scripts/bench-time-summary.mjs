@@ -8,10 +8,11 @@ export function timeError(r,manifest){
     if(r.kind!=='time-values-v1'||r.success!==true||!Array.isArray(r.errors)||r.errors.length||r.repeats!==8)return 'failed time run';
     if(!manifest)return 'missing manifest';
     const integrity=integrityError(r,manifest);if(integrity)return integrity;
-    const library=manifest.Variants.find(v=>v.Name===r.variant)?.Library;
+    const variant=manifest.Variants.find(v=>v.Name===r.variant),library=variant?.Library;
     if(library!==r.library)return 'library mismatch';
     if(r.environment?.visibility!=='visible'||r.environment?.serviceWorker!==false||!Array.isArray(r.environment.viewport)||r.environment.viewport.some(n=>!Number.isFinite(n)||n<=0))return 'invalid environment';
-    const models=library==='Flare'?['Dial','Dropdown','List']:['Default'];
+    const models=library==='Flare'?(variant.TimeModel?[variant.TimeModel]:['Dial','Dropdown','List']):['Default'];
+    if(variant.TimeModel&&!['Dial','Dropdown','List'].includes(variant.TimeModel))return 'invalid model manifest';
     if(r.modelOrder?.length!==models.length||new Set(r.modelOrder).size!==models.length||models.some(m=>!r.modelOrder.includes(m)))return 'incorrect models';
     const keys=models.flatMap(m=>[1,50].map(n=>m+'/'+n));
     if(!r.groups||Object.keys(r.groups).length!==keys.length||keys.some(k=>!r.groups[k]))return 'incorrect groups';

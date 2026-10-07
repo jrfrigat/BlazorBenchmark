@@ -23,7 +23,9 @@
                 hardwareConcurrency:navigator.hardwareConcurrency,visibility:document.visibilityState,
                 themeClasses:document.documentElement.className,serviceWorker:!!navigator.serviceWorker?.controller}};
         try{
-            let models=[...c.models];
+            const chosen=new URLSearchParams(location.search).get('model');
+            if(chosen && !c.models.includes(chosen))throw new Error('unknown popup model');
+            let models=chosen?[chosen]:[...c.models];
             const round=Number(new URLSearchParams(location.search).get('round')||0)%models.length;
             models=[...models.slice(round),...models.slice(0,round)];result.modelOrder=models;
             for(const model of models)for(const count of [1,50]){
