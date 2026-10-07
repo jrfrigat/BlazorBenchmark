@@ -17,6 +17,19 @@
     <button id="bench-interactions" type="button" @onclick="RunInteractions">Measure picker interactions</button>
     <button type="button" @onclick="Download">Download JSON</button>
     <span id="bench-value">@Value0</span>
+    @if (TimeValues)
+    {
+        <span id="bench-time-value" data-changes="@TimeChanges">@TimeValue0</span>
+        <span id="bench-time-variant">@TimeVariant</span>
+        <button id="bench-many-time" type="button" @onclick='() => Shape("times")'>50 time</button>
+        <button id="bench-time-reset" type="button" @onclick="ResetTime">Reset time values</button>
+        @foreach (var variant in (TimeVariant == "Default" ? Array.Empty<string>() : new[] { "Dial", "Dropdown", "List" }))
+        {
+            var selected = variant;
+            <button id="@($"bench-time-{variant}")" type="button" @onclick="() => TimeVariantChanged.InvokeAsync(selected)">@variant</button>
+        }
+        <button id="bench-time-values" type="button" @onclick="RunTimeValues">Measure time values</button>
+    }
     @if (_mounted)
     {
         <section class="bench-dates">
@@ -50,10 +63,23 @@
     /// <summary>Сколько полей каждого вида монтируется.</summary>
     [Parameter] public int Count { get; set; } = 50;
 
+    /// <summary>Enables the separate time-value protocol.</summary>
+    [Parameter] public bool TimeValues { get; set; }
+    /// <summary>First bound time, formatted as HH:mm:ss.</summary>
+    [Parameter] public string? TimeValue0 { get; set; }
+    /// <summary>Number of first-time value callbacks.</summary>
+    [Parameter] public int TimeChanges { get; set; }
+    /// <summary>Current time popup model.</summary>
+    [Parameter] public string TimeVariant { get; set; } = "Default";
+    /// <summary>Changes the time popup model.</summary>
+    [Parameter] public EventCallback<string> TimeVariantChanged { get; set; }
+    /// <summary>Clears bound times and the callback count.</summary>
+    [Parameter] public EventCallback ResetTime { get; set; }
+    private Task RunTimeValues() => JS.InvokeVoidAsync("benchTimeValues.run").AsTask();
     private bool _mounted;
     private string _shape = "mixed";
     private int _renderVersion;
-    private int DateCount => _shape == "time" ? 0 : _shape == "date" ? 1 : Count;
+    private int DateCount => _shape is "time" or "times" ? 0 : _shape == "date" ? 1 : Count;
     private int TimeCount => _shape == "date" ? 0 : _shape == "time" ? 1 : Count;
     private void Shape(string shape) { _mounted = false; _shape = shape; }
 

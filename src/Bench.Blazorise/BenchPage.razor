@@ -1,13 +1,22 @@
 @namespace Bench.Blazorise
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 
-<BenchHost Title="Blazorise 2.3.3 / Bootstrap 5" Value0="@Value0">
+<BenchHost Title="Blazorise 2.3.3 / Bootstrap 5" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
+           TimeVariant="@_timeVariant" TimeVariantChanged="@(v => _timeVariant = v)" ResetTime="ResetTimes">
     <Date Context="i"><Field><FieldLabel>Date</FieldLabel><DatePicker TValue="DateTime?" InputFormat="MM/dd/yyyy" DisplayFormat="MM/dd/yyyy" Value="_dates[i]" ValueChanged="@((DateTime? v) => SetDate(i, v))" /></Field></Date>
-    <Time Context="i"><Field><FieldLabel>Time</FieldLabel><TimePicker TValue="TimeSpan?" Value="_times[i]" ValueChanged="@((TimeSpan? v) => _times[i] = v)" /></Field></Time>
+    <Time Context="i"><Field><FieldLabel>Time</FieldLabel><TimePicker TimeAs24hr="@TimeValues" DisplayFormat="@(TimeValues ? "H:i" : null)" MinuteIncrement="@(TimeValues ? 15 : 1)" Min="@(TimeValues ? new TimeSpan(8, 0, 0) : null)" Max="@(TimeValues ? new TimeSpan(18, 0, 0) : null)" TValue="TimeSpan?" Value="_times[i]" ValueChanged="@((TimeSpan? v) => SetTime(i, v))" /></Field></Time>
 </BenchHost>
 
 
 @code {
+    private bool TimeValues;
+    protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+    private string _timeVariant = "Default";
+    private int _timeChanges;
+    private string? TimeValue0 => _times[0] is var v ? v?.ToString(@"hh\:mm\:ss", System.Globalization.CultureInfo.InvariantCulture) : null;
+    private void SetTime(int i, TimeSpan? value) { _times[i] = value; if (TimeValues && i == 0) _timeChanges++; }
+    private void ResetTimes() { Array.Clear(_times); _timeChanges = 0; }
     private readonly DateTime?[] _dates = new DateTime?[50];
     private readonly TimeSpan?[] _times = new TimeSpan?[50];
 

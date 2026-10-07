@@ -12,13 +12,23 @@
 }
 </div>
 }
-<BenchHost Title="@ThemeSetup.Title" Value0="@Value0">
+<BenchHost Title="@ThemeSetup.Title" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
+           TimeVariant="@_timeVariant" TimeVariantChanged="SetPopupVariant" ResetTime="ResetTimes">
     <Date Context="i"><FlareDatePicker Label="Date" Value="_dates[i]" ValueChanged="@(v => SetDate(i, v))" /></Date>
-    <Time Context="i"><FlareTimePicker Label="Time" Value="_times[i]" ValueChanged="@(v => _times[i] = v)" /></Time>
+    <Time Context="i"><FlareTimePicker PopupVariant="@_popupVariant" Use24Hour="@(TimeValues ? true : null)" MinuteStep="@(TimeValues ? 15 : 1)" Min="@(TimeValues ? new TimeOnly(8, 0) : null)" Max="@(TimeValues ? new TimeOnly(18, 0) : null)" Label="Time" Value="_times[i]" ValueChanged="@(v => SetTime(i, v))" /></Time>
 </BenchHost>
 </FlareThemeProvider>
 
 @code {
+    private bool TimeValues;
+    protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+    private string _timeVariant = "Dial";
+    private int _timeChanges;
+    private string? TimeValue0 => _times[0] is var v ? v?.ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) : null;
+    private void SetTime(int i, TimeOnly? value) { _times[i] = value; if (TimeValues && i == 0) _timeChanges++; }
+    private void ResetTimes() { Array.Clear(_times); _timeChanges = 0; }
+    private TimePickerVariant _popupVariant = TimePickerVariant.Dial;
+    private void SetPopupVariant(string value) { _timeVariant = value; _popupVariant = Enum.Parse<TimePickerVariant>(value); }
     private string _completedTheme = "";
     private async Task SwitchTheme(string id)
     {

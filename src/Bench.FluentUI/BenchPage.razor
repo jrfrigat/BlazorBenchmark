@@ -1,13 +1,22 @@
 @namespace Bench.FluentUI
+@inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 
-<BenchHost Title="Microsoft FluentUI Blazor 5.0.0" Value0="@Value0">
+<BenchHost Title="Microsoft FluentUI Blazor 5.0.0" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
+           TimeVariant="@_timeVariant" TimeVariantChanged="@(v => _timeVariant = v)" ResetTime="ResetTimes">
     <Date Context="i"><FluentDatePicker TValue="DateTime?" Label="Date" Value="_dates[i]" ValueChanged="@((DateTime? v) => SetDate(i, v))" /></Date>
-    <Time Context="i"><FluentTimePicker TValue="DateTime?" Label="Time" Value="_times[i]" ValueChanged="@((DateTime? v) => _times[i] = v)" /></Time>
+    <Time Context="i"><FluentTimePicker TValue="DateTime?" Label="Time" Value="_times[i]" ValueChanged="@((DateTime? v) => SetTime(i, v))" /></Time>
 </BenchHost>
 
 
 @code {
+    private bool TimeValues;
+    protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+    private string _timeVariant = "Default";
+    private int _timeChanges;
+    private string? TimeValue0 => _times[0] is var v ? v?.ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) : null;
+    private void SetTime(int i, DateTime? value) { _times[i] = value; if (TimeValues && i == 0) _timeChanges++; }
+    private void ResetTimes() { Array.Clear(_times); _timeChanges = 0; }
     private readonly DateTime?[] _dates = new DateTime?[50];
     private readonly DateTime?[] _times = new DateTime?[50];
 

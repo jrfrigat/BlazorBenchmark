@@ -143,10 +143,11 @@
         await bench.until(() => document.getElementById('bench-mount') && shopDiagnostics.collect().appReadyMs !== null &&
             (benchConfig.library !== 'Flare' || !!marks.flareReadyMs), 'styled host ready');
         await document.fonts.ready;
-        const result = await bench.run();
+        const result = await (params.get('mode') === 'time-values' ? benchTimeValues.run() : bench.run());
         result.variant = params.get('variant') || benchConfig.library;
         result.round = Number(params.get('round') || 0);
         result.cache = params.get('cache') || 'manual';
+        if (params.get('mode') === 'time-values' && errors.length) { result.success=false; result.errors.push(...errors); }
         try {
             result.resourceIntegrity = await benchIntegrity.audit();
             if (!result.resourceIntegrity.success) { result.success = false; result.errors.push(...result.resourceIntegrity.errors); }
@@ -164,6 +165,6 @@
         }
     }
     if (params.get('run') === '1') {
-        if (params.get('mode') === 'interactions') interactions(); else run();
+        if (['interactions','time-values'].includes(params.get('mode'))) interactions(); else run();
     }
 })();
