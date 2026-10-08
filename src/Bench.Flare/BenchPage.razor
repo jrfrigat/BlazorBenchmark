@@ -14,12 +14,13 @@
 }
 <BenchHost Title="@ThemeSetup.Title" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
            TimeVariant="@_timeVariant" TimeVariantChanged="SetPopupVariant" ResetTime="ResetTimes">
-    <Date Context="i"><FlareDatePicker Label="Date" Value="_dates[i]" ValueChanged="@(v => SetDate(i, v))" /></Date>
+    <Date Context="i"><FlareDatePicker PreRenderCalendar="@PreRenderCalendar" Label="Date" Value="_dates[i]" ValueChanged="@(v => SetDate(i, v))" /></Date>
     <Time Context="i"><FlareTimePicker PopupVariant="@_popupVariant" Use24Hour="@(TimeValues ? true : null)" MinuteStep="@(TimeValues ? 15 : 1)" Min="@(TimeValues ? new TimeOnly(8, 0) : null)" Max="@(TimeValues ? new TimeOnly(18, 0) : null)" Label="Time" Value="_times[i]" ValueChanged="@(v => SetTime(i, v))" /></Time>
 </BenchHost>
 </FlareThemeProvider>
 
 @code {
+    private bool PreRenderCalendar => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("prerenderCalendar=1", StringComparer.Ordinal);
     private bool TimeValues;
     protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
     private string _timeVariant = "Dial";
