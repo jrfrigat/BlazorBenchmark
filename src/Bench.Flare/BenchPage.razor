@@ -20,9 +20,14 @@
 </FlareThemeProvider>
 
 @code {
-    private bool PreRenderCalendar => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("prerenderCalendar=1", StringComparer.Ordinal);
+    private bool PreRenderCalendar;
     private bool TimeValues;
-    protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+    protected override void OnInitialized()
+    {
+        var query = Navigation.ToAbsoluteUri(Navigation.Uri).Query;
+        TimeValues = query.Contains("mode=time-values", StringComparison.Ordinal);
+        PreRenderCalendar = query.Split('?', '&').Contains("prerenderCalendar=1", StringComparer.Ordinal);
+    }
     private string _timeVariant = "Dial";
     private int _timeChanges;
     private string? TimeValue0 => _times[0] is var v ? v?.ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) : null;
