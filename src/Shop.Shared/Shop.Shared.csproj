@@ -10,7 +10,7 @@
   <ItemGroup>
     <!-- Sdk.Razor уже ссылается на shared framework Microsoft.AspNetCore.App; для IJSRuntime и
          System.Net.Http.Json достаточно этого пакета -->
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.13" />
   </ItemGroup>
 
 </Project>

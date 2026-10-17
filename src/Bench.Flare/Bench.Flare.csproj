@@ -14,14 +14,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.11" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.11" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.13" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Flare\src\Flare\Flare.csproj" />
-    <ProjectReference Condition="'$(ThemeSet)' != 'Fluent2'" Include="..\..\..\Flare\src\Flare.Theme.MaterialDesign2\Flare.Theme.MaterialDesign2.csproj" />
-    <ProjectReference Include="..\..\..\Flare\src\Flare.Icons.MaterialDesign2.Svg\Flare.Icons.MaterialDesign2.Svg.csproj" />
+    <PackageReference Include="Flare.Blazor" Version="0.45.0" />
+    <PackageReference Condition="'$(ThemeSet)' != 'Fluent2'" Include="Flare.Theme.MaterialDesign2" Version="0.45.0" />
+    <PackageReference Include="Flare.Icons.MaterialDesign2.Svg" Version="0.45.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,13 +29,13 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(ThemeSet)' == 'Fluent2' Or '$(ThemeSet)' == 'All'">
-    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.FluentUI2\Flare.Theme.FluentUI2.csproj" />
+    <PackageReference Include="Flare.Theme.FluentUI2" Version="0.45.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(ThemeSet)' == 'All'">
-    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.MaterialDesign3\Flare.Theme.MaterialDesign3.csproj" />
-    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.MaterialDesign3Expressive\Flare.Theme.MaterialDesign3Expressive.csproj" />
-    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.Aero\Flare.Theme.Aero.csproj" />
-    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.LiquidGlass\Flare.Theme.LiquidGlass.csproj" />
-    <ProjectReference Include="..\..\..\Flare\src\Flare.Theme.VisualStudio\Flare.Theme.VisualStudio.csproj" />
+    <PackageReference Include="Flare.Theme.MaterialDesign3" Version="0.45.0" />
+    <PackageReference Include="Flare.Theme.MaterialDesign3Expressive" Version="0.45.0" />
+    <PackageReference Include="Flare.Theme.Aero" Version="0.45.0" />
+    <PackageReference Include="Flare.Theme.LiquidGlass" Version="0.45.0" />
+    <PackageReference Include="Flare.Theme.VisualStudio" Version="0.45.0" />
   </ItemGroup>
 </Project>

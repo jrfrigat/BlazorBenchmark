@@ -2,7 +2,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 
-<BenchHost Title="Radzen.Blazor 12.0.5 / Material" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
+<BenchHost Title="Radzen.Blazor 12.1.4 / Material" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
            TimeVariant="@_timeVariant" TimeVariantChanged="@(v => _timeVariant = v)" ResetTime="ResetTimes">
     <Date Context="i"><RadzenFormField Text="Date"><RadzenDatePicker TValue="DateTime?" DateFormat="MM/dd/yyyy" Value="_dates[i]" ValueChanged="@(v => SetDate(i, v))" /></RadzenFormField></Date>
     <Time Context="i"><RadzenFormField Text="Time"><RadzenDatePicker TValue="DateTime?" TimeOnly="true" ShowTime="true" MinutesStep="@(TimeValues ? "15" : "")" DateFormat="HH:mm" Value="_times[i]" ValueChanged="@(v => SetTime(i, v))" /></RadzenFormField></Time>

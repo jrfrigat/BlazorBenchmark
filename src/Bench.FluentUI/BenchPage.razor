@@ -2,7 +2,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 
-<BenchHost Title="Microsoft FluentUI Blazor 5.0.0" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
+<BenchHost Title="Microsoft FluentUI Blazor 5.0.1" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
            TimeVariant="@_timeVariant" TimeVariantChanged="@(v => _timeVariant = v)" ResetTime="ResetTimes">
     <Date Context="i"><FluentDatePicker TValue="DateTime?" Label="Date" Value="_dates[i]" ValueChanged="@((DateTime? v) => SetDate(i, v))" /></Date>
     <Time Context="i"><FluentTimePicker TValue="DateTime?" Label="Time" Value="_times[i]" ValueChanged="@((DateTime? v) => SetTime(i, v))" /></Time>

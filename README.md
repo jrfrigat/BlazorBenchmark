@@ -5,9 +5,9 @@
 
 | Приложение | Библиотека | Тема | Лицензия |
 |---|---|---|---|
-| `src/Shop.Flare` | Flare.Blazor 0.37.0 | Material Design 2 | MIT |
-| `src/Shop.MudBlazor` | MudBlazor 9.9.0 | Material | MIT |
-| `src/Shop.Radzen` | Radzen.Blazor 11.3.2 | Material | MIT |
+| `src/Shop.Flare` | Flare.Blazor 0.45.0 | Material Design 2 | MIT |
+| `src/Shop.MudBlazor` | MudBlazor 9.11.0 | Material | MIT |
+| `src/Shop.Radzen` | Radzen.Blazor 12.1.4 | Material | MIT |
 
 Страницы, данные, правила валидации и подписи общие и лежат в `src/Shop.Shared`; отличается
 только UI-слой — так сравнение показывает разницу библиотек, а не разницу приложений.

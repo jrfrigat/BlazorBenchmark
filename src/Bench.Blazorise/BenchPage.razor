@@ -2,7 +2,7 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 
-<BenchHost Title="Blazorise 2.3.3 / Bootstrap 5" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
+<BenchHost Title="Blazorise 2.4.0 / Bootstrap 5" Value0="@Value0" TimeValues="@TimeValues" TimeValue0="@TimeValue0" TimeChanges="@_timeChanges"
            TimeVariant="@_timeVariant" TimeVariantChanged="@(v => _timeVariant = v)" ResetTime="ResetTimes">
     <Date Context="i"><Field><FieldLabel>Date</FieldLabel><DatePicker TValue="DateTime?" InputFormat="MM/dd/yyyy" DisplayFormat="MM/dd/yyyy" Value="_dates[i]" ValueChanged="@((DateTime? v) => SetDate(i, v))" /></Field></Date>
     <Time Context="i"><Field><FieldLabel>Time</FieldLabel><TimePicker TimeAs24hr="@TimeValues" DisplayFormat="@(TimeValues ? "H:i" : null)" MinuteIncrement="@(TimeValues ? 15 : 1)" Min="@(TimeValues ? new TimeSpan(8, 0, 0) : null)" Max="@(TimeValues ? new TimeSpan(18, 0, 0) : null)" TValue="TimeSpan?" Value="_times[i]" ValueChanged="@((TimeSpan? v) => SetTime(i, v))" /></Field></Time>

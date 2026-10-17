@@ -18,7 +18,7 @@ $variants = @(
 $manifest = @{
     CreatedAt=(Get-Date).ToUniversalTime().ToString('o')
     BenchmarkSha=(git -C $root rev-parse HEAD)
-    FlareSha=(git -C (Join-Path $root '../Flare') rev-parse HEAD)
+    FlareVersion=([xml](Get-Content (Join-Path $root 'src/Bench.Flare/Bench.Flare.csproj') -Raw)).Project.ItemGroup.PackageReference.Where({ $_.Include -eq 'Flare.Blazor' }).Version
     BenchmarkDirty=@(git -C $root status --short)
     Framework='net10.0';Configuration='Release';Trimmed=$true;Aot=$false;DelayMs=40
     FontPolicy='System Arial, no remote fonts; provider font assets filtered in benchmark adapter'
@@ -28,8 +28,7 @@ foreach ($variant in $variants) {
     $name=$variant.Name
     $project=Join-Path $root "src/Bench.$($variant.Library)/Bench.$($variant.Library).csproj"
     $publish=Join-Path $out "$name/publish"
-    $arguments=@('publish',$project,'-c','Release','-f','net10.0','-o',$publish,'--nologo',
-        '-p:FlareLibTargetFrameworks=net10.0')
+    $arguments=@('publish',$project,'-c','Release','-f','net10.0','-o',$publish,'--nologo')
     if ($variant.Theme) { $arguments += "-p:ThemeSet=$($variant.Theme)" }
     Write-Host "Publishing $name..."
     & dotnet @arguments *> (Join-Path $out "$name.log")

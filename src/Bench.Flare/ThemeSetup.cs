@@ -23,10 +23,10 @@ namespace Bench.Flare;
 internal static class ThemeSetup
 {
 #if FLUENT_THEME
-    internal const string Title = "Flare / Fluent UI 2 (one theme)";
+    internal const string Title = "Flare 0.45.0 / Fluent UI 2 (one theme)";
     private static ITheme CreateDefault() => new FluentUI2Theme();
 #else
-    internal const string Title = "Flare / Material Design 2";
+    internal const string Title = "Flare 0.45.0 / Material Design 2";
     private static ITheme CreateDefault() => new MaterialDesign2Theme();
 #endif
     internal static double Register(IServiceCollection services)
