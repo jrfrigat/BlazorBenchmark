@@ -1,0 +1,32 @@
+@namespace Bench.Radzen
+@if (State.Kind == "datagrid")
+{
+    <RadzenDataGrid TItem="BenchGridRow" Data="@State.Rows" AllowPaging="false" AllowSorting="false" AllowFiltering="false" AllowVirtualization="false">
+        <Columns>
+            <RadzenDataGridColumn Title="Id"><Template Context="row">@BenchGridCells.Cell(row, "id")</Template></RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Name"><Template Context="row">@BenchGridCells.Cell(row, "name")</Template></RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Price"><Template Context="row">@BenchGridCells.Cell(row, "price")</Template></RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Stock"><Template Context="row">@BenchGridCells.Cell(row, "stock")</Template></RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Active"><Template Context="row">@BenchGridCells.Cell(row, "active")</Template></RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+else
+{
+    @for (var i = 0; i < State.Count; i++)
+    {
+        var index = i;
+        <div class="component-sample" data-index="@index" @key="index">
+            @switch (State.Kind)
+            {
+                case "button": <RadzenButton Text="@($"Action {index}")" Click="() => State.Click(index)" /> break;
+                case "text": <RadzenTextBox aria-label="@($"Text {index}")" Value="@State.Text[index]" ValueChanged="v => State.SetText(index, v)" /> break;
+                case "number": <RadzenNumeric TValue="decimal" aria-label="@($"Number {index}")" Value="@State.Numbers[index]" ValueChanged="v => State.SetNumber(index, v)" Min="0" Max="1000" Step="0.25" /> break;
+                case "checkbox": <RadzenCheckBox TValue="bool" aria-label="@($"Check {index}")" Value="@State.Checks[index]" ValueChanged="v => State.SetCheck(index, v)" /> break;
+                case "switch": <RadzenSwitch aria-label="@($"Switch {index}")" Value="@State.Switches[index]" ValueChanged="v => State.SetSwitch(index, v)" /> break;
+                case "select": <RadzenDropDown TValue="string" aria-label="@($"Select {index}")" Data="@ComponentBenchState.Options" Value="@State.Selections[index]" ValueChanged="v => State.SetSelection(index, v)" /> break;
+            }
+        </div>
+    }
+}
+@code { [Parameter, EditorRequired] public ComponentBenchState State { get; set; } = default!; }

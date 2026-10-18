@@ -1,0 +1,37 @@
+@namespace Bench.Blazorise
+@using global::Blazorise.DataGrid
+@if (State.Kind == "datagrid")
+{
+    <DataGrid TItem="BenchGridRow" Data="@State.Rows" ShowPager="false" PageSize="1000" Sortable="false" Filterable="false">
+        <DataGridColumns>
+            <DataGridColumn Field="@nameof(BenchGridRow.Id)" Caption="Id"><DisplayTemplate Context="row">@BenchGridCells.Cell(row.Item, "id")</DisplayTemplate></DataGridColumn>
+            <DataGridColumn Field="@nameof(BenchGridRow.Name)" Caption="Name"><DisplayTemplate Context="row">@BenchGridCells.Cell(row.Item, "name")</DisplayTemplate></DataGridColumn>
+            <DataGridColumn Field="@nameof(BenchGridRow.Price)" Caption="Price"><DisplayTemplate Context="row">@BenchGridCells.Cell(row.Item, "price")</DisplayTemplate></DataGridColumn>
+            <DataGridColumn Field="@nameof(BenchGridRow.Stock)" Caption="Stock"><DisplayTemplate Context="row">@BenchGridCells.Cell(row.Item, "stock")</DisplayTemplate></DataGridColumn>
+            <DataGridColumn Field="@nameof(BenchGridRow.Active)" Caption="Active"><DisplayTemplate Context="row">@BenchGridCells.Cell(row.Item, "active")</DisplayTemplate></DataGridColumn>
+        </DataGridColumns>
+    </DataGrid>
+}
+else
+{
+    @for (var i = 0; i < State.Count; i++)
+    {
+        var index = i;
+        <div class="component-sample" data-index="@index" @key="index">
+            @switch (State.Kind)
+            {
+                case "button": <Button Clicked="() => State.Click(index)">Action @index</Button> break;
+                case "text": <TextInput aria-label="@($"Text {index}")" Text="@State.Text[index]" TextChanged="v => State.SetText(index, v)" /> break;
+                case "number": <NumericInput TValue="decimal" aria-label="@($"Number {index}")" Value="@State.Numbers[index]" ValueChanged="v => State.SetNumber(index, v)" Min="0" Max="1000" Step="0.25m" /> break;
+                case "checkbox": <Check TValue="bool" Checked="@State.Checks[index]" CheckedChanged="v => State.SetCheck(index, v)">Check @index</Check> break;
+                case "switch": <Switch TValue="bool" Checked="@State.Switches[index]" CheckedChanged="v => State.SetSwitch(index, v)">Switch @index</Switch> break;
+                case "select":
+                    <Select TValue="string" aria-label="@($"Select {index}")" SelectedValue="@State.Selections[index]" SelectedValueChanged="v => State.SetSelection(index, v)">
+                        @foreach (var option in ComponentBenchState.Options) { <SelectItem TValue="string" Value="@option">@option</SelectItem> }
+                    </Select>
+                    break;
+            }
+        </div>
+    }
+}
+@code { [Parameter, EditorRequired] public ComponentBenchState State { get; set; } = default!; }

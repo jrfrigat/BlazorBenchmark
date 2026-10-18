@@ -1,0 +1,36 @@
+@namespace Bench.MudBlazor
+@if (State.Kind == "datagrid")
+{
+    <MudDataGrid T="BenchGridRow" Items="@State.Rows" RowsPerPage="1000" SortMode="global::MudBlazor.SortMode.None" Filterable="false" Virtualize="false">
+        <Columns>
+            <TemplateColumn Title="Id"><CellTemplate>@BenchGridCells.Cell(context.Item, "id")</CellTemplate></TemplateColumn>
+            <TemplateColumn Title="Name"><CellTemplate>@BenchGridCells.Cell(context.Item, "name")</CellTemplate></TemplateColumn>
+            <TemplateColumn Title="Price"><CellTemplate>@BenchGridCells.Cell(context.Item, "price")</CellTemplate></TemplateColumn>
+            <TemplateColumn Title="Stock"><CellTemplate>@BenchGridCells.Cell(context.Item, "stock")</CellTemplate></TemplateColumn>
+            <TemplateColumn Title="Active"><CellTemplate>@BenchGridCells.Cell(context.Item, "active")</CellTemplate></TemplateColumn>
+        </Columns>
+    </MudDataGrid>
+}
+else
+{
+    @for (var i = 0; i < State.Count; i++)
+    {
+        var index = i;
+        <div class="component-sample" data-index="@index" @key="index">
+            @switch (State.Kind)
+            {
+                case "button": <MudButton OnClick="() => State.Click(index)">Action @index</MudButton> break;
+                case "text": <MudTextField T="string" Label="@($"Text {index}")" Value="@State.Text[index]" ValueChanged="v => State.SetText(index, v)" /> break;
+                case "number": <MudNumericField T="decimal" Label="@($"Number {index}")" Value="@State.Numbers[index]" ValueChanged="v => State.SetNumber(index, v)" Min="0" Max="1000" Step="0.25m" /> break;
+                case "checkbox": <MudCheckBox T="bool" Label="@($"Check {index}")" Value="@State.Checks[index]" ValueChanged="v => State.SetCheck(index, v)" /> break;
+                case "switch": <MudSwitch T="bool" Label="@($"Switch {index}")" Value="@State.Switches[index]" ValueChanged="v => State.SetSwitch(index, v)" /> break;
+                case "select":
+                    <MudSelect T="string" Label="@($"Select {index}")" Value="@State.Selections[index]" ValueChanged="v => State.SetSelection(index, v)">
+                        @foreach (var option in ComponentBenchState.Options) { <MudSelectItem T="string" Value="@option">@option</MudSelectItem> }
+                    </MudSelect>
+                    break;
+            }
+        </div>
+    }
+}
+@code { [Parameter, EditorRequired] public ComponentBenchState State { get; set; } = default!; }

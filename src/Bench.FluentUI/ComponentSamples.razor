@@ -1,0 +1,30 @@
+@namespace Bench.FluentUI
+@if (State.Kind == "datagrid")
+{
+    <FluentDataGrid TGridItem="BenchGridRow" Items="@State.QueryRows" Virtualize="false">
+        <TemplateColumn Title="Id" Context="row">@BenchGridCells.Cell(row, "id")</TemplateColumn>
+        <TemplateColumn Title="Name" Context="row">@BenchGridCells.Cell(row, "name")</TemplateColumn>
+        <TemplateColumn Title="Price" Context="row">@BenchGridCells.Cell(row, "price")</TemplateColumn>
+        <TemplateColumn Title="Stock" Context="row">@BenchGridCells.Cell(row, "stock")</TemplateColumn>
+        <TemplateColumn Title="Active" Context="row">@BenchGridCells.Cell(row, "active")</TemplateColumn>
+    </FluentDataGrid>
+}
+else
+{
+    @for (var i = 0; i < State.Count; i++)
+    {
+        var index = i;
+        <div class="component-sample" data-index="@index" @key="index">
+            @switch (State.Kind)
+            {
+                case "button": <FluentButton OnClick="() => State.Click(index)">Action @index</FluentButton> break;
+                case "text": <FluentTextInput Label="@($"Text {index}")" Value="@State.Text[index]" ValueChanged="v => State.SetText(index, v)" /> break;
+                case "number": <FluentNumberInput TValue="decimal" Label="@($"Number {index}")" Value="@State.Numbers[index]" ValueChanged="v => State.SetNumber(index, v)" Min="0" Max="1000" Step="0.25m" /> break;
+                case "checkbox": <FluentCheckbox Label="@($"Check {index}")" Value="@State.Checks[index]" ValueChanged="v => State.SetCheck(index, v)" /> break;
+                case "switch": <FluentSwitch Label="@($"Switch {index}")" Value="@State.Switches[index]" ValueChanged="v => State.SetSwitch(index, v)" /> break;
+                case "select": <FluentSelect TOption="string" TValue="string" Label="@($"Select {index}")" Items="@ComponentBenchState.Options" OptionValue="v => v" OptionText="v => v" Value="@State.Selections[index]" ValueChanged="v => State.SetSelection(index, v)" /> break;
+            }
+        </div>
+    }
+}
+@code { [Parameter, EditorRequired] public ComponentBenchState State { get; set; } = default!; }

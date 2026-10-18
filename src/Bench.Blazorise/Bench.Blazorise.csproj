@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Blazorise.Bootstrap5" Version="2.4.0" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="2.4.0" />
+    <PackageReference Include="Blazorise.DataGrid" Version="2.4.0" />
   </ItemGroup>
 
   <ItemGroup>

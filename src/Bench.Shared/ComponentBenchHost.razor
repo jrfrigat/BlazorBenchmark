@@ -1,0 +1,51 @@
+@namespace Bench.Shared
+@inject IJSRuntime JS
+<main class="bench component-bench">
+    <h1>@Title</h1>
+    <a href="?">Date and time benchmark</a>
+    <p>Component rendering and bound-value checks. DOM completion and next-frame latency are separate.</p>
+    <label>Component <select id="components-kind" value="@_state.Kind" @onchange="KindChanged">
+        @foreach (var kind in ComponentBenchState.Kinds) { <option value="@kind">@kind</option> }
+    </select></label>
+    <label>Instances <select id="components-count" value="@_state.Count" @onchange="CountChanged">
+        <option value="1">1</option><option value="50">50</option>
+    </select></label>
+    <label>Grid rows <select id="components-rows" value="@_state.RowCount" @onchange="RowsChanged">
+        <option value="100">100</option><option value="1000">1000</option>
+    </select></label>
+    <button id="components-mount" @onclick="() => _state.Mount(true)">Mount</button>
+    <button id="components-unmount" @onclick="() => _state.Mount(false)">Unmount</button>
+    <button id="components-rerender" @onclick="_state.Rerender">Rerender unchanged container</button>
+    <button id="components-run" @onclick="Run">Measure all components</button>
+    <button @onclick="Download">Download JSON</button>
+    <p>DataGrid uses identical shared sorting, filtering and 50-row window replacement; native query engines,
+        native paging, virtualization and editing features are not ranked by these timings.</p>
+    @foreach (var action in new[] { "reset", "sort", "filter", "page", "update" })
+    {
+        var operation = action;
+        <button id="@($"components-grid-{operation}")" @onclick="() => _state.Grid(operation)">@operation data</button>
+    }
+    <output id="components-snapshot" hidden>@_state.Snapshot</output>
+    @if (_state.Mounted)
+    {
+        <section id="components-mounted" data-kind="@_state.Kind" data-count="@_state.Count" data-rows="@_state.RowCount">
+            @ChildContent(_state)
+        </section>
+    }
+    <pre id="bench-report"></pre>
+</main>
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public RenderFragment<ComponentBenchState> ChildContent { get; set; } = default!;
+    private readonly ComponentBenchState _state = new();
+    protected override void OnInitialized() => _state.Changed = () => InvokeAsync(StateHasChanged);
+    private Task KindChanged(ChangeEventArgs e) => _state.Configure(e.Value?.ToString() ?? "", _state.Count, _state.RowCount);
+    private Task CountChanged(ChangeEventArgs e) => _state.Configure(_state.Kind, int.Parse(e.Value?.ToString() ?? "0"), _state.RowCount);
+    private Task RowsChanged(ChangeEventArgs e) => _state.Configure(_state.Kind, _state.Count, int.Parse(e.Value?.ToString() ?? "0"));
+    private Task Run() => JS.InvokeVoidAsync("benchComponents.run").AsTask();
+    private Task Download() => JS.InvokeVoidAsync("benchAnalytics.download").AsTask();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await JS.InvokeVoidAsync("shopDiagnostics.markAppReady");
+    }
+}
