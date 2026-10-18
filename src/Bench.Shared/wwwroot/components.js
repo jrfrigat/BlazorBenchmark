@@ -35,7 +35,7 @@
         if(busy)throw new Error('component measurement already running');busy=true;
         const library=benchConfig.library,c=benchComponentConfigs[library];
         const result={kind:'components-v1',library,repeats:N,selectPopup:c.selectPopup,success:false,errors:[],groups:{},
-            protocol:'synthetic public DOM events; shared bound-state callbacks; full grid cell/order verification',
+            protocol:'synthetic public DOM events; click-only option commit; shared bound-state callbacks; full grid cell/order verification',
             gridPolicy:'100/1000 unvirtualized rows, 5 shared cell templates; shared sorting/filtering/50-row window; native query engines excluded',
             environment:{userAgent:navigator.userAgent,viewport:[innerWidth,innerHeight],devicePixelRatio,
                 hardwareConcurrency:navigator.hardwareConcurrency,visibility:document.visibilityState,
@@ -67,7 +67,10 @@
                     let target=kind==='button'?String(Number(state().value)+1):kind==='text'?(i%2?'Bench beta':'Bench alpha'):
                         kind==='number'?(i%2?'24.75':'12.5'):kind==='select'?(i%2?'Option 003':'Option 002'):(i%2?'false':'true');
                     if(kind==='text'||kind==='number')await c.prepare(root());
-                    if(kind==='select'&&c.selectPopup!=='native')add(i?'open':'firstOpen',await timed(()=>c.open(root()),()=>!!c.popup(),'select open'));
+                    if(kind==='select'&&c.selectPopup!=='native'){
+                        add(i?'open':'firstOpen',await timed(()=>c.open(root()),()=>c.optionReady(c.popup(),target),'select option ready'));
+                        await bench.until(()=>c.settled(c.popup()),'select opening animation');await bench.frame();
+                    }
                     const old=state().changes;
                     const s=await timed(()=>{
                         if(kind==='button')c.button(root());else if(kind==='text'||kind==='number')c.type(root(),target);

@@ -21,12 +21,12 @@ else
             @switch (State.Kind)
             {
                 case "button": <Button Clicked="() => State.Click(index)">Action @index</Button> break;
-                case "text": <TextInput aria-label="@($"Text {index}")" Text="@State.Text[index]" TextChanged="v => State.SetText(index, v)" /> break;
+                case "text": <TextInput aria-label="@($"Text {index}")" Value="@State.Text[index]" ValueChanged="v => State.SetText(index, v)" /> break;
                 case "number": <NumericInput TValue="decimal" aria-label="@($"Number {index}")" Value="@State.Numbers[index]" ValueChanged="v => State.SetNumber(index, v)" Min="0" Max="1000" Step="0.25m" /> break;
-                case "checkbox": <Check TValue="bool" Checked="@State.Checks[index]" CheckedChanged="v => State.SetCheck(index, v)">Check @index</Check> break;
-                case "switch": <Switch TValue="bool" Checked="@State.Switches[index]" CheckedChanged="v => State.SetSwitch(index, v)">Switch @index</Switch> break;
+                case "checkbox": <Check TValue="bool" Value="@State.Checks[index]" ValueChanged="v => State.SetCheck(index, v)">Check @index</Check> break;
+                case "switch": <Switch TValue="bool" Value="@State.Switches[index]" ValueChanged="v => State.SetSwitch(index, v)">Switch @index</Switch> break;
                 case "select":
-                    <Select TValue="string" aria-label="@($"Select {index}")" SelectedValue="@State.Selections[index]" SelectedValueChanged="v => State.SetSelection(index, v)">
+                    <Select TValue="string" aria-label="@($"Select {index}")" Value="@State.Selections[index]" ValueChanged="v => State.SetSelection(index, v)">
                         @foreach (var option in ComponentBenchState.Options) { <SelectItem TValue="string" Value="@option">@option</SelectItem> }
                     </Select>
                     break;

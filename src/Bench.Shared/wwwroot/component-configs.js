@@ -13,6 +13,7 @@
         if (!e) throw new Error('component action target missing');
         const b = e.getBoundingClientRect(), init = { bubbles:true, cancelable:true, composed:true,
             view:window, button:0, detail:1, clientX:b.x+b.width/2, clientY:b.y+b.height/2 };
+        if(e.tabIndex>=0)e.focus({preventScroll:true});
         for (const type of ['pointerdown','mousedown','pointerup','mouseup','click'])
             e.dispatchEvent(type.startsWith('pointer') ? new PointerEvent(type,init) : new MouseEvent(type,init));
     }
@@ -24,14 +25,19 @@
         e.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,composed:true}));
         e.blur();
     }
-    function option(root, text) {
-        if (!root) throw new Error('select popup missing');
-        const e = Array.from(root.querySelectorAll('[role=option],fluent-option,li'))
+    function findOption(root, text) {
+        return root && Array.from(root.querySelectorAll('[role=option],fluent-option,li'))
             .find(e => e.textContent.trim() === text && !e.disabled && e.getAttribute('aria-disabled') !== 'true');
-        if (!e) throw new Error('select option missing: '+text); press(e);
+    }
+    function option(root, text) {
+        const e = findOption(root, text);
+        if (!e) throw new Error('select option missing: '+text); e.click();
     }
     const outside = () => press(q('.component-bench h1'));
-    const common = {input,type,mounted:(r,kind)=>kind==='text'||kind==='number'?!!deep(r,'input:not([type=hidden]),textarea'):
+    const common = {input,type,optionReady:(root,text)=>{const e=findOption(root,text);return !!e&&e.getBoundingClientRect().height>0;},
+        settled:root=>!!root&&(root.closest('[popover],.mud-popover,.rz-dropdown-panel')||root)
+            .getAnimations({subtree:true}).every(a=>a.playState!=='running'),
+        mounted:(r,kind)=>kind==='text'||kind==='number'?!!deep(r,'input:not([type=hidden]),textarea'):
         kind==='button'?!!deep(r,'button,fluent-button'):
         kind==='select'?!!r.querySelector('select,[role=combobox],fluent-dropdown,.flare-select,.rz-dropdown'):
         !!deep(r,'input[type=checkbox],[role=checkbox],[role=switch],fluent-checkbox,fluent-switch'),
@@ -40,11 +46,11 @@
         prepare:async r=>{input(r).focus();await bench.frame();await bench.frame();}};
     window.benchComponentConfigs = {
         Flare:{...common,selectPopup:'custom',
-            open:r=>press(r.querySelector('[role=combobox],.flare-input__control,.flare-select')),
+            open:r=>press(r.querySelector('[role=combobox]') || r.querySelector('.flare-select__control')),
             popup:()=>q('[popover]:popover-open [role=listbox]') || q('[role=listbox]:popover-open'),
             pick:text=>option(window.benchComponentConfigs.Flare.popup(),text),close:outside},
         MudBlazor:{...common,selectPopup:'custom',
-            open:r=>press(r.querySelector('.mud-select-input,[role=combobox],.mud-input-slot')),
+            open:r=>press(r.querySelector('[role=combobox]:not(input)') || r.querySelector('input[role=combobox]:not([type=hidden])')),
             popup:()=>q('.mud-popover-open [role=listbox]') || q('.mud-popover-open'),
             pick:text=>option(window.benchComponentConfigs.MudBlazor.popup(),text),close:outside},
         Radzen:{...common,selectPopup:'custom',
