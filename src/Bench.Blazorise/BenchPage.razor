@@ -2,7 +2,28 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 
-@if (ComponentsMode)
+@if (RangeMode)
+{
+    <RangeBenchHost Title="Blazorise 2.4.0 / Bootstrap 5" StartValue="@RangeStart" EndValue="@RangeEnd" RangeChanges="@_rangeChanges">
+        <Fields Context="i">
+            <div class="bench-field bench-field-start">
+                <Field><FieldLabel>Start</FieldLabel><DatePicker TValue="DateTime?" InputFormat="MM/dd/yyyy" DisplayFormat="MM/dd/yyyy" Value="_rangeStarts[i]" ValueChanged="@((DateTime? v) => SetRangeStart(i, v))" /></Field>
+            </div>
+            <div class="bench-field bench-field-end">
+                <Field><FieldLabel>End</FieldLabel><DatePicker TValue="DateTime?" InputFormat="MM/dd/yyyy" DisplayFormat="MM/dd/yyyy" Value="_rangeEnds[i]" ValueChanged="@((DateTime? v) => SetRangeEnd(i, v))" /></Field>
+            </div>
+        </Fields>
+        <Calendar Context="i">
+            <DatePicker TValue="IReadOnlyList<DateTime?>" Value="_ranges[i]" ValueChanged="@((IReadOnlyList<DateTime?> v) => SetRange(i, v))"
+                        SelectionMode="DateInputSelectionMode.Range" Inline="true" Min="RangeMin" Max="RangeMax" />
+        </Calendar>
+        <Popup Context="i">
+            <DatePicker TValue="IReadOnlyList<DateTime?>" Value="_ranges[i]" ValueChanged="@((IReadOnlyList<DateTime?> v) => SetRange(i, v))"
+                        SelectionMode="DateInputSelectionMode.Range" Min="RangeMin" Max="RangeMax" />
+        </Popup>
+    </RangeBenchHost>
+}
+else if (ComponentsMode)
 {
     <ComponentBenchHost Title="Blazorise 2.4.0 / Bootstrap 5" Context="state"><ComponentSamples State="@state" /></ComponentBenchHost>
 }
@@ -18,8 +39,39 @@ else
 
 @code {
     private bool ComponentsMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=components", StringComparer.Ordinal);
+    private bool RangeMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=range", StringComparer.Ordinal);
     private bool TimeValues;
-    protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+
+    private static readonly DateTimeOffset RangeMin = new(2026, 10, 1, 0, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset RangeMax = new(2026, 12, 31, 0, 0, 0, TimeSpan.Zero);
+    private readonly DateTime?[] _rangeStarts = new DateTime?[50];
+    private readonly DateTime?[] _rangeEnds = new DateTime?[50];
+    private readonly IReadOnlyList<DateTime?>[] _ranges = new IReadOnlyList<DateTime?>[50];
+    private int _rangeChanges;
+    private string? RangeStart => _rangeStarts[0]?.ToString("yyyy-MM-dd");
+    private string? RangeEnd => _rangeEnds[0]?.ToString("yyyy-MM-dd");
+    private void SetRangeStart(int i, DateTime? value) { _rangeStarts[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRangeEnd(int i, DateTime? value) { _rangeEnds[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRange(int i, IReadOnlyList<DateTime?> value)
+    {
+        _ranges[i] = value;
+        if (i != 0) return;
+        var days = value.Where(day => day.HasValue).Select(day => day!.Value).ToList();
+        _rangeStarts[0] = days.Count == 0 ? null : days.Min();
+        _rangeEnds[0] = days.Count == 0 ? null : days.Max();
+        _rangeChanges++;
+    }
+
+    protected override void OnInitialized()
+    {
+        TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+        for (var i = 0; i < 50; i++)
+        {
+            _rangeStarts[i] = new DateTime(2026, 10, 14);
+            _rangeEnds[i] = new DateTime(2026, 10, 20);
+            _ranges[i] = new List<DateTime?> { _rangeStarts[i], _rangeEnds[i] };
+        }
+    }
     private string _timeVariant = "Default";
     private int _timeChanges;
     private string? TimeValue0 => _times[0] is var v ? v?.ToString(@"hh\:mm\:ss", System.Globalization.CultureInfo.InvariantCulture) : null;

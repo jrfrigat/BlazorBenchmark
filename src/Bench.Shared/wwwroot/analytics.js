@@ -140,14 +140,18 @@
     window.benchAnalytics = { run, restart, download, recordSetup: value => { setup = value; },
         mark: (name, value) => { marks[name] = value; } };
     async function interactions() {
-        await bench.until(() => document.getElementById(params.get('mode') === 'components' ? 'components-mount' : 'bench-mount') && shopDiagnostics.collect().appReadyMs !== null &&
+        const mountId = params.get('mode') === 'components' ? 'components-mount'
+            : params.get('mode') === 'range' ? 'bench-range-mount' : 'bench-mount';
+        await bench.until(() => document.getElementById(mountId) && shopDiagnostics.collect().appReadyMs !== null &&
             (benchConfig.library !== 'Flare' || !!marks.flareReadyMs), 'styled host ready');
         await document.fonts.ready;
-        const result = await (params.get('mode') === 'components' ? benchComponents.run() : params.get('mode') === 'time-values' ? benchTimeValues.run() : bench.run());
+        const result = await (params.get('mode') === 'components' ? benchComponents.run()
+            : params.get('mode') === 'time-values' ? benchTimeValues.run()
+            : params.get('mode') === 'range' ? benchRange.run() : bench.run());
         result.variant = params.get('variant') || benchConfig.library;
         result.round = Number(params.get('round') || 0);
         result.cache = params.get('cache') || 'manual';
-        if (['time-values','components'].includes(params.get('mode')) && errors.length) { result.success=false; result.errors.push(...errors); }
+        if (['time-values','components','range'].includes(params.get('mode')) && errors.length) { result.success=false; result.errors.push(...errors); }
         try {
             result.resourceIntegrity = await benchIntegrity.audit();
             if (!result.resourceIntegrity.success) { result.success = false; result.errors.push(...result.resourceIntegrity.errors); }
@@ -158,6 +162,7 @@
         window.benchAnalyticsResult = result;
         if (params.get('save') === '1') {
             const response = await fetch('/__results', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(result)});
+            result.saved = response.ok;
             if (response.ok && params.get('sequence') === '1' && result.success) {
                 const next = (await response.json()).next;
                 if (next) location.assign(next + '&sequence=1');
@@ -165,6 +170,6 @@
         }
     }
     if (params.get('run') === '1') {
-        if (['interactions','time-values','components'].includes(params.get('mode'))) interactions(); else run();
+        if (['interactions','time-values','components','range'].includes(params.get('mode'))) interactions(); else run();
     }
 })();

@@ -2,7 +2,24 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 
-@if (ComponentsMode)
+@if (RangeMode)
+{
+    <RangeBenchHost Title="Microsoft FluentUI Blazor 5.0.1" StartValue="@RangeStart" EndValue="@RangeEnd" RangeChanges="@_rangeChanges">
+        <Fields Context="i">
+            <div class="bench-field bench-field-start">
+                <FluentDatePicker TValue="DateTime?" Label="Start" Value="_rangeStarts[i]" ValueChanged="@((DateTime? v) => SetRangeStart(i, v))" />
+            </div>
+            <div class="bench-field bench-field-end">
+                <FluentDatePicker TValue="DateTime?" Label="End" Value="_rangeEnds[i]" ValueChanged="@((DateTime? v) => SetRangeEnd(i, v))" />
+            </div>
+        </Fields>
+        <Calendar Context="i">
+            <FluentCalendar TValue="DateTime?" SelectMode="CalendarSelectMode.Range" SelectedDates="_ranges[i]"
+                            SelectedDatesChanged="@((IEnumerable<DateTime?> v) => SetRange(i, v))" MinDate="RangeMin" MaxDate="RangeMax" />
+        </Calendar>
+    </RangeBenchHost>
+}
+else if (ComponentsMode)
 {
     <ComponentBenchHost Title="Microsoft FluentUI Blazor 5.0.1" Context="state"><ComponentSamples State="@state" /></ComponentBenchHost>
 }
@@ -18,8 +35,40 @@ else
 
 @code {
     private bool ComponentsMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=components", StringComparer.Ordinal);
+    private bool RangeMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=range", StringComparer.Ordinal);
     private bool TimeValues;
-    protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+
+    private static readonly DateTime RangeMin = new(2026, 10, 1);
+    private static readonly DateTime RangeMax = new(2026, 12, 31);
+    private readonly DateTime?[] _rangeStarts = new DateTime?[50];
+    private readonly DateTime?[] _rangeEnds = new DateTime?[50];
+    private readonly IReadOnlyList<DateTime?>[] _ranges = new IReadOnlyList<DateTime?>[50];
+    private int _rangeChanges;
+    private string? RangeStart => _rangeStarts[0]?.ToString("yyyy-MM-dd");
+    private string? RangeEnd => _rangeEnds[0]?.ToString("yyyy-MM-dd");
+    private void SetRangeStart(int i, DateTime? value) { _rangeStarts[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRangeEnd(int i, DateTime? value) { _rangeEnds[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRange(int i, IEnumerable<DateTime?> value)
+    {
+        var list = value.ToList();
+        _ranges[i] = list;
+        if (i != 0) return;
+        // FluentCalendar publishes every day of the range, not only its endpoints.
+        _rangeStarts[0] = list.Count == 0 ? null : list.Min();
+        _rangeEnds[0] = list.Count == 0 ? null : list.Max();
+        _rangeChanges++;
+    }
+
+    protected override void OnInitialized()
+    {
+        TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+        for (var i = 0; i < 50; i++)
+        {
+            _rangeStarts[i] = new DateTime(2026, 10, 14);
+            _rangeEnds[i] = new DateTime(2026, 10, 20);
+            _ranges[i] = new List<DateTime?> { _rangeStarts[i], _rangeEnds[i] };
+        }
+    }
     private string _timeVariant = "Default";
     private int _timeChanges;
     private string? TimeValue0 => _times[0] is var v ? v?.ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) : null;

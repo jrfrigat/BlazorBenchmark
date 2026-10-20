@@ -2,7 +2,28 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 <MudThemeProvider /><MudPopoverProvider />
-@if (ComponentsMode)
+@if (RangeMode)
+{
+    <RangeBenchHost Title="MudBlazor 9.11.0 / Material" StartValue="@RangeStart" EndValue="@RangeEnd" RangeChanges="@_rangeChanges">
+        <Fields Context="i">
+            <div class="bench-field bench-field-start">
+                <MudDatePicker Label="Start" Editable="true" Date="_rangeStarts[i]" DateChanged="@(v => SetRangeStart(i, v))" MinDate="RangeMin" MaxDate="RangeMax" />
+            </div>
+            <div class="bench-field bench-field-end">
+                <MudDatePicker Label="End" Editable="true" Date="_rangeEnds[i]" DateChanged="@(v => SetRangeEnd(i, v))" MinDate="RangeMin" MaxDate="RangeMax" />
+            </div>
+        </Fields>
+        <Calendar Context="i">
+            <MudDateRangePicker PickerVariant="global::MudBlazor.PickerVariant.Static" DisplayMonths="1" DateRange="_ranges[i]"
+                               DateRangeChanged="@(v => SetRange(i, v))" MinDate="RangeMin" MaxDate="RangeMax" />
+        </Calendar>
+        <Popup Context="i">
+            <MudDateRangePicker Editable="true" DateRange="_ranges[i]" DateRangeChanged="@(v => SetRange(i, v))"
+                               MinDate="RangeMin" MaxDate="RangeMax" />
+        </Popup>
+    </RangeBenchHost>
+}
+else if (ComponentsMode)
 {
     <ComponentBenchHost Title="MudBlazor 9.11.0 / Material" Context="state"><ComponentSamples State="@state" /></ComponentBenchHost>
 }
@@ -18,8 +39,38 @@ else
 
 @code {
     private bool ComponentsMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=components", StringComparer.Ordinal);
+    private bool RangeMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=range", StringComparer.Ordinal);
     private bool TimeValues;
-    protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+
+    private static readonly DateTime RangeMin = new(2026, 10, 1);
+    private static readonly DateTime RangeMax = new(2026, 12, 31, 23, 59, 59);
+    private readonly DateTime?[] _rangeStarts = new DateTime?[50];
+    private readonly DateTime?[] _rangeEnds = new DateTime?[50];
+    private readonly global::MudBlazor.DateRange[] _ranges = new global::MudBlazor.DateRange[50];
+    private int _rangeChanges;
+    private string? RangeStart => _rangeStarts[0]?.ToString("yyyy-MM-dd");
+    private string? RangeEnd => _rangeEnds[0]?.ToString("yyyy-MM-dd");
+    private void SetRangeStart(int i, DateTime? value) { _rangeStarts[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRangeEnd(int i, DateTime? value) { _rangeEnds[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRange(int i, global::MudBlazor.DateRange value)
+    {
+        _ranges[i] = value;
+        if (i != 0) return;
+        _rangeStarts[0] = value.Start;
+        _rangeEnds[0] = value.End;
+        _rangeChanges++;
+    }
+
+    protected override void OnInitialized()
+    {
+        TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+        for (var i = 0; i < 50; i++)
+        {
+            _rangeStarts[i] = new DateTime(2026, 10, 14);
+            _rangeEnds[i] = new DateTime(2026, 10, 20);
+            _ranges[i] = new global::MudBlazor.DateRange(_rangeStarts[i], _rangeEnds[i]);
+        }
+    }
     private string _timeVariant = "Default";
     private int _timeChanges;
     private string? TimeValue0 => _times[0] is var v ? v?.ToString(@"hh\:mm\:ss", System.Globalization.CultureInfo.InvariantCulture) : null;

@@ -2,7 +2,26 @@
 @inject Microsoft.AspNetCore.Components.NavigationManager Navigation
 
 
-@if (ComponentsMode)
+@if (RangeMode)
+{
+    <RangeBenchHost Title="Radzen.Blazor 12.1.4 / Material" StartValue="@RangeStart" EndValue="@RangeEnd" RangeChanges="@_rangeChanges">
+        <Fields Context="i">
+            <div class="bench-field bench-field-start">
+                <RadzenFormField Text="Start"><RadzenDatePicker TValue="DateTime?" DateFormat="MM/dd/yyyy" Min="RangeMin" Max="RangeMax" Value="_rangeStarts[i]" ValueChanged="@(v => SetRangeStart(i, v))" /></RadzenFormField>
+            </div>
+            <div class="bench-field bench-field-end">
+                <RadzenFormField Text="End"><RadzenDatePicker TValue="DateTime?" DateFormat="MM/dd/yyyy" Min="RangeMin" Max="RangeMax" Value="_rangeEnds[i]" ValueChanged="@(v => SetRangeEnd(i, v))" /></RadzenFormField>
+            </div>
+        </Fields>
+        <Calendar Context="i">
+            <RadzenDateRangePicker Value="_ranges[i]" ValueChanged="@(v => SetRange(i, v))" Inline="true" DisplayMonths="1" Min="RangeMin" Max="RangeMax" />
+        </Calendar>
+        <Popup Context="i">
+            <RadzenDateRangePicker Value="_ranges[i]" ValueChanged="@(v => SetRange(i, v))" Min="RangeMin" Max="RangeMax" />
+        </Popup>
+    </RangeBenchHost>
+}
+else if (ComponentsMode)
 {
     <ComponentBenchHost Title="Radzen.Blazor 12.1.4 / Material" Context="state"><ComponentSamples State="@state" /></ComponentBenchHost>
 }
@@ -18,8 +37,38 @@ else
 
 @code {
     private bool ComponentsMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=components", StringComparer.Ordinal);
+    private bool RangeMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=range", StringComparer.Ordinal);
     private bool TimeValues;
-    protected override void OnInitialized() => TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+
+    private static readonly DateTime RangeMin = new(2026, 10, 1);
+    private static readonly DateTime RangeMax = new(2026, 12, 31);
+    private readonly DateTime?[] _rangeStarts = new DateTime?[50];
+    private readonly DateTime?[] _rangeEnds = new DateTime?[50];
+    private readonly global::Radzen.DateRange[] _ranges = new global::Radzen.DateRange[50];
+    private int _rangeChanges;
+    private string? RangeStart => _rangeStarts[0]?.ToString("yyyy-MM-dd");
+    private string? RangeEnd => _rangeEnds[0]?.ToString("yyyy-MM-dd");
+    private void SetRangeStart(int i, DateTime? value) { _rangeStarts[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRangeEnd(int i, DateTime? value) { _rangeEnds[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRange(int i, global::Radzen.DateRange value)
+    {
+        _ranges[i] = value;
+        if (i != 0) return;
+        _rangeStarts[0] = value.Start;
+        _rangeEnds[0] = value.End;
+        _rangeChanges++;
+    }
+
+    protected override void OnInitialized()
+    {
+        TimeValues = Navigation.ToAbsoluteUri(Navigation.Uri).Query.Contains("mode=time-values", StringComparison.Ordinal);
+        for (var i = 0; i < 50; i++)
+        {
+            _rangeStarts[i] = new DateTime(2026, 10, 14);
+            _rangeEnds[i] = new DateTime(2026, 10, 20);
+            _ranges[i] = new global::Radzen.DateRange(_rangeStarts[i], _rangeEnds[i]);
+        }
+    }
     private string _timeVariant = "Default";
     private int _timeChanges;
     private string? TimeValue0 => _times[0] is var v ? v?.ToString("HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture) : null;

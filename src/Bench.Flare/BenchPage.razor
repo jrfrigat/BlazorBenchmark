@@ -12,7 +12,22 @@
 }
 </div>
 }
-@if (ComponentsMode)
+@if (RangeMode)
+{
+    <RangeBenchHost Title="@ThemeSetup.Title" StartValue="@RangeStart" EndValue="@RangeEnd" RangeChanges="@_rangeChanges">
+        <Fields Context="i">
+            <FlareDateRangePicker Mode="DateRangePickerMode.Fields" Min="RangeMin" Max="RangeMax" StartDate="_rangeStarts[i]"
+                                  StartDateChanged="@(v => SetRangeStart(i, v))" EndDate="_rangeEnds[i]"
+                                  EndDateChanged="@(v => SetRangeEnd(i, v))" StartLabel="Start" EndLabel="End" />
+        </Fields>
+        <Calendar Context="i">
+            <FlareDateRangePicker Mode="DateRangePickerMode.Calendar" Min="RangeMin" Max="RangeMax" StartDate="_rangeStarts[i]"
+                                  StartDateChanged="@(v => SetRangeStart(i, v))" EndDate="_rangeEnds[i]"
+                                  EndDateChanged="@(v => SetRangeEnd(i, v))" Label="Range" />
+        </Calendar>
+    </RangeBenchHost>
+}
+else if (ComponentsMode)
 {
     <ComponentBenchHost Title="@ThemeSetup.Title" Context="state"><ComponentSamples State="@state" /></ComponentBenchHost>
 }
@@ -29,12 +44,29 @@ else
 @code {
     private bool PreRenderCalendar;
     private bool ComponentsMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=components", StringComparer.Ordinal);
+    private bool RangeMode => Navigation.ToAbsoluteUri(Navigation.Uri).Query.Split('?', '&').Contains("mode=range", StringComparer.Ordinal);
     private bool TimeValues;
+
+    private static readonly DateOnly RangeMin = new(2026, 10, 1);
+    private static readonly DateOnly RangeMax = new(2026, 12, 31);
+    private readonly DateOnly?[] _rangeStarts = new DateOnly?[50];
+    private readonly DateOnly?[] _rangeEnds = new DateOnly?[50];
+    private int _rangeChanges;
+    private string? RangeStart => _rangeStarts[0]?.ToString("yyyy-MM-dd");
+    private string? RangeEnd => _rangeEnds[0]?.ToString("yyyy-MM-dd");
+    private void SetRangeStart(int i, DateOnly? value) { _rangeStarts[i] = value; if (i == 0) _rangeChanges++; }
+    private void SetRangeEnd(int i, DateOnly? value) { _rangeEnds[i] = value; if (i == 0) _rangeChanges++; }
+
     protected override void OnInitialized()
     {
         var query = Navigation.ToAbsoluteUri(Navigation.Uri).Query;
         TimeValues = query.Contains("mode=time-values", StringComparison.Ordinal);
         PreRenderCalendar = query.Split('?', '&').Contains("prerenderCalendar=1", StringComparer.Ordinal);
+        for (var i = 0; i < 50; i++)
+        {
+            _rangeStarts[i] = new DateOnly(2026, 10, 14);
+            _rangeEnds[i] = new DateOnly(2026, 10, 20);
+        }
     }
     private string _timeVariant = "Dial";
     private int _timeChanges;

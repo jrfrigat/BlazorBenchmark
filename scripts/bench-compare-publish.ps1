@@ -1,5 +1,7 @@
 # Fresh controlled WASM publications. No AOT; trimming and compression match across variants.
-param([string]$Output = 'artifacts/bench-compare')
+# RestoreSources adds a local NuGet feed (for a Flare build that is not published yet); FlareRoot
+# records the source commit that feed was packed from.
+param([string]$Output = 'artifacts/bench-compare', [string]$RestoreSources = '', [string]$FlareRoot = '')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $out = [IO.Path]::GetFullPath((Join-Path $root $Output))
@@ -24,12 +26,18 @@ $manifest = @{
     FontPolicy='System Arial, no remote fonts; provider font assets filtered in benchmark adapter'
     Runtime=(dotnet --version);Variants=@()
 }
+if ($FlareRoot) {
+    $manifest.FlareSha = (git -C $FlareRoot rev-parse HEAD)
+    $manifest.FlareDirty = @(git -C $FlareRoot status --short)
+}
+if ($RestoreSources) { $manifest.RestoreSources = $RestoreSources }
 foreach ($variant in $variants) {
     $name=$variant.Name
     $project=Join-Path $root "src/Bench.$($variant.Library)/Bench.$($variant.Library).csproj"
     $publish=Join-Path $out "$name/publish"
     $arguments=@('publish',$project,'-c','Release','-f','net10.0','-o',$publish,'--nologo')
     if ($variant.Theme) { $arguments += "-p:ThemeSet=$($variant.Theme)" }
+    if ($RestoreSources) { $arguments += "-p:RestoreSources=$RestoreSources" }
     Write-Host "Publishing $name..."
     & dotnet @arguments *> (Join-Path $out "$name.log")
     if ($LASTEXITCODE -ne 0) { throw "Publishing $name failed; see $out/$name.log" }

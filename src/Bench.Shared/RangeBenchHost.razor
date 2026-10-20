@@ -1,0 +1,89 @@
+@namespace Bench.Shared
+@inject IJSRuntime JS
+
+@* The same frame for every library's date range benchmark: a profile (two linked fields, a native inline
+   calendar or a native popup range), a unit count, and the bound value of the first unit. Only the range
+   component itself comes from the library. *@
+<main class="bench bench-range-host">
+    <h1>@Title</h1>
+    <a href="?mode=components">Buttons, inputs, toggles, selects and DataGrid</a>
+    <a href="./">Date and time pickers</a>
+    <button id="bench-range-fields" type="button" @onclick='() => Shape("fields")'>Linked fields</button>
+    <button id="bench-range-calendar" type="button" @onclick='() => Shape("calendar")'>Inline calendar</button>
+    @if (Popup is not null)
+    {
+        <button id="bench-range-popup" type="button" @onclick='() => Shape("popup")'>Popup range</button>
+    }
+    <button id="bench-range-count-1" type="button" @onclick="() => SetCount(1)">1</button>
+    <button id="bench-range-count-50" type="button" @onclick="() => SetCount(50)">50</button>
+    <button id="bench-range-mount" type="button" @onclick="Mount">Mount</button>
+    <button id="bench-range-unmount" type="button" @onclick="Unmount">Unmount</button>
+    <button id="bench-range-rerender" type="button" @onclick="() => _renderVersion++">Rerender container</button>
+    <button id="bench-range-run" type="button" @onclick="Run">Measure range</button>
+    <span id="bench-range-shape">@_shape</span>
+    <span id="bench-range-count">@Count</span>
+    <span id="bench-render-version">@_renderVersion</span>
+    <span id="bench-range-start">@StartValue</span>
+    <span id="bench-range-end">@EndValue</span>
+    <span id="bench-range-changes" data-changes="@RangeChanges"></span>
+    @if (_mounted)
+    {
+        <section class="bench-ranges">
+            @for (var i = 0; i < Count; i++)
+            {
+                var index = i;
+                <div class="bench-range" data-shape="@_shape" @key="index">
+                    @switch (_shape)
+                    {
+                        case "fields":
+                            @Fields(index)
+                            break;
+                        case "calendar":
+                            @Calendar(index)
+                            break;
+                        case "popup":
+                            @Popup!(index)
+                            break;
+                    }
+                </div>
+            }
+        </section>
+        <span id="bench-mounted" data-shape="@_shape" data-count="@Count"></span>
+    }
+    <pre id="bench-report"></pre>
+</main>
+
+@code {
+    /// <summary>Library and theme that are measured.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    /// <summary>Two linked date fields form one unit (both ends typed or picked).</summary>
+    [Parameter, EditorRequired] public RenderFragment<int> Fields { get; set; } = default!;
+    /// <summary>A native inline range calendar forms one unit.</summary>
+    [Parameter, EditorRequired] public RenderFragment<int> Calendar { get; set; } = default!;
+    /// <summary>A native popup range forms one unit; null when the library has no such component.</summary>
+    [Parameter] public RenderFragment<int>? Popup { get; set; }
+    /// <summary>Bound start of the first unit, yyyy-MM-dd.</summary>
+    [Parameter] public string? StartValue { get; set; }
+    /// <summary>Bound end of the first unit, yyyy-MM-dd.</summary>
+    [Parameter] public string? EndValue { get; set; }
+    /// <summary>Range callbacks the first unit raised.</summary>
+    [Parameter] public int RangeChanges { get; set; }
+
+    private bool _mounted;
+    private string _shape = "fields";
+    private int _renderVersion;
+
+    /// <summary>Units mounted by the active profile.</summary>
+    [Parameter] public int Count { get; set; } = 50;
+
+    private void Shape(string shape) { _mounted = false; _shape = shape; }
+    private void SetCount(int count) { _mounted = false; Count = count; }
+    private void Mount() => _mounted = true;
+    private void Unmount() => _mounted = false;
+    private Task Run() => JS.InvokeVoidAsync("benchRange.run").AsTask();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await JS.InvokeVoidAsync("shopDiagnostics.markAppReady");
+    }
+}
