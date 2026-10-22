@@ -19,9 +19,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Flare.Blazor" Version="0.45.0" />
-    <PackageReference Condition="'$(ThemeSet)' != 'Fluent2'" Include="Flare.Theme.MaterialDesign2" Version="0.45.0" />
-    <PackageReference Include="Flare.Icons.MaterialDesign2.Svg" Version="0.45.0" />
+    <PackageReference Include="Flare.Blazor" Version="0.49.0" />
+    <PackageReference Condition="'$(ThemeSet)' != 'Fluent2'" Include="Flare.Theme.MaterialDesign2" Version="0.49.0" />
+    <PackageReference Include="Flare.Icons.MaterialDesign2.Svg" Version="0.49.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,13 +29,13 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(ThemeSet)' == 'Fluent2' Or '$(ThemeSet)' == 'All'">
-    <PackageReference Include="Flare.Theme.FluentUI2" Version="0.45.0" />
+    <PackageReference Include="Flare.Theme.FluentUI2" Version="0.49.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(ThemeSet)' == 'All'">
-    <PackageReference Include="Flare.Theme.MaterialDesign3" Version="0.45.0" />
-    <PackageReference Include="Flare.Theme.MaterialDesign3Expressive" Version="0.45.0" />
-    <PackageReference Include="Flare.Theme.Aero" Version="0.45.0" />
-    <PackageReference Include="Flare.Theme.LiquidGlass" Version="0.45.0" />
-    <PackageReference Include="Flare.Theme.VisualStudio" Version="0.45.0" />
+    <PackageReference Include="Flare.Theme.MaterialDesign3" Version="0.49.0" />
+    <PackageReference Include="Flare.Theme.MaterialDesign3Expressive" Version="0.49.0" />
+    <PackageReference Include="Flare.Theme.Aero" Version="0.49.0" />
+    <PackageReference Include="Flare.Theme.LiquidGlass" Version="0.49.0" />
+    <PackageReference Include="Flare.Theme.VisualStudio" Version="0.49.0" />
   </ItemGroup>
 </Project>
